@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -62,7 +62,7 @@ public final class LifecycleMonitor {
     }
 
     private final LongSupplier clock;
-    private final BooleanSupplier recordPluginTimings;
+    private final Predicate<LifecyclePhase> recordPluginTiming;
     private final Listener listener;
     private final Map<Thread, ThreadPhases> threads = new ConcurrentHashMap<>();
     private final Queue<PluginTiming> timings = new ConcurrentLinkedQueue<>();
@@ -71,12 +71,12 @@ public final class LifecycleMonitor {
      * Creates a monitor.
      *
      * @param clock               the time source in nanoseconds, {@code System::nanoTime} outside of tests
-     * @param recordPluginTimings whether the timing of plugin steps that end now should be kept for a summary
+     * @param recordPluginTiming  whether the timing of a plugin step that ends now should be kept for a summary
      * @param listener            notified when phases are closed
      */
-    LifecycleMonitor(final LongSupplier clock, final BooleanSupplier recordPluginTimings, final Listener listener) {
+    LifecycleMonitor(final LongSupplier clock, final Predicate<LifecyclePhase> recordPluginTiming, final Listener listener) {
         this.clock = clock;
-        this.recordPluginTimings = recordPluginTimings;
+        this.recordPluginTiming = recordPluginTiming;
         this.listener = listener;
     }
 
@@ -179,12 +179,11 @@ public final class LifecycleMonitor {
                 this.threads.remove(thread, phases);
             }
         }
-        final boolean record = this.recordPluginTimings.getAsBoolean();
         for (final ClosedPhase closedPhase : closed) {
             final LifecyclePhase closedOne = closedPhase.phase();
             final PluginStep step = closedOne.pluginStep();
             final String pluginName = closedOne.pluginName();
-            if (record && step != null && pluginName != null) {
+            if (step != null && pluginName != null && this.recordPluginTiming.test(closedOne)) {
                 this.timings.add(new PluginTiming(pluginName, step, closedOne.startNanos(), closedPhase.exclusiveNanos()));
             }
             this.listener.phaseClosed(closedOne, closedPhase.durationNanos());

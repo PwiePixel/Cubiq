@@ -182,9 +182,26 @@ class LifecycleControllerTest {
     }
 
     @Test
+    void aStepThatAnotherThreadRunsDuringTheShutdownIsNotPartOfIt() throws InterruptedException {
+        this.startUp();
+        // The shutdown thread stops a server that does not respond, while the server thread still saves a world
+        this.controller.stopping();
+        final Thread serverThread = new Thread(() -> this.runServerStep(ServerStep.SAVING_WORLD, "world_nether", 1000), "Server thread");
+        serverThread.start();
+        serverThread.join();
+        try (LifecyclePhase _ = this.controller.serverStep(ServerStep.SAVING_WORLDS, null)) {
+            this.runServerStep(ServerStep.SAVING_WORLD, "world", 500);
+        }
+
+        this.controller.stopped();
+
+        assertEquals(List.of("INFO Stopped the server in 1.5 s: worlds 500 ms (world 500 ms), other 1.0 s."), this.log);
+    }
+
+    @Test
     void writesTheReportWhenTheServerHasStartedAndWhenItHasStopped(@TempDir final Path directory) throws IOException {
         final Path report = directory.resolve("reports").resolve("lifecycle.json");
-        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, report));
+        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, report.toString()));
         try (LifecyclePhase _ = reporting.bootstrapping()) {
             this.clock.advanceMillis(1000);
         }
@@ -231,7 +248,7 @@ class LifecycleControllerTest {
         // A directory that is not empty cannot be replaced by the report
         final Path report = Files.createDirectories(directory.resolve("lifecycle.json"));
         Files.writeString(report.resolve("file"), "");
-        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, report));
+        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, report.toString()));
         reporting.startupBegins();
 
         reporting.startupFinished(TimeUnit.SECONDS.toNanos(1));
@@ -239,6 +256,57 @@ class LifecycleControllerTest {
         assertEquals(LifecycleController.State.RUNNING, reporting.state());
         assertEquals(1, this.log.size(), this.log.toString());
         assertTrue(this.log.getFirst().startsWith("WARN Could not write the lifecycle report to " + report + ": "), this.log.getFirst());
+        try (Stream<Path> files = Files.list(directory)) {
+            assertEquals(List.of(report.getFileName()), files.map(Path::getFileName).toList(), "no temporary file is left");
+        }
+    }
+
+    @Test
+    void theReportPathIsOnlyResolvedWhenTheReportIsWritten() {
+        final String previous = System.getProperty(LifecycleController.REPORT_PROPERTY);
+        try {
+            System.setProperty(LifecycleController.REPORT_PROPERTY, "  ");
+            assertNull(LifecycleController.Settings.fromSystemProperties().report());
+            System.setProperty(LifecycleController.REPORT_PROPERTY, " reports/lifecycle.json ");
+            assertEquals("reports/lifecycle.json", LifecycleController.Settings.fromSystemProperties().report());
+            // Reading the settings must not fail on a path that the file system rejects, or the server would not start
+            System.setProperty(LifecycleController.REPORT_PROPERTY, "lifecycle\0.json");
+            assertEquals("lifecycle\0.json", LifecycleController.Settings.fromSystemProperties().report());
+        } finally {
+            if (previous == null) {
+                System.clearProperty(LifecycleController.REPORT_PROPERTY);
+            } else {
+                System.setProperty(LifecycleController.REPORT_PROPERTY, previous);
+            }
+        }
+    }
+
+    @Test
+    void aReportPathThatTheFileSystemRejectsIsAWarning() {
+        // Every file system rejects the NUL character, Windows also characters such as ':' outside the drive
+        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, "lifecycle\0.json"));
+        reporting.startupBegins();
+
+        reporting.startupFinished(TimeUnit.SECONDS.toNanos(1));
+
+        assertEquals(LifecycleController.State.RUNNING, reporting.state());
+        assertEquals(1, this.log.size(), this.log.toString());
+        assertTrue(this.log.getFirst().startsWith("WARN Could not write the lifecycle report to lifecycle\0.json: java.nio.file.InvalidPathException"), this.log.getFirst());
+    }
+
+    @Test
+    void bootstrappingReplacesTheReportOfAnEarlierRun(@TempDir final Path directory) throws IOException {
+        final Path report = directory.resolve("lifecycle.json");
+        Files.writeString(report, LifecycleReport.toJson(new TimingReport(1L, List.of(), List.of()), new TimingReport(1L, List.of(), List.of())));
+        final LifecycleController reporting = this.controller(new LifecycleController.Settings(false, true, 1L, 1L, report.toString()));
+
+        // A run that fails while bootstrapping neither finishes its startup nor stops the server
+        try (LifecyclePhase _ = reporting.bootstrapping()) {
+            this.clock.advanceMillis(1000);
+        }
+
+        assertEquals("{\n  \"formatVersion\": 1\n}\n", Files.readString(report));
+        assertEquals(List.of(), this.log);
     }
 
     @Test
@@ -307,16 +375,37 @@ class LifecycleControllerTest {
         // A plugin manager enables a plugin at runtime, and another thread stops the server meanwhile
         final LifecyclePhase runtimeEnable = this.controller.pluginStep(PluginStep.ENABLE, "Runtime", "Runtime v1.0");
         this.clock.advanceMillis(5000);
-        final Thread shutdown = new Thread(this.controller::stopping, "Server Shutdown Thread");
+        final Thread shutdown = new Thread(() -> {
+            this.controller.stopping();
+            this.runPluginStep(PluginStep.DISABLE, "Example", 300);
+        }, "Server Shutdown Thread");
         shutdown.start();
         shutdown.join();
         this.clock.advanceMillis(1000);
         runtimeEnable.close();
-        this.runPluginStep(PluginStep.DISABLE, "Example", 300);
 
         this.controller.stopped();
 
         assertEquals(List.of("INFO Stopped the server in 1.3 s. Plugins took 300 ms to stop. Plugin: Example 300 ms."), this.log);
+    }
+
+    @Test
+    void aPluginThatAnotherThreadDisablesDuringTheShutdownIsNotPartOfItsSummary() throws InterruptedException {
+        this.startUp();
+        final LifecyclePhase reload = this.controller.reloading();
+        // Another thread stops the server while the reload runs, and the reload disables a plugin meanwhile
+        final Thread shutdown = new Thread(() -> {
+            this.controller.stopping();
+            this.runPluginStep(PluginStep.DISABLE, "Other", 1200);
+        }, "Server Shutdown Thread");
+        shutdown.start();
+        shutdown.join();
+        this.runPluginStep(PluginStep.DISABLE, "Example", 400);
+        reload.close();
+
+        this.controller.stopped();
+
+        assertEquals(List.of("INFO Stopped the server in 1.6 s. Plugins took 1.2 s to stop. Plugin: Other 1.2 s."), this.log);
     }
 
     @Test

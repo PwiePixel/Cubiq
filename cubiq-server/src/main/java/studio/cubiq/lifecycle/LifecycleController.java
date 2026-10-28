@@ -53,9 +53,11 @@ final class LifecycleController {
      * @param watchdog       whether to report phases that make no progress
      * @param warnAfterNanos how long a phase may make no progress before it is reported
      * @param warnEveryNanos how often a phase that stays stuck is reported again
-     * @param report         the file to write how long starting and stopping the server took to, or {@code null}
+     * @param report         the path of the file to write how long starting and stopping the server took to, or
+     *                       {@code null}. It is only resolved when the file is written, so that a path the file system
+     *                       rejects is a warning and does not keep the server from starting.
      */
-    record Settings(boolean summaries, boolean watchdog, long warnAfterNanos, long warnEveryNanos, @Nullable Path report) {
+    record Settings(boolean summaries, boolean watchdog, long warnAfterNanos, long warnEveryNanos, @Nullable String report) {
 
         static Settings fromSystemProperties() {
             final boolean watchdog = Boolean.parseBoolean(System.getProperty(WATCHDOG_PROPERTY, "true"))
@@ -68,7 +70,7 @@ final class LifecycleController {
                 watchdog,
                 TimeUnit.SECONDS.toNanos(warnAfterSeconds),
                 TimeUnit.SECONDS.toNanos(warnEverySeconds),
-                report.isEmpty() ? null : Path.of(report)
+                report.isEmpty() ? null : report
             );
         }
     }
@@ -96,8 +98,9 @@ final class LifecycleController {
     private @Nullable LifecyclePhase startup;
     private @Nullable LifecyclePhase reload;
     private @Nullable LifecyclePhase stop;
+    // The phase of the shutdown, until stopped() has closed it and the steps still open inside it
+    private @Nullable LifecyclePhase shutdown;
     private @Nullable Breakdown shutdownSteps;
-    private long shutdownStartNanos;
     private @Nullable TimingReport startupTiming;
     private boolean watchdogStarted;
 
@@ -130,7 +133,7 @@ final class LifecycleController {
         this.settings = settings;
         this.log = log;
         this.watchdogStarter = watchdogStarter;
-        this.monitor = new LifecycleMonitor(clock, () -> this.state.get() != State.RUNNING, this::phaseClosed);
+        this.monitor = new LifecycleMonitor(clock, this::isPartOfASummary, this::phaseClosed);
         this.watchdog = settings.watchdog()
             ? new LifecycleWatchdog(this.monitor, () -> this.state.get() != State.RUNNING, settings.warnAfterNanos(), settings.warnEveryNanos(), threadDump, log::warn)
             : null;
@@ -156,6 +159,9 @@ final class LifecycleController {
      */
     LifecyclePhase bootstrapping() {
         this.startWatchdog();
+        // Replaces the report of an earlier run, which would otherwise stay in place if this run fails before the server
+        // has started
+        this.writeReport(null, null);
         return this.monitor.beginServerStep(ServerStep.BOOTSTRAPPING, null);
     }
 
@@ -270,8 +276,8 @@ final class LifecycleController {
         final LifecyclePhase phase = this.monitor.begin("Stopping the server");
         synchronized (this) {
             this.stop = phase;
+            this.shutdown = phase;
             this.shutdownSteps = new Breakdown();
-            this.shutdownStartNanos = phase.startNanos();
         }
     }
 
@@ -295,10 +301,12 @@ final class LifecycleController {
         synchronized (this) {
             steps = this.shutdownSteps;
             this.shutdownSteps = null;
+            this.shutdown = null;
             startup = this.startupTiming;
         }
-        // Only the plugins that the shutdown disabled. A step that began before, for example during a reload or a
-        // plugin enabled at runtime that another thread's shutdown overtook, is not part of the shutdown.
+        // Only the plugins that the shutdown disabled. While the server stops, only the steps inside the shutdown are
+        // recorded (see isPartOfASummary). A step that began before, for example of a reload or of a plugin enabled at
+        // runtime that another thread's shutdown overtook, can have been recorded just before and is not part of it.
         final List<PluginTiming> timings = this.monitor.drainPluginTimings().stream()
             .filter(timing -> timing.step() == PluginStep.DISABLE && timing.startNanos() - phase.startNanos() >= 0L)
             .toList();
@@ -331,7 +339,9 @@ final class LifecycleController {
 
     /**
      * Adds a step of starting or stopping the server to the breakdown of the startup or the shutdown. Steps while the
-     * server runs or reloads, and steps of the shutdown that began before it, are not part of either.
+     * server runs or reloads are not part of either. A step is only part of the shutdown if it runs inside the
+     * shutdown's phase: not a step that began before, and not a step of another thread, for example a save that the
+     * server thread continues while the shutdown thread stops a server that does not respond.
      */
     private void addToBreakdown(final LifecyclePhase phase, final long durationNanos) {
         final ServerStep step = phase.serverStep();
@@ -342,7 +352,7 @@ final class LifecycleController {
         synchronized (this) {
             breakdown = switch (this.state.get()) {
                 case STARTING -> this.startupSteps;
-                case STOPPING -> phase.startNanos() - this.shutdownStartNanos >= 0L ? this.shutdownSteps : null;
+                case STOPPING -> isInside(phase, this.shutdown) ? this.shutdownSteps : null;
                 case RUNNING, RELOADING -> null;
             };
         }
@@ -356,13 +366,40 @@ final class LifecycleController {
         breakdown.add(step, phase.subject(), enclosing, phase.startNanos(), durationNanos);
     }
 
+    /**
+     * Whether the step of a plugin that ends now is part of the summary of the startup, a reload or the shutdown. Steps
+     * while the server runs are not, and a step is only part of the shutdown if it runs inside the shutdown's phase, like
+     * the steps of its breakdown: not, for example, a plugin that a reload on another thread disables meanwhile.
+     */
+    private boolean isPartOfASummary(final LifecyclePhase phase) {
+        return switch (this.state.get()) {
+            case STARTING, RELOADING -> true;
+            case RUNNING -> false;
+            case STOPPING -> {
+                synchronized (this) {
+                    yield isInside(phase, this.shutdown);
+                }
+            }
+        };
+    }
+
+    /** Whether a phase was opened inside another one, that is, on the same thread while the other one was open. */
+    private static boolean isInside(final LifecyclePhase phase, final @Nullable LifecyclePhase outer) {
+        for (LifecyclePhase parent = phase.parent(); parent != null; parent = parent.parent()) {
+            if (parent == outer) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void writeReport(final @Nullable TimingReport startup, final @Nullable TimingReport shutdown) {
-        final Path report = this.settings.report();
+        final String report = this.settings.report();
         if (report == null) {
             return;
         }
         try {
-            LifecycleReport.write(report, startup, shutdown);
+            LifecycleReport.write(Path.of(report), startup, shutdown);
         } catch (final IOException | RuntimeException ex) {
             this.log.warn("Could not write the lifecycle report to " + report, ex);
         }

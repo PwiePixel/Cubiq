@@ -94,6 +94,7 @@ expect "Startup took "
 expect ": bootstrapping "
 expect ", worlds "
 expect "(world "
+expect ", initial save "
 expect "Stopped the server in "
 expect ": disabling plugins 3."
 check
@@ -109,7 +110,7 @@ problems = []
 if report.get("formatVersion") != 1:
     problems.append(f"formatVersion is {report.get('formatVersion')}")
 expected = {
-    "startup": (["bootstrapping", "data packs", "server setup", "loading plugins", "enabling plugins", "worlds"], ["bootstrap", "load", "enable"]),
+    "startup": (["bootstrapping", "data packs", "server setup", "loading plugins", "enabling plugins", "worlds", "initial save"], ["bootstrap", "load", "enable"]),
     "shutdown": (["disabling plugins", "worlds"], ["disable"]),
 }
 for part, (steps, plugin_steps) in expected.items():

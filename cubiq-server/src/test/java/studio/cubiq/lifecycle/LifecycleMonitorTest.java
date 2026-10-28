@@ -18,7 +18,7 @@ class LifecycleMonitorTest {
     private boolean recordTimings = true;
     private final LifecycleMonitor monitor = new LifecycleMonitor(
         this.clock,
-        () -> this.recordTimings,
+        phase -> this.recordTimings,
         (phase, durationNanos) -> this.closed.add(phase.description() + " after " + TimeUnit.NANOSECONDS.toMillis(durationNanos) + " ms")
     );
 

@@ -120,9 +120,9 @@ When the server has started, and again when it has stopped, Cubiq logs which ste
 plugins took. For example, with the test plugin of Cubiq's smoke test, whose steps each take three seconds:
 
 ```
-Startup took 18.3 s: bootstrapping 7.0 s, data packs 1.6 s, server setup 1.0 s, loading plugins 3.0 s, enabling plugins 3.0 s, worlds 469 ms (world 358 ms, world_nether 43 ms, world_the_end 57 ms), delayed init tasks 1 ms, other 2.1 s.
+Startup took 24.9 s: bootstrapping 10.5 s, data packs 2.6 s, server setup 1.4 s, loading plugins 3.0 s, enabling plugins 3.0 s, worlds 922 ms (world 641 ms, world_nether 150 ms, world_the_end 114 ms), initial save 60 ms, delayed init tasks 1 ms, other 3.3 s.
 Plugins took 9.0 s to start (bootstrap 3.0 s, load 3.0 s, enable 3.0 s). Plugin: LifecycleSmokeTest 9.0 s.
-Stopped the server in 3.2 s: disabling plugins 3.0 s, worlds 15 ms (world 7 ms, world_nether 3 ms, world_the_end 2 ms), other 207 ms. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
+Stopped the server in 3.2 s: disabling plugins 3.0 s, worlds 20 ms (world 9 ms, world_nether 3 ms, world_the_end 3 ms), other 212 ms. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
 ```
 
 The startup time is the one of Paper's `Done` message, measured from the start of the server's main class. Its steps:
@@ -130,17 +130,19 @@ The startup time is the one of Paper's `Done` message, measured from the start o
 | Step | What it includes |
 | --- | --- |
 | bootstrapping | Discovering the plugins, running the bootstrappers of Paper plugins, and Minecraft's bootstrap (registries) |
-| data packs | Loading the data packs and the registries that depend on them |
+| data packs | Loading the data packs and the registries that depend on them. When Paper imports a world that it has not run before and that Minecraft does not need to upgrade, for example a world of a vanilla 26.x server, also that import and the 30 seconds that Paper waits before it (`-Dpaper.disableMigrationDelay=true` skips the wait) |
 | server setup | Loading the configuration files, the player lists and the commands, and opening the network port (including UPnP) |
-| loading plugins | The plugins' `onLoad` |
+| loading plugins | Creating the plugins (loading their classes, running their constructors and, on first start, downloading the libraries that Spigot plugins declare) and their `onLoad` |
 | enabling plugins | Enabling the plugins, before and after the worlds are loaded |
-| worlds | Loading the worlds and preparing their spawn areas, per world, and saving them right after |
+| worlds | Loading the worlds and preparing their spawn areas, per world. Worlds that plugins create while they are enabled count for enabling plugins |
+| initial save | Saving the players and all worlds once the worlds are loaded and the plugins enabled |
 | delayed init tasks | The tasks that plugins scheduled for the first tick, which Paper runs before it reports `Done` |
-| other | Everything else: starting the JVM's logging, reading `server.properties`, `eula.txt` and the world's `level.dat`, creating the server and the short pauses between the steps |
+| other | Everything else: starting the JVM's logging, reading `server.properties`, `eula.txt` and the world's `level.dat`, creating the server, starting the bundled spark profiler, Query and RCON, the plugins' listeners of Paper's command registration (the `COMMANDS` lifecycle event) and of `ServerLoadEvent`, the short pauses between the steps and, when Minecraft upgrades a world from before 26.1, that upgrade of the world's files and the 30 seconds that Paper waits before it |
 
 The shutdown is measured from the moment the server begins to stop. Its steps are disabling the plugins, waiting for
 their asynchronous tasks (`plugin tasks`), saving the players, saving the worlds (per world) and waiting for the
-region files to be written; `other` is the rest. The lines leave out steps that took less than a millisecond.
+region files to be written; `other` is the rest. The lines leave out steps that took less than half a millisecond,
+which would show as 0 ms.
 
 With more plugins, the line names the five slowest ones. The time of a plugin is the sum of its bootstrap (Paper
 plugins only), `onLoad`, enabling (`onEnable` and the `PluginEnableEvent`) and disabling (`onDisable` and removing
@@ -158,40 +160,45 @@ and steps that took no time are included. The report of a server without plugins
 {
   "formatVersion": 1,
   "startup": {
-    "totalMillis": 8849.0,
+    "totalMillis": 16398.0,
     "steps": [
-      {"name": "bootstrapping", "millis": 3585.255},
-      {"name": "data packs", "millis": 1563.736},
-      {"name": "server setup", "millis": 1021.287},
-      {"name": "loading plugins", "millis": 0.292},
-      {"name": "enabling plugins", "millis": 28.56},
-      {"name": "worlds", "millis": 555.346, "details": [
-        {"name": "world", "millis": 409.319},
-        {"name": "world_nether", "millis": 57.298},
-        {"name": "world_the_end", "millis": 78.925}
+      {"name": "bootstrapping", "millis": 6679.35},
+      {"name": "data packs", "millis": 2828.16},
+      {"name": "server setup", "millis": 1876.296},
+      {"name": "loading plugins", "millis": 0.453},
+      {"name": "enabling plugins", "millis": 34.627},
+      {"name": "worlds", "millis": 955.43, "details": [
+        {"name": "world", "millis": 740.204},
+        {"name": "world_nether", "millis": 89.413},
+        {"name": "world_the_end", "millis": 110.214}
       ]},
-      {"name": "delayed init tasks", "millis": 4.371},
-      {"name": "other", "millis": 2090.153}
+      {"name": "initial save", "millis": 83.315},
+      {"name": "delayed init tasks", "millis": 17.137},
+      {"name": "other", "millis": 3923.233}
     ],
     "plugins": []
   },
   "shutdown": {
-    "totalMillis": 26.521,
+    "totalMillis": 776.12,
     "steps": [
-      {"name": "disabling plugins", "millis": 0.022},
-      {"name": "worlds", "millis": 15.122, "details": [{"name": "world", "millis": 6.254}]},
-      {"name": "other", "millis": 11.293}
+      {"name": "disabling plugins", "millis": 0.041},
+      {"name": "worlds", "millis": 29.365, "details": [{"name": "world", "millis": 12.557}]},
+      {"name": "other", "millis": 746.455}
     ],
     "plugins": []
   }
 }
 ```
 
-Together with `other`, the steps add up to `totalMillis` (see the limitations below). Each plugin is listed with the time of its steps, for example
-`{"name": "Example", "loadMillis": 12.5, "enableMillis": 310.25}`. The file is replaced atomically where the file
-system supports it, so a tool never reads half of it. `formatVersion` changes when a field changes its meaning or is
-removed; new fields can be added without a new version. A startup that failed has no `startup` part, and a server that
-is still running has no `shutdown` part. If the file cannot be written, Cubiq logs a warning and the server is not
+Together with `other`, the steps add up to `totalMillis` (see the limitations below). Each plugin is listed with the
+time of its steps, for example `{"name": "Example", "loadMillis": 12.5, "enableMillis": 310.25}`. The file is replaced
+atomically where the file system supports it, so a tool never reads half of it; a symbolic link at its path is replaced
+as well, by the file. `formatVersion` changes when a field changes its meaning or is removed; new fields can be added
+without a new version. A startup that failed has no `startup` part, and a server that is still running has no
+`shutdown` part: when the server starts, Cubiq replaces the file with a report that has neither, so that a run that
+fails before the server has started does not leave the report of an earlier run in place. The `startup` part is
+written right after Paper's `Done` message, so a tool that waits for that message should then wait for the `startup`
+part as well. If the file cannot be written, or its path is not valid, Cubiq logs a warning and the server is not
 affected.
 
 ### Lifecycle watchdog
@@ -250,6 +257,11 @@ Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAf
   time; `other` is then at least zero.
 - Plugins enabled or disabled while the server runs, for example by a plugin manager, are watched by Paper's
   watchdog and are not part of the summaries.
+- When Paper imports a world at startup that it has not run before, it waits 30 seconds before it begins, so that the
+  server owner can stop the server. If Minecraft does not need to upgrade the world, the watchdog reports
+  `Loading data packs` meanwhile, with the stack trace of the main thread, which only shows that it waits for the
+  thread that imports the world. When Minecraft upgrades a world from before 26.1, it does so before the steps begin:
+  the watchdog does not watch it, and the summary counts the wait and the upgrade as `other`.
 - Work that plugins run on other threads is only visible when it blocks one of the watched steps, for example
   when the thread of a step waits for it.
 - The JVM cannot dump virtual threads. When one of them holds the lock a step waits for, the report names it and

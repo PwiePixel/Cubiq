@@ -5,11 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class LifecycleReportTest {
 
@@ -82,6 +82,43 @@ class LifecycleReportTest {
 
     @Test
     void theShutdownFollowsTheStartup() {
+        final TimingReport startup = new TimingReport(TimeUnit.MILLISECONDS.toNanos(800), List.of(), List.of());
+        final TimingReport shutdown = new TimingReport(TimeUnit.MILLISECONDS.toNanos(1500), List.of(), List.of());
+
+        final String json = LifecycleReport.toJson(startup, shutdown);
+
+        assertEquals(
+            """
+                {
+                  "formatVersion": 1,
+                  "startup": {
+                    "totalMillis": 800.0,
+                    "steps": [
+                      {
+                        "name": "other",
+                        "millis": 800.0
+                      }
+                    ],
+                    "plugins": []
+                  },
+                  "shutdown": {
+                    "totalMillis": 1500.0,
+                    "steps": [
+                      {
+                        "name": "other",
+                        "millis": 1500.0
+                      }
+                    ],
+                    "plugins": []
+                  }
+                }
+                """,
+            json
+        );
+    }
+
+    @Test
+    void aStartupThatFailedHasNoStartupPart() {
         final TimingReport shutdown = new TimingReport(TimeUnit.MILLISECONDS.toNanos(1500), List.of(), List.of());
 
         final String json = LifecycleReport.toJson(null, shutdown);
@@ -114,7 +151,9 @@ class LifecycleReportTest {
         LifecycleReport.write(report, null, new TimingReport(0L, List.of(), List.of()));
 
         assertEquals(LifecycleReport.toJson(null, new TimingReport(0L, List.of(), List.of())), Files.readString(report));
-        assertFalse(Files.exists(report.resolveSibling("lifecycle.json.tmp")));
+        try (Stream<Path> files = Files.list(report.getParent())) {
+            assertEquals(List.of(report.getFileName()), files.map(Path::getFileName).toList(), "no temporary file is left");
+        }
     }
 
     @Test
