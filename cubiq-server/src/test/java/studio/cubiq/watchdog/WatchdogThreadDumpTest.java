@@ -5,13 +5,16 @@ import java.lang.management.ThreadInfo;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.when;
 
 class WatchdogThreadDumpTest {
 
@@ -149,6 +152,114 @@ class WatchdogThreadDumpTest {
     }
 
     @Test
+    void aConcurrentLockHeldByAVirtualThreadIsExplained() throws InterruptedException {
+        final ReentrantLock lock = new ReentrantLock();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = Thread.ofVirtual().name("Virtual lock holder").start(() -> {
+            lock.lock();
+            try {
+                locked.countDown();
+                release.await();
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.unlock();
+            }
+        });
+        final Thread server = new Thread(() -> {
+            lock.lock();
+            lock.unlock();
+        }, "Server thread under test");
+        try {
+            locked.await();
+            server.start();
+            awaitState(server, Thread.State.WAITING);
+
+            final List<String> lines = WatchdogThreadDump.serverThread(server);
+
+            assertTrue(lines.contains("The server thread waits for a lock held by \"Virtual lock holder\" (thread ID " + holder.threadId()
+                + "), whose stack trace cannot be taken here: it is a virtual thread or has ended. " + WatchdogThreadDump.VIRTUAL_THREAD_DUMP
+            ), String.join("\n", lines));
+        } finally {
+            release.countDown();
+            holder.join();
+            server.join();
+        }
+    }
+
+    @Test
+    void aMonitorHeldByARunningVirtualThreadIsNotBlamedOnTheThreadItRunsOn() throws InterruptedException {
+        final Object monitor = new Object();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final AtomicBoolean release = new AtomicBoolean();
+        final Thread holder = Thread.ofVirtual().name("Virtual monitor holder").start(() -> {
+            synchronized (monitor) {
+                locked.countDown();
+                while (!release.get()) {
+                    Thread.onSpinWait();
+                }
+            }
+        });
+        final Thread server = new Thread(() -> {
+            synchronized (monitor) {
+                monitor.notifyAll();
+            }
+        }, "Server thread under test");
+        try {
+            locked.await();
+            server.start();
+            awaitState(server, Thread.State.BLOCKED);
+
+            final String dump = String.join("\n", WatchdogThreadDump.serverThread(server));
+
+            assertTrue(dump.contains("The server thread waits for a lock held by the virtual thread \"Virtual monitor holder\" (thread ID "
+                + holder.threadId() + "), which runs on \""), dump);
+            assertFalse(dump.contains("which is likely the cause"), dump);
+        } finally {
+            release.set(true);
+            holder.join();
+            server.join();
+        }
+    }
+
+    @Test
+    void aMonitorHeldByAWaitingVirtualThreadIsExplained() throws InterruptedException {
+        final Object monitor = new Object();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = Thread.ofVirtual().name("Virtual monitor holder").start(() -> {
+            synchronized (monitor) {
+                locked.countDown();
+                try {
+                    release.await();
+                } catch (final InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        final Thread server = new Thread(() -> {
+            synchronized (monitor) {
+                monitor.notifyAll();
+            }
+        }, "Server thread under test");
+        try {
+            locked.await();
+            server.start();
+            awaitState(server, Thread.State.BLOCKED);
+
+            final String dump = String.join("\n", WatchdogThreadDump.serverThread(server));
+
+            // The JVM reports neither the monitor nor its owner when a virtual thread that is not running holds it
+            assertTrue(dump.contains(", which happens when a virtual thread holds the monitor. " + WatchdogThreadDump.VIRTUAL_THREAD_DUMP), dump);
+        } finally {
+            release.countDown();
+            holder.join();
+            server.join();
+        }
+    }
+
+    @Test
     void aThreadWithoutLocksIsDumpedLikeUpstream() throws InterruptedException {
         final CountDownLatch release = new CountDownLatch(1);
         final Thread thread = new Thread(() -> {
@@ -173,6 +284,20 @@ class WatchdogThreadDumpTest {
         } finally {
             release.countDown();
             thread.join();
+        }
+    }
+
+    @Test
+    void formattingNeverThrowsNotEvenWhenMemoryRunsOut() {
+        // The watchdog thread must survive a report to halt or restart a server that does not respond
+        final ThreadInfo info = Mockito.mock(ThreadInfo.class);
+        when(info.getThreadName()).thenThrow(new OutOfMemoryError("Java heap space"));
+
+        // Caught here because JUnit does not let an OutOfMemoryError fail a test; it ends the test run
+        try {
+            assertEquals(List.of(), WatchdogThreadDump.lines(info));
+        } catch (final OutOfMemoryError ex) {
+            fail("formatting threw " + ex);
         }
     }
 

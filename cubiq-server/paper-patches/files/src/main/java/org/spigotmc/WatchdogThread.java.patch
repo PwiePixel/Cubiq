@@ -89,13 +89,14 @@
                  }
  
                  logger.log(Level.SEVERE, "------------------------------");
-@@ -156,24 +_,23 @@
+@@ -156,24 +_,24 @@
          }
      }
  
 +    // Cubiq start - Watchdog hardening - do not busy-spin while the server does not respond
 +    // The early-warning checks above used to skip the sleep at the end of the loop, so the watchdog spun on a full
-+    // core for as long as the server did not respond, or permanently with early-warning-every <= 0.
++    // core for as long as the server did not respond. With early-warning-every: 0 it also spun while the server ran
++    // normally, from every check until the next tick, and with a negative value permanently.
 +    private void pauseBeforeNextCheck() {
 +        try {
 +            sleep(1000);

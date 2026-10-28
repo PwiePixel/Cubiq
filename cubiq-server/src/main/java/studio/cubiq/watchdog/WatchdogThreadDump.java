@@ -23,12 +23,18 @@ import org.jspecify.annotations.Nullable;
  * make the lag worse every few seconds. The lock a thread waits for and the thread that holds it are known without
  * that scan. Upstream's full dump on a long timeout still captures them.</p>
  *
- * <p>The methods never throw, because they run on the watchdog thread, which must survive any problem in a report.
- * If the lock information cannot be captured, the plain stack trace is used.</p>
+ * <p>The thread management interface knows nothing about virtual threads, which the server uses for example for
+ * {@code AsyncPlayerPreLoginEvent}. When one of them holds the lock, the dump says so instead of blaming another
+ * thread, and how to get a dump that includes virtual threads.</p>
+ *
+ * <p>The methods never throw, not even an {@link OutOfMemoryError}, because they run on the watchdog thread, which
+ * must survive any problem in a report to halt or restart a server that does not respond. If the lock information
+ * cannot be captured, the plain stack trace is used.</p>
  */
 public final class WatchdogThreadDump {
 
     static final String SEPARATOR = "------------------------------";
+    static final String VIRTUAL_THREAD_DUMP = "\"jcmd <pid> Thread.dump_to_file <file>\" writes a thread dump that includes virtual threads.";
 
     private WatchdogThreadDump() {
     }
@@ -42,15 +48,21 @@ public final class WatchdogThreadDump {
     public static List<String> serverThread(final Thread serverThread) {
         try {
             return serverThreadWithLocks(serverThread);
-        } catch (final RuntimeException | LinkageError ex) {
-            final List<String> lines = new ArrayList<>();
-            lines.add(SEPARATOR);
-            lines.add("Current Thread: " + serverThread.getName() + " (locks unavailable: " + ex + ")");
-            lines.add("\tStack:");
-            for (final StackTraceElement frame : serverThread.getStackTrace()) {
-                lines.add("\t\t" + frame);
+        } catch (final Throwable ex) {
+            try {
+                final List<String> lines = new ArrayList<>();
+                lines.add(SEPARATOR);
+                lines.add("Current Thread: " + serverThread.getName() + " (locks unavailable: " + ex + ")");
+                lines.add("\tStack:");
+                for (final StackTraceElement frame : serverThread.getStackTrace()) {
+                    lines.add("\t\t" + frame);
+                }
+                return lines;
+            } catch (final Throwable again) {
+                // For example another OutOfMemoryError: leave the server thread out of the report rather than end the
+                // watchdog thread
+                return List.of();
             }
-            return lines;
         }
     }
 
@@ -67,13 +79,31 @@ public final class WatchdogThreadDump {
         final long ownerId = info.getLockOwnerId();
         if (ownerId != -1L && ownerId != info.getThreadId()) {
             final ThreadInfo owner = threadInfo(threads, ownerId);
-            if (owner != null) {
-                lines.add(SEPARATOR);
+            lines.add(SEPARATOR);
+            if (owner == null) {
+                lines.add("The server thread waits for a lock held by \"" + info.getLockOwnerName() + "\" (thread ID " + ownerId
+                    + "), whose stack trace cannot be taken here: it is a virtual thread or has ended. " + VIRTUAL_THREAD_DUMP);
+            } else if (carriesVirtualThread(owner)) {
+                // A virtual thread that holds a monitor while it runs is reported as the platform thread it runs on
+                lines.add("The server thread waits for a lock held by the virtual thread \"" + owner.getLockOwnerName() + "\" (thread ID "
+                    + owner.getLockOwnerId() + "), which runs on \"" + owner.getThreadName() + "\". Its stack trace cannot be taken here. "
+                    + VIRTUAL_THREAD_DUMP);
+            } else {
                 lines.add("The server thread waits for a lock held by \"" + owner.getThreadName() + "\", which is likely the cause:");
                 lines.addAll(lines(owner));
             }
+        } else if (info.getLockInfo() == null && serverThread.getState() == Thread.State.BLOCKED) {
+            // A thread that is blocked on a monitor held by a virtual thread that is not running is reported as running
+            lines.add(SEPARATOR);
+            lines.add("The server thread is blocked on a monitor although the JVM reports it as " + info.getThreadState()
+                + ", which happens when a virtual thread holds the monitor. " + VIRTUAL_THREAD_DUMP);
         }
         return lines;
+    }
+
+    private static boolean carriesVirtualThread(final ThreadInfo thread) {
+        final LockInfo lock = thread.getLockInfo();
+        return lock != null && "java.lang.VirtualThread".equals(lock.getClassName()) && thread.getLockOwnerName() != null;
     }
 
     private static @Nullable ThreadInfo threadInfo(final ThreadMXBean threads, final long threadId) {
@@ -91,8 +121,12 @@ public final class WatchdogThreadDump {
     public static List<String> lines(final ThreadInfo thread) {
         try {
             return linesWithLocks(thread);
-        } catch (final RuntimeException | LinkageError ex) {
-            return List.of(SEPARATOR, "Current Thread: " + thread.getThreadName() + " (could not be formatted: " + ex + ")");
+        } catch (final Throwable ex) {
+            try {
+                return List.of(SEPARATOR, "Current Thread: " + thread.getThreadName() + " (could not be formatted: " + ex + ")");
+            } catch (final Throwable again) {
+                return List.of();
+            }
         }
     }
 

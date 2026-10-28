@@ -14,11 +14,15 @@ import org.jspecify.annotations.Nullable;
  * <p>The {@code java.util.concurrent} locks that a thread holds are left out: to find them, HotSpot scans the whole
  * heap while all threads are paused, which takes seconds on a large heap. The lock that a thread waits for and the
  * thread that holds it are known without that scan.</p>
+ *
+ * <p>The thread management interface knows nothing about virtual threads. When one of them holds the lock, the dump
+ * says so instead of blaming another thread, and how to get a dump that includes virtual threads.</p>
  */
 final class ThreadDumps {
 
     /** Limits the size of a single dump, for example of a thread in a deep recursion. */
     static final int MAX_FRAMES = 200;
+    static final String VIRTUAL_THREAD_DUMP = "\"jcmd <pid> Thread.dump_to_file <file>\" writes a thread dump that includes virtual threads.";
 
     /**
      * A formatted stack trace.
@@ -63,12 +67,30 @@ final class ThreadDumps {
         final long ownerId = info.getLockOwnerId();
         if (ownerId != -1L && ownerId != info.getThreadId()) {
             final ThreadInfo owner = threadInfo(threads, ownerId);
-            if (owner != null) {
+            if (owner == null) {
+                out.append("The lock is held by \"").append(info.getLockOwnerName()).append("\" #").append(ownerId)
+                    .append(", whose stack trace cannot be taken here: it is a virtual thread or has ended. ")
+                    .append(VIRTUAL_THREAD_DUMP).append('\n');
+            } else if (carriesVirtualThread(owner)) {
+                // A virtual thread that holds a monitor while it runs is reported as the platform thread it runs on
+                out.append("The lock is held by the virtual thread \"").append(owner.getLockOwnerName()).append("\" #")
+                    .append(owner.getLockOwnerId()).append(", which runs on \"").append(owner.getThreadName())
+                    .append("\". Its stack trace cannot be taken here. ").append(VIRTUAL_THREAD_DUMP).append('\n');
+            } else {
                 out.append("The lock is held by \"").append(owner.getThreadName()).append("\":\n");
                 append(out, owner);
             }
+        } else if (info.getLockInfo() == null && thread.getState() == Thread.State.BLOCKED) {
+            // A thread that is blocked on a monitor held by a virtual thread that is not running is reported as running
+            out.append("The thread is blocked on a monitor although the JVM reports it as ").append(info.getThreadState())
+                .append(", which happens when a virtual thread holds the monitor. ").append(VIRTUAL_THREAD_DUMP).append('\n');
         }
         return new Dump(info.getThreadState(), out.toString());
+    }
+
+    private static boolean carriesVirtualThread(final ThreadInfo thread) {
+        final LockInfo lock = thread.getLockInfo();
+        return lock != null && "java.lang.VirtualThread".equals(lock.getClassName()) && thread.getLockOwnerName() != null;
     }
 
     private static @Nullable ThreadInfo threadInfo(final ThreadMXBean threads, final long threadId) {

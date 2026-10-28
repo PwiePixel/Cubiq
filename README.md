@@ -38,7 +38,8 @@ Cubiq is put together.
   `/reload` and shutdown that stop making progress, such as a plugin that hangs in `onDisable`, with a stack trace.
   Paper's watchdog does not watch these phases. See [FEATURES.md](docs/FEATURES.md#lifecycle-diagnostics).
 - **Watchdog fix.** The inherited watchdog no longer spins on a CPU core while the server does not respond, and its
-  reports say whether the server thread is busy or waiting, which lock it waits for and which thread holds it.
+  reports say whether the server thread is busy, waiting or stopped by garbage collection, which lock it waits for
+  and which thread holds it.
   See [FEATURES.md](docs/FEATURES.md#watchdog-improvements).
 - Cubiq identifies itself as Cubiq (brand id `cubiqstudio:cubiq`). Plugins that check for Paper or
   Purpur through `ServerBuildInfo#isBrandCompatible` keep working.

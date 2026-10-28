@@ -132,6 +132,8 @@ Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAf
   watchdog and are not part of the summaries.
 - Work that plugins run on other threads is only visible when it blocks one of the watched steps, for example
   when the thread of a step waits for it.
+- The JVM cannot dump virtual threads. When one of them holds the lock a step waits for, the report names it and
+  explains how to get a dump that includes virtual threads.
 
 ## Watchdog improvements
 
@@ -142,23 +144,30 @@ reports more useful:
 
 - **No busy waiting.** While the server thread did not respond, Paper's watchdog skipped its one-second pause
   between checks and spun on a full CPU core until the next early warning, that is exactly when the server already
-  struggles. With `early-warning-every: 0` it did so between all ticks. Cubiq's watchdog pauses between all checks;
+  struggles. With `early-warning-every: 0` it also spun while the server ran normally, from every check until the
+  next tick (about 3% of a core), and with a negative value permanently. Cubiq's watchdog pauses between all checks;
   see [PERFORMANCE.md](PERFORMANCE.md#results) for the measurements.
-- **Busy or waiting.** Every report says how much CPU time the server thread used since its last tick, for example
-  `The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a
-  lock, a file, the network or a database.` A server thread near 100% is busy, for example in an endless loop.
+- **Busy, waiting or stopped.** Every report says how much CPU time the server thread used since its last tick,
+  for example `The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for
+  example for a lock, a file, the network or a database, or it gets too little CPU time from the operating system.`
+  A server thread near 100% is busy, for example in an endless loop. A thread gets no CPU time either while garbage
+  collection pauses all threads, so when that takes a tenth of the time or more, the report says for how long, and
+  when it takes most of the time, that the server thread is mostly stopped by garbage collection, which happens for
+  example when the memory of the server is nearly full.
 - **Locks.** The dump of the server thread now includes the monitors it holds and the lock it waits for, and when
   another thread holds that lock, that thread is dumped right after it, because it is usually the actual cause.
   The `java.util.concurrent` locks that a thread holds are left out of the early warnings: finding them pauses all
   threads for a scan of the whole heap, which would make the lag worse. Upstream's full dump on a long timeout
-  still lists them.
+  still lists them. The JVM cannot dump virtual threads, which the server uses for example for
+  `AsyncPlayerPreLoginEvent`; when one of them holds the lock, the report names it instead of blaming another
+  thread, and explains how to get a dump that includes virtual threads.
   The labels of the dumps are corrected: upstream called the thread id `PID` and listed the locks a thread holds as
   monitors it is "waiting on". An abridged example from Cubiq's watchdog smoke test:
 
 ```
 The server has not responded for 10 seconds! Creating thread dump
 ...
-The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a lock, a file, the network or a database.
+The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a lock, a file, the network or a database, or it gets too little CPU time from the operating system.
 ------------------------------
 Current Thread: Server thread
 	Thread ID: 51 | Suspended: false | Native: false | State: BLOCKED
@@ -176,3 +185,6 @@ Current Thread: WatchdogSmokeTest lock holder
 	Stack:
 		...
 ```
+
+Cubiq's additions to the reports catch every failure, even when the server runs out of memory, so that they cannot
+end the watchdog thread, which has to halt or restart a server that does not respond.

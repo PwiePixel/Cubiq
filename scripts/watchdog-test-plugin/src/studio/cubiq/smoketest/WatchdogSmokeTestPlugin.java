@@ -6,20 +6,42 @@ import java.util.concurrent.CountDownLatch;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Blocks the server thread on a lock that another thread holds, so that the watchdog reports it, and measures the
- * CPU time the watchdog thread uses while the server does not respond.
+ * Makes the server thread stop responding twice, so that the watchdog reports it: first it blocks the server thread
+ * on a lock that another thread holds, and measures the CPU time the watchdog thread uses meanwhile, then it keeps the
+ * server thread busy.
  */
 public final class WatchdogSmokeTestPlugin extends JavaPlugin {
 
     private static final Object LOCK = new Object();
     private static final String HOLDER_NAME = "WatchdogSmokeTest lock holder";
+    private static volatile long spins;
 
     @Override
     public void onEnable() {
         final long stallMillis = Long.getLong("cubiqSmokeTest.stallMillis", 0L);
+        final long busyMillis = Long.getLong("cubiqSmokeTest.busyMillis", 0L);
         if (stallMillis > 0L) {
-            // One second after the server has started
-            this.getServer().getScheduler().runTaskLater(this, () -> this.blockServerThread(stallMillis), 20L);
+            // One second after the server has started, and the busy stall one second after the server responds again
+            this.getServer().getScheduler().runTaskLater(this, () -> {
+                this.blockServerThread(stallMillis);
+                this.getServer().getScheduler().runTaskLater(this, () -> {
+                    this.keepServerThreadBusy(busyMillis);
+                    this.getLogger().info("Watchdog smoke test finished");
+                }, 20L);
+            }, 20L);
+        }
+    }
+
+    private void keepServerThreadBusy(final long busyMillis) {
+        this.getLogger().info("Keeping the server thread busy for " + busyMillis + " ms");
+        spinInWatchdogSmokeTest(busyMillis);
+        this.getLogger().info("The server thread is no longer busy");
+    }
+
+    private static void spinInWatchdogSmokeTest(final long millis) {
+        final long end = System.nanoTime() + millis * 1_000_000L;
+        while (System.nanoTime() < end) {
+            spins++;
         }
     }
 
@@ -41,11 +63,12 @@ public final class WatchdogSmokeTestPlugin extends JavaPlugin {
             // Reached once the holder releases the lock
             LOCK.notifyAll();
         }
+        this.getLogger().info("The server thread is free again");
         final long watchdogCpuAfter = watchdog == null ? -1L : threads.getThreadCpuTime(watchdog.threadId());
         if (watchdogCpuBefore < 0L || watchdogCpuAfter < 0L) {
             this.getLogger().warning("The CPU time of the watchdog thread could not be measured");
         } else {
-            this.getLogger().info("The server thread is free again. Meanwhile the watchdog thread used "
+            this.getLogger().info("While the server thread was blocked, the watchdog thread used "
                 + (watchdogCpuAfter - watchdogCpuBefore) / 1_000_000L + " ms of CPU time");
         }
     }

@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -128,6 +130,111 @@ class ThreadDumpsTest {
             release.countDown();
             owner.join();
             waiting.join();
+        }
+    }
+
+    @Test
+    void aLockHeldByAVirtualThreadIsExplained() throws InterruptedException {
+        final ReentrantLock lock = new ReentrantLock();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = Thread.ofVirtual().name("Virtual lock holder").start(() -> {
+            lock.lock();
+            try {
+                locked.countDown();
+                release.await();
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.unlock();
+            }
+        });
+        final Thread waiting = new Thread(() -> {
+            lock.lock();
+            lock.unlock();
+        }, "Waiting thread");
+        try {
+            locked.await();
+            waiting.start();
+            awaitState(waiting, Thread.State.WAITING);
+
+            final String dump = ThreadDumps.dump(waiting).text();
+
+            assertTrue(dump.contains("The lock is held by \"Virtual lock holder\" #" + holder.threadId()
+                + ", whose stack trace cannot be taken here: it is a virtual thread or has ended. " + ThreadDumps.VIRTUAL_THREAD_DUMP + "\n"), dump);
+        } finally {
+            release.countDown();
+            holder.join();
+            waiting.join();
+        }
+    }
+
+    @Test
+    void aMonitorHeldByARunningVirtualThreadIsNotBlamedOnTheThreadItRunsOn() throws InterruptedException {
+        final Object monitor = new Object();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final AtomicBoolean release = new AtomicBoolean();
+        final Thread holder = Thread.ofVirtual().name("Virtual monitor holder").start(() -> {
+            synchronized (monitor) {
+                locked.countDown();
+                while (!release.get()) {
+                    Thread.onSpinWait();
+                }
+            }
+        });
+        final Thread blocked = new Thread(() -> {
+            synchronized (monitor) {
+                monitor.notifyAll();
+            }
+        }, "Blocked thread");
+        try {
+            locked.await();
+            blocked.start();
+            awaitState(blocked, Thread.State.BLOCKED);
+
+            final String dump = ThreadDumps.dump(blocked).text();
+
+            assertTrue(dump.contains("The lock is held by the virtual thread \"Virtual monitor holder\" #" + holder.threadId() + ", which runs on \""), dump);
+            assertFalse(dump.contains("The lock is held by \"ForkJoinPool"), dump);
+        } finally {
+            release.set(true);
+            holder.join();
+            blocked.join();
+        }
+    }
+
+    @Test
+    void aMonitorHeldByAWaitingVirtualThreadIsExplained() throws InterruptedException {
+        final Object monitor = new Object();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = Thread.ofVirtual().name("Virtual monitor holder").start(() -> {
+            synchronized (monitor) {
+                locked.countDown();
+                try {
+                    release.await();
+                } catch (final InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        final Thread blocked = new Thread(() -> {
+            synchronized (monitor) {
+                monitor.notifyAll();
+            }
+        }, "Blocked thread");
+        try {
+            locked.await();
+            blocked.start();
+            awaitState(blocked, Thread.State.BLOCKED);
+
+            final String dump = ThreadDumps.dump(blocked).text();
+
+            assertTrue(dump.contains(", which happens when a virtual thread holds the monitor. " + ThreadDumps.VIRTUAL_THREAD_DUMP + "\n"), dump);
+        } finally {
+            release.countDown();
+            holder.join();
+            blocked.join();
         }
     }
 

@@ -153,9 +153,15 @@ server does not start or stop cleanly or an expected message is missing.
 texts and notices included, no Minecraft code, fixed entry times.
 
 The server jar and the Paperclip jar are reproducible: building the same commit twice in the same environment produces
-identical files, which CI checks on every push. javac breaks this for increments, decrements and compound assignments
-such as `+=` of boxed values through another object, for example `pair.left++` with an `Integer` field: it names the
-temporary variables after hash codes, which differ between builds. Write `pair.left = pair.left + 1` instead.
+identical files, which CI checks on every push. Two things break this:
+
+- javac names the temporary variables of increments, decrements and compound assignments such as `+=` of boxed values
+  through another object, for example `pair.left++` with an `Integer` field, after hash codes, which differ between
+  builds. Write `pair.left = pair.left + 1` instead; CI's check fails otherwise.
+- An incremental build can compile a class differently from a complete build, for example when javac takes the
+  parameter names of a superclass constructor from source code in one build and from a class file in another. CI
+  only makes complete builds. Compare local jars only from complete builds, for example with
+  `./gradlew createPaperclipJar --rerun-tasks --no-build-cache`.
 
 The manifest of the server jar records the build time, the branch and the build number. Local builds use the epoch as
 build time, CI uses the commit time (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). A local build can

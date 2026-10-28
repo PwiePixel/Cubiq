@@ -77,7 +77,9 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
   (`scripts/lifecycle-smoke-test.sh`),
 - a watchdog smoke test that blocks the server thread for 15 seconds on a lock held by another thread and checks
   that the watchdog reports it with the CPU use, the lock and the thread that holds it, without a restart, and
-  that the watchdog thread used at most 1.5 seconds of CPU time meanwhile (`scripts/watchdog-smoke-test.sh`),
+  that the watchdog thread used at most 1.5 seconds of CPU time meanwhile; then it keeps the server thread busy for
+  12 seconds and checks that the report calls it busy, and that the two stalls caused 2 to 4 early warnings
+  (`scripts/watchdog-smoke-test.sh`),
 - a check of the distribution: the Paperclip jar and the server jar it created contain the license texts and
   notices, and the Paperclip jar contains no Minecraft code, only a patch against Mojang's jar, which Paperclip
   downloads from Mojang (`scripts/check-distribution.sh`),

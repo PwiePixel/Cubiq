@@ -22,9 +22,11 @@ the CPU time the watchdog thread wasted while the server did not respond. The me
   few CraftBukkit getters read `bukkit.yml` at runtime. Recording stops when the configuration check has run.
 - **Configuration check**: runs once on the server thread right after startup and parses the three files again.
   Its duration is logged with its result so that it can be monitored on real servers.
-- **Watchdog**: Cubiq's watchdog reads the CPU time of the server thread once per check (once per second), on the
-  watchdog thread, and captures lock information only when it writes a report. The watchdog fix removes CPU use
-  (see the results below).
+- **Watchdog**: Cubiq's watchdog reads the CPU time of the server thread and the pause times of the garbage
+  collectors once per check (once per second), on the watchdog thread, and captures lock information only when it
+  writes a report. It does not ask for the `java.util.concurrent` locks that threads hold, because HotSpot finds
+  them by scanning the whole heap while all threads are paused. The watchdog fix removes CPU use (see the results
+  below).
 - **Lifecycle diagnostics**: each plugin step, world load and lifecycle phase opens and closes a small tracking
   object (a few per plugin and world, so a few hundred on large servers), which takes an uncontended lock and
   reads the clock. Plugins enabled or disabled at runtime are tracked the same way. The watchdog thread wakes up
