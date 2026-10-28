@@ -31,7 +31,51 @@ to the Cubiq maintainers, it is marked as such.
   a build tool and is not part of the server that Cubiq distributes.
 - **Paperclip**, the launcher that becomes the distributed jar, is MIT licensed and bundles
   `jbsdiff` (BSD-style license) and Apache Commons Compress (Apache License 2.0). Their license
-  files are included by upstream tooling under `META-INF/license/` in the Paperclip jar.
+  files are included by upstream tooling under `META-INF/license/` in the Paperclip jar. The `NOTICE`
+  file of Apache Commons Compress is not included.
+- **CraftBukkit's license files.** Paper's `paper-server` directory contains `LICENCE.txt` (GPLv3) and
+  `LGPL.txt` (LGPLv3), and `paper-api` contains `LICENCE.txt` (GPLv3). Paper's `LICENSE.md` does not explain
+  which code the LGPLv3 text applies to. Cubiq ships both texts (`licenses/GPL-3.0.txt`, `licenses/LGPL-3.0.txt`).
+
+## Third-party code inside the server
+
+Some files in Paper carry their own license headers in addition to the GPLv3, for example the MIT-licensed
+timings classes by Aikar (`co.aikar.*`, `CustomTimingsHandler`) and `JohnsonSimpleCycles`, which is derived from
+JGraphT and licensed `EPL-2.0 OR LGPL-2.1-or-later`. Two of Paper's feature patches (Eigencraft and Alternate
+Current redstone) record that the ported code was originally MIT licensed. Cubiq does not modify these files;
+their headers must be kept.
+
+A few upstream files carry notices that need a closer look (see the open questions below):
+
+- `co.aikar.util.LoadingIntMap` in Paper's API, deprecated for removal, starts with "Copyright (c) 2015. Starlis
+  LLC / dba Empire Minecraft" and "This source code is proprietary software and must not be redistributed
+  without Starlis LLC's approval". Paper's API jar contains the compiled class, and so does Cubiq's.
+- `io.papermc.paper.command.CommandUtil` contains a method marked `// Code from Mojang - copyright them`.
+- Paper patches classes of Mojang's libraries (authlib, Brigadier, DataFixerUpper and logging) and of JLine. The
+  patched classes are compiled into the server jar.
+- `GS4QueryEvent` in Paper's API was adapted from Velocity's `ProxyQueryEvent`.
+
+The Paperclip jar also contains the server's runtime libraries as separate jars, each under its own license.
+Examples, taken from the libraries' Maven metadata: Configurate (Apache 2.0), leafpile (GPLv3), Rhino (MPL 2.0),
+upnp4j (LGPL 3.0, added by Purpur) and MySQL Connector/J (GPLv2 with the Universal FOSS Exception). Some come in
+as dependencies of other libraries, for example Eclipse Sisu Inject (EPL 1.0, through the Maven model builder
+used by Paper's API) and protobuf-java (BSD-3-Clause, through MySQL Connector/J). A complete, automatically
+generated inventory of all bundled libraries and their licenses does not exist yet; it is planned (see
+[ROADMAP.md](ROADMAP.md)).
+
+Open questions that need an answer before the first release:
+
+- Whether Paper is licensed GPLv3-only or GPLv3-or-later. Paper's `LICENSE.md` says "version 3"; some
+  Bukkit-era file headers say "or (at your option) any later version".
+- The licenses of the Moonrise and DataConverter code included in Paper, whose patches only link to their
+  repositories.
+- The license of the logo images: the server GUI currently shows the `logo.png` that Purpur ships.
+- Whether `co.aikar.util.LoadingIntMap` may be redistributed despite its "proprietary" header, or whether Cubiq
+  should remove it. Removing it could break plugins that still use the deprecated class.
+- Whether bundling Eclipse Sisu Inject (EPL 1.0, which the FSF lists as incompatible with the GPL) as a separate
+  library jar is acceptable. Paper bundles the same library.
+- How to provide the attribution notices of Apache Commons Compress, whose `NOTICE` file the Paperclip jar does
+  not contain.
 
 ## Cubiq's own license
 
@@ -57,14 +101,20 @@ compliance and has not been done.
 When distributing a Cubiq server jar (for example as a release or CI artifact):
 
 - **License texts and notices travel with the binary.** The server jar contains
-  `META-INF/license/` with Cubiq's `LICENSE` and `NOTICE`, the GPLv3 text, Paper's licensing
-  statement and MIT text, and Purpur's MIT notice. The build configuration inherited from Purpur and
-  Paper does not package these files into the server jar (only Mojang's own `META-INF/LICENSE` notice
-  ends up there); Cubiq adds them in `cubiq-server/build.gradle.kts.patch`.
+  `META-INF/license/` with Cubiq's `LICENSE` and `NOTICE`, the GPLv3 and LGPLv3 texts, Paper's
+  licensing statement and MIT text, and Purpur's MIT notice. The build configuration inherited from
+  Purpur and Paper does not package these files into the server jar (only Mojang's own
+  `META-INF/LICENSE` notice, which refers to the Minecraft EULA, ends up there); Cubiq adds them in
+  `cubiq-server/build.gradle.kts.patch`. The distributed Paperclip jar contains the server jar only as
+  a binary patch, so these files appear in the server jar Paperclip creates on first start
+  (`versions/<version>/cubiq-<version>.jar`). The Paperclip jar itself only contains the license files
+  of Paperclip and its bundled libraries; adding Cubiq's files to it as well is planned.
 - **Corresponding source must be available.** The GPLv3 requires offering the complete corresponding
   source for distributed binaries. For Cubiq this is the Cubiq repository at the commit the build was
   made from (recorded in the jar manifest as `Git-Commit`) together with the pinned upstream commits
-  (`purpurCommit` in `gradle.properties`, and the Paper commit pinned by that Purpur commit).
+  (`purpurCommit` in `gradle.properties`, and the Paper commit pinned by that Purpur commit). Source
+  archives and a written source offer for releases are not set up yet; they are part of the release
+  process on the roadmap.
 - **Modified files are marked.** Cubiq's changes to upstream files are marked with `// Cubiq`
   comments and are kept as patches, which documents what was changed.
 - **The Apache 2.0 `NOTICE` must be kept.** Derivative works of Cubiq must include the attribution

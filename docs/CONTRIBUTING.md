@@ -117,15 +117,15 @@ authlib or DataFixerUpper), list it in `build-data/dev-imports.txt`.
 ```bash
 ./gradlew build                 # compile everything, run tests and checks
 ./gradlew createPaperclipJar    # cubiq-server/build/libs/cubiq-paperclip-<version>.jar
-./gradlew :cubiq-server:test --tests 'studio.cubiq.testing.CubiqUnitTestSuite'
+./gradlew :cubiq-server:test --tests 'studio.cubiq.testing.*'   # only Cubiq's tests
 ```
 
 - The server test task only runs classes named `*TestSuite`. Cubiq's plain unit tests live under
   `studio.cubiq` and are collected by `studio.cubiq.testing.CubiqUnitTestSuite`.
-- Tests that need Minecraft registries use the upstream environment annotations
-  (`@Normal`, `@VanillaFeature`, `@AllFeatures` from `org.bukkit.support.environment`) and must be
-  run by a suite that sets the matching `TestSuite` configuration parameter; see the suites in
-  `paper-server/src/test/java/org/bukkit/support/suite/`.
+- Tests that need Minecraft's registries or a dummy server are annotated with `@Normal` (from
+  `org.bukkit.support.environment`) and run by `studio.cubiq.testing.CubiqNormalTestSuite`. Tests for the other
+  upstream environments (`@VanillaFeature`, `@AllFeatures`) need a matching suite that sets the `TestSuite`
+  configuration parameter; see `paper-server/src/test/java/org/bukkit/support/suite/`.
 - Every behavior change needs a test, and every fixed bug needs a regression test. Make sure a new
   test fails without the change it covers.
 - Checkstyle is enforced for the API modules, following Paper's rules.
