@@ -6,17 +6,21 @@ Purpur; see [COMPATIBILITY.md](COMPATIBILITY.md).
 ## Configuration check
 
 CraftBukkit, Spigot and Purpur silently ignore settings they do not know and settings whose value has the
-wrong type. A misspelled setting therefore has no effect, and nothing tells the server owner about it.
+wrong type. Paper keeps settings it does not know in its configuration files and ignores them as well. A
+misspelled setting therefore has no effect, and nothing tells the server owner about it.
 
 Once the server has started, Cubiq compares `bukkit.yml`, `spigot.yml` and `purpur.yml` with the settings the
-server actually used while starting, and logs every setting that has no effect as a warning of the `Cubiq`
-logger, for example:
+server actually used while starting, and Paper's configuration files with the settings Paper knows, and logs every
+setting that has no effect as a warning of the `Cubiq` logger, for example:
 
 ```
-Configuration check: found 3 problems in bukkit.yml, purpur.yml, spigot.yml (37 ms). The following settings have no effect:
+Configuration check: found 6 problems in bukkit.yml, purpur.yml, spigot.yml, config/paper-global.yml, config/paper-world-defaults.yml, world/dimensions/minecraft/overworld/paper-world.yml, world/dimensions/minecraft/the_nether/paper-world.yml, world/dimensions/minecraft/the_end/paper-world.yml (86 ms). The following settings have no effect:
   bukkit.yml: Unknown setting 'spawn-limits.monster' has no effect. Did you mean 'spawn-limits.monsters'?
   purpur.yml: Unknown setting 'world-settings.default.mobs.zombie.ridabel' has no effect. Did you mean 'world-settings.default.mobs.zombie.ridable'?
   spigot.yml: 'world-settings.default.mob-spawn-range' must be a number, but is "eight", so it is ignored.
+  config/paper-global.yml: Unknown setting 'chunk-loading-basic.player-max-chunk-load-rat' has no effect. Did you mean 'chunk-loading-basic.player-max-chunk-load-rate'?
+  config/paper-world-defaults.yml: Unknown setting 'entities.spawning.spawn-limits.monsters' has no effect. Did you mean 'entities.spawning.spawn-limits.monster'?
+  world/dimensions/minecraft/overworld/paper-world.yml: Unknown setting 'chunks.auto-save-intervall' has no effect. Did you mean 'chunks.auto-save-interval'?
 Fix or remove these settings. This check runs on every start and can be disabled with -Dcubiq.configCheck=false
 ```
 
@@ -35,8 +39,16 @@ What is reported:
 
 How it works:
 
-- While the server starts, the configuration objects of these files record which settings are read, with which
-  expected type, and which settings the server writes. Recording stops when the check runs.
+- While the server starts, the configuration objects of `bukkit.yml`, `spigot.yml` and `purpur.yml` record which
+  settings are read, with which expected type, and which settings the server writes. Recording stops when the check
+  runs.
+- Paper maps its files (`config/paper-global.yml`, `config/paper-world-defaults.yml` and the `paper-world.yml` of
+  each world) to configuration objects. When Paper has loaded one of them, Cubiq writes the loaded configuration to
+  an empty tree with Paper's own serializers, which gives exactly the settings Paper knows, including the entries of
+  maps that Paper could read, and reports the settings of the file that are not in that tree. Entries of maps of
+  registry entries match with and without the `minecraft:` namespace. A world file only contains the settings that
+  the world overrides; it is checked without the defaults. Paper reports values of the wrong type in its files
+  itself, because it cannot load such a file.
 - Settings in a world section (`world-settings.<world>.<setting>`) are checked against the settings of
   `world-settings.default`, so settings for worlds that are not loaded are checked as well.
 - Sections that the server reads as a whole, such as maps of blocks or entity types, may contain any key.
@@ -45,8 +57,9 @@ How it works:
 
 Limitations:
 
-- Paper's configuration files (`config/paper-global.yml`, `config/paper-world-defaults.yml` and the per-world
-  `paper-world.yml`), `server.properties` and `commands.yml` are not checked yet.
+- `server.properties` and `commands.yml` are not checked yet.
+- The `paper-world.yml` of a world that a plugin loads after startup is not checked, because the check has already
+  run when Paper loads it.
 - Plugins that read these files with their own code can make the check report settings that only those plugins use.
 - Settings inside sections that the server reads as a whole, such as Purpur's maps of blocks, are not checked
   individually, because the server reads them through the section. The per-world `generator` and

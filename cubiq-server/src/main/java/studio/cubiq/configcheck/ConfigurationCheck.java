@@ -77,6 +77,7 @@ public final class ConfigurationCheck {
     static void resetForTests() {
         pending = isEnabled();
         CONFIGURATIONS.clear();
+        PaperConfigurationCheck.resetForTests();
     }
 
     static ConfigurationChecker.@Nullable Scope scopeOf(final String name) {
@@ -116,7 +117,17 @@ public final class ConfigurationCheck {
                     checked.add(file.getPath());
                 }
             }
-            final long elapsedMillis = (System.nanoTime() - start) / 1_000_000L;
+            // Paper's files were checked when Paper loaded them
+            for (final PaperConfigurationCheck.Result result : PaperConfigurationCheck.drain()) {
+                if (result.findings() == null) {
+                    LOGGER.warn("Configuration check: could not check {}", result.file());
+                } else {
+                    findings.addAll(result.findings());
+                    checked.add(result.file());
+                }
+            }
+            // Including the time it took to check Paper's files while they were loaded
+            final long elapsedMillis = (System.nanoTime() - start + PaperConfigurationCheck.drainCheckNanos()) / 1_000_000L;
             for (final String line : report(checked, findings, elapsedMillis)) {
                 if (findings.isEmpty()) {
                     LOGGER.info(line);

@@ -31,9 +31,9 @@ Cubiq is put together.
 
 ## Differences from Purpur
 
-- **Configuration check.** After startup, Cubiq reports settings in `bukkit.yml`, `spigot.yml` and
-  `purpur.yml` that have no effect, such as misspelled settings or values of the wrong type, and suggests
-  the setting that was probably meant. See [FEATURES.md](docs/FEATURES.md).
+- **Configuration check.** After startup, Cubiq reports settings in `bukkit.yml`, `spigot.yml`, `purpur.yml`
+  and Paper's configuration files that have no effect, such as misspelled settings or values of the wrong type, and
+  suggests the setting that was probably meant. See [FEATURES.md](docs/FEATURES.md).
 - **Lifecycle diagnostics.** Cubiq logs how long the plugins take to start and stop, and reports steps of startup,
   `/reload` and shutdown that stop making progress, such as a plugin that hangs in `onDisable`, with a stack trace.
   Paper's watchdog does not watch these phases. See [FEATURES.md](docs/FEATURES.md#lifecycle-diagnostics).

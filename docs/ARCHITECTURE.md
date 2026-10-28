@@ -91,6 +91,8 @@ change to inherited behavior easy to find. The current hooks are:
 | Watchdog hardening | `org.spigotmc.WatchdogThread` | Pause between all checks; CPU use and locks in the dumps (`studio.cubiq.watchdog`) |
 | Configuration tracking | `org.spigotmc.SpigotConfig`, `org.purpurmc.purpur.PurpurConfig`, `org.bukkit.craftbukkit.CraftServer` | Create `TrackedYamlConfiguration`s |
 | Configuration check | `net.minecraft.server.MinecraftServer` after the `Done` message | Run `ConfigurationCheck` |
+| Paper configuration check | `paper-server: io.papermc.paper.configuration.Configurations` after each file is loaded | Compare the file with the settings Paper knows (`PaperConfigurationCheck`) |
+| Restart | `org.spigotmc.RestartCommand` | Watch the shutdown by `/restart` from the moment Paper's watchdog stops |
 | Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |
 | Plugin and world steps | `PaperPluginInstanceManager` (enable, disable), `BootstrapProviderStorage`, `ServerPluginProviderStorage` (`onLoad`), `PaperWorldLoader` | Time plugin steps; give the watchdog progress and step names |
 

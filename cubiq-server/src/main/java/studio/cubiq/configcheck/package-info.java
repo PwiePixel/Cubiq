@@ -3,7 +3,8 @@
  *
  * <p>{@link studio.cubiq.configcheck.TrackedYamlConfiguration} records which settings the server uses while it
  * starts, and {@link studio.cubiq.configcheck.ConfigurationCheck} compares them with the files once startup has
- * finished.</p>
+ * finished. {@link studio.cubiq.configcheck.PaperConfigurationCheck} checks Paper's configuration files when Paper
+ * loads them.</p>
  */
 @NullMarked
 package studio.cubiq.configcheck;

@@ -38,6 +38,8 @@ Low-risk features that give server owners information upstream does not provide.
 reports, and is covered by tests. In order of priority:
 
 - [x] Configuration check for `bukkit.yml`, `spigot.yml` and `purpur.yml`
+- [x] Configuration check for Paper's configuration files (`config/paper-global.yml`,
+      `config/paper-world-defaults.yml` and the `paper-world.yml` of each world)
 - [x] [Lifecycle watchdog](FEATURES.md#lifecycle-diagnostics): stack traces when startup, `/reload`, a plugin's
       bootstrap, load, enable or disable, loading a world or shutdown stops making progress. The upstream watchdog is
       only armed between `Done` and the start of shutdown, so hangs in these phases were never reported.
@@ -55,8 +57,9 @@ reports, and is covered by tests. In order of priority:
 - [ ] Plugin compatibility matrix: run a set of widely used plugins (permissions, world management, protection,
       economy, placeholders, Folia-supported plugins) against Cubiq in an automated test server
 - [ ] API conformance tests for the brand and version APIs used by plugins to detect server software
-- [ ] Extend the configuration check to Paper's configuration files (`paper-global.yml`, world defaults and
-      per-world files), `server.properties` and `commands.yml`
+- [x] Extend the configuration check to Paper's configuration files (`paper-global.yml`, world defaults and
+      per-world files)
+- [ ] Extend the configuration check to `server.properties` and `commands.yml`
 - [ ] A command to re-run the configuration check after reloads, and an optional machine-readable report
 - [ ] Document configuration differences between Paper, Purpur and Cubiq defaults
 
