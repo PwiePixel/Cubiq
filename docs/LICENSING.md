@@ -106,15 +106,19 @@ When distributing a Cubiq server jar (for example as a release or CI artifact):
   Purpur and Paper does not package these files into the server jar (only Mojang's own
   `META-INF/LICENSE` notice, which refers to the Minecraft EULA, ends up there); Cubiq adds them in
   `cubiq-server/build.gradle.kts.patch`. The distributed Paperclip jar contains the server jar only as
-  a binary patch, so these files appear in the server jar Paperclip creates on first start
-  (`versions/<version>/cubiq-<version>.jar`). The Paperclip jar itself only contains the license files
-  of Paperclip and its bundled libraries; adding Cubiq's files to it as well is planned.
+  a binary patch, so Cubiq adds the same files to the Paperclip jar itself, next to the license files
+  of Paperclip and the libraries it includes (jbsdiff and Apache Commons Compress). The server jar
+  Paperclip creates on first start (`versions/<version>/cubiq-<version>.jar`) contains them as well.
+  `scripts/check-distribution.sh` verifies both jars in CI.
 - **Corresponding source must be available.** The GPLv3 requires offering the complete corresponding
   source for distributed binaries. For Cubiq this is the Cubiq repository at the commit the build was
   made from (recorded in the jar manifest as `Git-Commit`) together with the pinned upstream commits
-  (`purpurCommit` in `gradle.properties`, and the Paper commit pinned by that Purpur commit). Source
-  archives and a written source offer for releases are not set up yet; they are part of the release
-  process on the roadmap.
+  (`purpurCommit` in `gradle.properties`, and the Paper commit pinned by that Purpur commit). On
+  every push, CI builds the jars a second time without reusing any build output, checks that the
+  server jar and the Paperclip jar are identical to the first build and reports the SHA-256 of the
+  Paperclip jar. Whether a build on another machine produces the same jar has not been verified
+  yet. Source archives and a written source offer for releases are not set up yet; they are part of
+  the release process on the roadmap.
 - **Modified files are marked.** Cubiq's changes to upstream files are marked with `// Cubiq`
   comments and are kept as patches, which documents what was changed.
 - **The Apache 2.0 `NOTICE` must be kept.** Derivative works of Cubiq must include the attribution

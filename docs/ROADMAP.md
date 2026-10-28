@@ -18,10 +18,13 @@ and pushed.
 - [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
 - [ ] Release process: version scheme, release channel, published artifacts with checksums, changelog, and a
       source archive with the exact upstream commits for each release
-- [ ] Verify that two builds of the same commit produce identical jars
-- [ ] Add Cubiq's license files to the Paperclip jar itself, not only to the server jar that Paperclip creates
-- [ ] CI checks on the distributed jar: no Minecraft classes in the Paperclip jar, license files present
-- [ ] CI check that rebuilding the patches from the patched sources changes nothing, so that the committed patches
+- [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
+      Paperclip jar (checked in CI)
+- [ ] Reproducible across machines: compare a local build with the CI build of the same commit and document what has
+      to match
+- [x] Add Cubiq's license files to the Paperclip jar itself, not only to the server jar that Paperclip creates
+- [x] CI checks on the distributed jar: no Minecraft classes in the Paperclip jar, license files present
+- [x] CI check that rebuilding the patches from the patched sources changes nothing, so that the committed patches
       always match what was built
 - [ ] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
 - [ ] Resolve the open licensing questions listed in [LICENSING.md](LICENSING.md)

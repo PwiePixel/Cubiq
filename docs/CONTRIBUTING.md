@@ -146,8 +146,21 @@ scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run
 ```
 
 `smoke-test.sh` uses `java` from the `PATH` unless `JAVA` points to a Java 25 executable; the other two scripts
-compile their test plugins with `javac` from `JAVA_HOME`. Both fail with the last lines of the server log when the
+compile their test plugins with `javac` from `JAVA_HOME`. The scripts fail with an excerpt of the server log when the
 server does not start or stop cleanly or an expected message is missing.
+
+`scripts/check-distribution.sh <paperclip-jar> [<server-directory>]` checks the jar server owners download: license
+texts and notices included, no Minecraft code, fixed entry times.
+
+The server jar and the Paperclip jar are reproducible: building the same commit twice in the same environment produces
+identical files, which CI checks on every push. javac breaks this for increments, decrements and compound assignments
+such as `+=` of boxed values through another object, for example `pair.left++` with an `Integer` field: it names the
+temporary variables after hash codes, which differ between builds. Write `pair.left = pair.left + 1` instead.
+
+The manifest of the server jar records the build time, the branch and the build number. Local builds use the epoch as
+build time, CI uses the commit time (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). A local build can
+therefore only match a CI build with the same JDK build, the same branch name, `BUILD_STARTED_AT` set as in CI and
+`BUILD_NUMBER` unset. Such a comparison has not been done yet.
 
 Running a server locally (for example with `./gradlew :cubiq-server:runDevServer` or by starting the
 Paperclip jar) requires accepting the [Minecraft EULA](https://aka.ms/MinecraftEULA). Upstream's run
@@ -170,6 +183,8 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
   `perf/entity-ticking` or `docs/architecture`.
 - Write commit messages with a short imperative summary line and a body that explains why.
 - Every commit must build: run `./gradlew applyAllPatches build` before pushing.
+- Commit patches exactly as the `rebuild*` tasks write them. CI rebuilds all patches from the patched sources and
+  fails if that changes a committed patch.
 - Do not commit generated directories, build output, server run directories or secrets.
 
 ## Troubleshooting
@@ -180,6 +195,9 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
   `https://maven-central.storage-download.googleapis.com/maven2/`.
 - **A generated directory is in a broken state.** Re-run `./gradlew applyAllPatches`. As a last
   resort, run `./gradlew cleanCache` and apply again.
+- **Rebuilding patches fails with `Unable to create '.../.git/index.lock': File exists`.** The rebuild tasks stage
+  their patches with git and can collide when Gradle runs them in parallel. Run the rebuild again with
+  `--max-workers=1`, as CI does.
 
 ## Licensing of contributions
 

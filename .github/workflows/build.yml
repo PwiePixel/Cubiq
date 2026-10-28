@@ -46,6 +46,21 @@ jobs:
       - name: Apply patches
         run: ./gradlew applyAllPatches --stacktrace
 
+      # Rebuilding the patches from the patched sources must reproduce the committed patches exactly. The two patch
+      # sets are rebuilt in separate Gradle runs because paperweight's task graph rejects running them together, and
+      # one task at a time because each rebuild task stages its patches in this repository with git, and git allows
+      # only one process to change the index at a time.
+      - name: Check that the patches are up to date
+        run: |
+          ./gradlew rebuildPurpurPatches --max-workers=1 --stacktrace
+          ./gradlew :cubiq-server:rebuildAllServerPatches --max-workers=1 --stacktrace
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Rebuilding the patches changed them. Rebuild the patches locally and commit the result."
+            git status --short
+            git diff
+            exit 1
+          fi
+
       - name: Build and test
         run: ./gradlew build --stacktrace
 
@@ -74,6 +89,27 @@ jobs:
       # A test plugin that blocks the server thread on a lock, which the watchdog must report without spinning
       - name: Smoke test (watchdog)
         run: scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # The jar must contain the license texts and no Minecraft code; the server jar that Paperclip created in the
+      # smoke tests is checked as well
+      - name: Check the distribution
+        run: scripts/check-distribution.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # Building the jars again from the same commit must produce an identical server jar and Paperclip jar.
+      # --rerun-tasks runs every task again, including the compilation, and --no-build-cache keeps Gradle from reusing
+      # outputs of the first build. The bundler jar is an intermediate file whose entries carry the build time.
+      - name: Check that the jars are reproducible
+        run: |
+          jars="cubiq-server/build/libs/cubiq-server-*.jar cubiq-server/build/libs/cubiq-paperclip-*.jar"
+          sha256sum $jars | tee "$RUNNER_TEMP/first-build.sha256"
+          ./gradlew :cubiq-server:createPaperclipJar --rerun-tasks --no-build-cache --stacktrace
+          sha256sum $jars | tee "$RUNNER_TEMP/second-build.sha256"
+          if ! diff "$RUNNER_TEMP/first-build.sha256" "$RUNNER_TEMP/second-build.sha256"; then
+            echo "::error::Two builds of the same commit produced different jars"
+            exit 1
+          fi
+          jar=$(ls cubiq-server/build/libs/cubiq-paperclip-*.jar)
+          echo "SHA-256 of $(basename "$jar"): \`$(sha256sum "$jar" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload smoke test logs
         if: failure()

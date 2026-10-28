@@ -66,15 +66,21 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
 - Cubiq's unit tests (`studio.cubiq.testing.CubiqUnitTestSuite`),
 - Cubiq's tests against the real Spigot, Purpur and CraftBukkit configuration code
   (`studio.cubiq.testing.CubiqNormalTestSuite`),
+- a check that rebuilding the patches from the patched sources reproduces the committed patches exactly,
 - the creation of the Paperclip jar,
 - a smoke test that starts the Paperclip jar twice (first start and a start with existing files), checks that the
-  server reaches `Done`, that the configuration check finds no problems in the generated files, and that the server
-  stops cleanly (`scripts/smoke-test.sh`), and that the lifecycle watchdog reports nothing,
+  server reaches `Done`, that the configuration check finds no problems in the generated files, that the lifecycle
+  watchdog reports nothing and that the server stops cleanly (`scripts/smoke-test.sh`),
 - a lifecycle smoke test that starts the server with a test plugin whose bootstrap, load, enable and disable each
   take three seconds, and checks that the lifecycle watchdog reports every step with the plugin's stack frames and
   that both summaries name the plugin (`scripts/lifecycle-smoke-test.sh`),
 - a watchdog smoke test that blocks the server thread for 15 seconds on a lock held by another thread and checks
   that the watchdog reports it with the CPU use, the lock and the thread that holds it, without a restart, and
-  that the watchdog thread used at most 1.5 seconds of CPU time meanwhile (`scripts/watchdog-smoke-test.sh`).
+  that the watchdog thread used at most 1.5 seconds of CPU time meanwhile (`scripts/watchdog-smoke-test.sh`),
+- a check of the distribution: the Paperclip jar and the server jar it created contain the license texts and
+  notices, and the Paperclip jar contains no Minecraft code, only a patch against Mojang's jar, which Paperclip
+  downloads from Mojang (`scripts/check-distribution.sh`),
+- a second build that reuses no output of the first build and must produce an identical server jar and Paperclip jar;
+  the SHA-256 of the Paperclip jar is shown in the summary of the CI run.
 
 Connecting clients and running real plugins are not automated yet.
