@@ -6,7 +6,7 @@ combine Paper's performance work and plugin compatibility, Purpur's configurabil
 engineered, Folia-inspired scalability features.
 
 > **Status: early development (alpha).** Cubiq currently consists of Purpur plus Cubiq's own build
-> infrastructure, branding and tests. It has not been benchmarked or validated
+> infrastructure, branding, a configuration check and tests. It has not been benchmarked or validated
 > on production servers yet, and no performance claims are made. Do not use it for production servers.
 
 | | |
@@ -30,6 +30,9 @@ Cubiq is put together.
 
 ## Differences from Purpur
 
+- **Configuration check.** After startup, Cubiq reports settings in `bukkit.yml`, `spigot.yml` and
+  `purpur.yml` that have no effect, such as misspelled settings or values of the wrong type, and suggests
+  the setting that was probably meant. See [FEATURES.md](docs/FEATURES.md).
 - Cubiq identifies itself as Cubiq (brand id `cubiqstudio:cubiq`). Plugins that check for Paper or
   Purpur through `ServerBuildInfo#isBrandCompatible` keep working.
 - `/version` does not query Paper's or Purpur's download APIs for Cubiq builds, which would report

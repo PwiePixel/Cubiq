@@ -1,0 +1,11 @@
+--- a/src/main/java/org/spigotmc/SpigotConfig.java
++++ b/src/main/java/org/spigotmc/SpigotConfig.java
+@@ -53,7 +_,7 @@
+ 
+     public static void init(File configFile) {
+         SpigotConfig.CONFIG_FILE = configFile;
+-        SpigotConfig.config = new YamlConfiguration();
++        SpigotConfig.config = new studio.cubiq.configcheck.TrackedYamlConfiguration("spigot.yml"); // Cubiq - Configuration check
+         try {
+             SpigotConfig.config.load(SpigotConfig.CONFIG_FILE);
+         } catch (IOException ignored) {
