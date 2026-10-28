@@ -18,6 +18,11 @@ performance results and no performance claims for Cubiq at this time.
   few CraftBukkit getters read `bukkit.yml` at runtime. Recording stops when the configuration check has run.
 - **Configuration check**: runs once on the server thread right after startup and parses the three files again.
   Its duration is logged with its result so that it can be monitored on real servers.
+- **Lifecycle diagnostics**: each plugin step, world load and lifecycle phase opens and closes a small tracking
+  object (a few per plugin and world, so a few hundred on large servers), which takes an uncontended lock and
+  reads the clock. Plugins enabled or disabled at runtime are tracked the same way. The watchdog thread wakes up
+  once per second; while the server runs normally it only finds that no phase is open. Stack traces are only taken
+  when a step is reported.
 
 ## Available measurement tools
 

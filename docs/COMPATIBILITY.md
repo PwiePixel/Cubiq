@@ -33,6 +33,7 @@ This page records what has been verified, what is inherited unchanged, and where
 | bStats server metrics | Changed | Cubiq does not submit server-implementation metrics, because it has no registered bStats page and must not report as Purpur. `plugins/bStats/config.yml` is still created, so plugins that use bStats are unaffected. |
 | Configuration files (`server.properties`, `bukkit.yml`, `spigot.yml`, `config/paper-*.yml`, `purpur.yml`) | Inherited | Read and written as by Purpur. Cubiq adds no configuration file. The [configuration check](FEATURES.md#configuration-check) only logs and never changes them. |
 | Chunk system system properties (`-DPaper.WorkerThreadCount`, `-DPaper.MaxViewDistance`, `-DPaper.NumaScheduling`) | Inherited | Same names as on Paper. The chunk system builds these names from its platform brand, which Cubiq deliberately leaves at `Paper`. |
+| Console and log output | Changed | Cubiq adds messages of the `Cubiq` logger: the result of the configuration check, how long the plugins took to start and stop, and reports of the [lifecycle watchdog](FEATURES.md#lifecycle-diagnostics). Upstream messages are unchanged apart from the rebranded crash and watchdog texts. |
 | World and player data | Inherited | Cubiq stores no data of its own, so worlds stay compatible with Paper and Purpur 26.3. |
 | Proxies (Velocity, BungeeCord) | Inherited | Not tested with Cubiq yet. |
 | Third-party plugins | Not verified | No plugin compatibility tests exist yet; they are planned for phase 2 of the roadmap. |

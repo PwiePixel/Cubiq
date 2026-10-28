@@ -1,0 +1,45 @@
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
+@@ -169,10 +_,21 @@
+         }
+     }
+ 
++    // Cubiq start - Lifecycle diagnostics
+     public synchronized void enablePlugin(@NotNull Plugin plugin) {
+         if (plugin.isEnabled()) {
+             return;
+         }
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.pluginStep(studio.cubiq.lifecycle.PluginStep.ENABLE, plugin)) {
++            this.enablePlugin0(plugin);
++        }
++    }
++
++    private synchronized void enablePlugin0(@NotNull Plugin plugin) {
++        // Cubiq end - Lifecycle diagnostics
++        if (plugin.isEnabled()) {
++            return;
++        }
+ 
+         if (plugin.getPluginMeta() instanceof PluginDescriptionFile) {
+             List<Command> bukkitCommands = PluginCommandYamlParser.parse(plugin);
+@@ -218,7 +_,20 @@
+         HandlerList.bakeAll();
+     }
+ 
++    // Cubiq start - Lifecycle diagnostics
+     public synchronized void disablePlugin(@NotNull Plugin plugin) {
++        if (!(plugin instanceof JavaPlugin) || !plugin.isEnabled()) {
++            // Nothing to time; the original checks still apply
++            this.disablePlugin0(plugin);
++            return;
++        }
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.pluginStep(studio.cubiq.lifecycle.PluginStep.DISABLE, plugin)) {
++            this.disablePlugin0(plugin);
++        }
++    }
++
++    private synchronized void disablePlugin0(@NotNull Plugin plugin) {
++        // Cubiq end - Lifecycle diagnostics
+         if (!(plugin instanceof JavaPlugin javaPlugin)) {
+             throw new IllegalArgumentException("Only expects java plugins.");
+         }

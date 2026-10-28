@@ -9,6 +9,23 @@
          this.configuration.options().copyDefaults(true);
          YamlConfiguration configurationDefaults = YamlConfiguration.loadConfiguration(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("configurations/bukkit.yml"), StandardCharsets.UTF_8));
          this.configuration.setDefaults(configurationDefaults);
+@@ -943,8 +_,16 @@
+         }
+     }
+ 
++    // Cubiq start - Lifecycle diagnostics
+     @Override
+     public void reload() {
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.reloading()) {
++            this.reload0();
++        }
++    }
++
++    private void reload0() {
++        // Cubiq end - Lifecycle diagnostics
+         // Paper start - lifecycle events
+         if (io.papermc.paper.plugin.lifecycle.event.LifecycleEventRunner.INSTANCE.blocksPluginReloading()) {
+             throw new IllegalStateException(org.bukkit.command.defaults.ReloadCommand.RELOADING_DISABLED_MESSAGE);
 @@ -952,7 +_,7 @@
          // Paper end - lifecycle events
          org.spigotmc.WatchdogThread.hasStarted = false; // Paper - Disable watchdog early timeout on reload

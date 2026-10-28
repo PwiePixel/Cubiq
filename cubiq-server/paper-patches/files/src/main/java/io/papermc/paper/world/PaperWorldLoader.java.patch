@@ -1,0 +1,24 @@
+--- a/src/main/java/io/papermc/paper/world/PaperWorldLoader.java
++++ b/src/main/java/io/papermc/paper/world/PaperWorldLoader.java
+@@ -134,7 +_,9 @@
+         // ((DedicatedServer) this.server).forceDifficulty();
+ 
+         for (ServerLevel serverLevel : this.server.getAllLevels()) {
+-            this.server.prepareLevel(serverLevel);
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.serverStep("Preparing world " + serverLevel.getWorld().getName())) { // Cubiq - Lifecycle diagnostics
++                this.server.prepareLevel(serverLevel);
++            } // Cubiq - Lifecycle diagnostics
+         }
+     }
+ 
+@@ -165,7 +_,9 @@
+             Main.forceUpgrade(this.server.storageSource, DataFixers.getDataFixer(), this.server.options.has("eraseCache"), () -> true, this.server.registryAccess(), this.server.options.has("recreateRegionFiles"));
+         }
+ 
+-        this.server.createLevel(stem, loading, worldDataAndGenSettings);
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.serverStep("Loading world " + loading.data().bukkitName())) { // Cubiq - Lifecycle diagnostics
++            this.server.createLevel(stem, loading, worldDataAndGenSettings);
++        } // Cubiq - Lifecycle diagnostics
+     }
+ 
+     private boolean hasDimensionData(final LevelStem stem) {

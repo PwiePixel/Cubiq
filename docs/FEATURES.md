@@ -55,3 +55,73 @@ Limitations:
   CraftBukkit's settings are covered by the defaults of `bukkit.yml`, so this mainly affects plugins.
 
 Disable the check by starting the server with `-Dcubiq.configCheck=false`.
+
+## Lifecycle diagnostics
+
+Paper's watchdog only watches the ticks of a server that is running. It is not armed while the server starts,
+while `/reload` runs and while the server stops, so a plugin or a step that hangs in these phases leaves the server
+stuck without any explanation. No upstream server shows either how long each plugin takes to start and stop.
+
+### Summaries
+
+When the server has started, and again when it has stopped, Cubiq logs how long the plugins took. For example,
+with the test plugin of Cubiq's smoke test, whose steps each take three seconds:
+
+```
+Plugins took 9.0 s to start (bootstrap 3.0 s, load 3.0 s, enable 3.0 s). Plugin: LifecycleSmokeTest 9.0 s.
+Stopped the server in 3.0 s. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
+```
+
+With more plugins, the line names the five slowest ones. The time of a plugin is the sum of its bootstrap (Paper
+plugins only), `onLoad`, enabling (`onEnable` and the `PluginEnableEvent`) and disabling (`onDisable` and removing
+the plugin's tasks, services and listeners). Time that a plugin spends enabling or disabling another plugin counts
+for the other plugin. Without plugins, only the shutdown line is logged.
+
+### Lifecycle watchdog
+
+While the server starts, reloads or stops, Cubiq watches each step: bootstrapping the server, bootstrapping,
+loading, enabling and disabling each plugin, loading and preparing each world, and saving the worlds on shutdown.
+When a thread has neither finished its current step nor started or finished another one for 30 seconds, Cubiq
+logs the step and the stack trace of that thread, including the locks it holds and waits for. If the thread waits
+for a lock that another thread holds, the stack trace of that thread follows. Stack frames of plugin code start
+with the name of the plugin's jar. An abridged example:
+
+```
+Lifecycle watchdog: Enabling plugin LifecycleSmokeTest v1.0 has not finished after 30 s.
+If this message repeats with the same stack trace, the step is probably stuck. Stack trace of thread "Server thread", which runs it:
+"Server thread" #51 TIMED_WAITING
+	at java.base@25.0.5/java.lang.Thread.sleep(Thread.java:540)
+	at LifecycleSmokeTest.jar//studio.cubiq.smoketest.StepDelay.waitInStep(StepDelay.java:19)
+	at LifecycleSmokeTest.jar//studio.cubiq.smoketest.LifecycleSmokeTestPlugin.onEnable(LifecycleSmokeTestPlugin.java:17)
+	at org.bukkit.plugin.java.JavaPlugin.setEnabled(JavaPlugin.java:280)
+	...
+```
+
+As long as the step does not finish, the report is repeated every 60 seconds with a new stack trace. When a
+reported step finishes after all, Cubiq logs how long it took, for example
+`Lifecycle watchdog: Enabling plugin LifecycleSmokeTest v1.0 finished after 45.2 s.` The watchdog only reports: it
+never stops, restarts or interrupts anything. While the server runs normally, Paper's watchdog is responsible and
+Cubiq's watchdog reports nothing.
+
+### Settings
+
+| System property | Default | Meaning |
+| --- | --- | --- |
+| `cubiq.lifecycleWatchdog` | `true` | `false` disables the lifecycle watchdog. Paper's `-Ddisable.watchdog=true` disables it as well. |
+| `cubiq.lifecycleWatchdog.warnAfter` | `30` | Seconds without progress before a step is reported (at least 1). |
+| `cubiq.lifecycleWatchdog.warnEvery` | `60` | Seconds between reports while a step does not finish (at least 1). |
+| `cubiq.lifecycleSummary` | `true` | `false` disables the startup and shutdown summaries. |
+
+Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAfter=60 -jar cubiq.jar`.
+
+### Limitations
+
+- Slow but healthy work can be reported, for example generating a large world, a plugin that migrates a database
+  on its first start, or saving many chunks on shutdown. Repeated stack traces show whether the step progresses.
+- Work between the steps listed above, for example running the tasks that plugins scheduled for the first tick,
+  belongs to the enclosing phase (`Starting the server`, `Reloading the server` or `Stopping the server`). Its
+  report says how long nothing has progressed.
+- Plugins enabled or disabled while the server runs, for example by a plugin manager, are watched by Paper's
+  watchdog and are not part of the summaries.
+- Work that plugins run on other threads is only visible when it blocks one of the watched steps, for example
+  when the thread of a step waits for it.

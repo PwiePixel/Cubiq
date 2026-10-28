@@ -75,6 +75,7 @@ Cubiq's own classes live in `cubiq-server/src/main/java` under `studio.cubiq`:
 | `studio.cubiq` | Project constants (`Cubiq.REPOSITORY_URL`, `Cubiq.ISSUES_URL`) and the `Cubiq` logger |
 | `studio.cubiq.version` | `CubiqVersionFetcher`, the `/version` update status for Cubiq builds |
 | `studio.cubiq.configcheck` | The configuration check, see [FEATURES.md](FEATURES.md) |
+| `studio.cubiq.lifecycle` | Lifecycle diagnostics: plugin timing and the lifecycle watchdog, see [FEATURES.md](FEATURES.md#lifecycle-diagnostics) |
 
 Changes to upstream code are kept as small as possible: a patch hook is usually one line that calls into a
 `studio.cubiq` class and is marked with a `// Cubiq` comment. This keeps upstream updates cheap and makes every
@@ -88,6 +89,8 @@ change to inherited behavior easy to find. The current hooks are:
 | Crash and watchdog text | `net.minecraft.CrashReport`, `org.spigotmc.WatchdogThread`, `CraftScheduler`, `PaperConsole` | Refer users to Cubiq |
 | Configuration tracking | `org.spigotmc.SpigotConfig`, `org.purpurmc.purpur.PurpurConfig`, `org.bukkit.craftbukkit.CraftServer` | Create `TrackedYamlConfiguration`s |
 | Configuration check | `net.minecraft.server.MinecraftServer` after the `Done` message | Run `ConfigurationCheck` |
+| Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |
+| Plugin and world steps | `PaperPluginInstanceManager` (enable, disable), `BootstrapProviderStorage`, `ServerPluginProviderStorage` (`onLoad`), `PaperWorldLoader` | Time plugin steps; give the watchdog progress and step names |
 
 ## Inherited runtime architecture
 
@@ -99,8 +102,8 @@ that Cubiq's roadmap builds on.
 `org.bukkit.craftbukkit.Main` parses the command line, then the Minecraft bootstrap starts the dedicated server.
 `DedicatedServer#initServer` loads `server.properties`, creates the player list and with it `CraftServer` (which
 loads `bukkit.yml`), initializes Spigot's, Paper's and Purpur's configurations, loads all plugins and enables those
-with `load: STARTUP`, then loads the worlds. `MinecraftServer#loadLevel` enables the remaining (`POSTWORLD`) plugins
-once the worlds exist, and the server finally logs `Done (<seconds>)!`. Cubiq's configuration check runs right after
+with `load: STARTUP`, then loads the worlds (`MinecraftServer#loadLevel`). `MinecraftServer#initPostWorld` enables the
+remaining (`POSTWORLD`) plugins once the worlds exist, and the server finally logs `Done (<seconds>)!`. Cubiq's configuration check runs right after
 that message, when every world's configuration has been read.
 
 ### Main thread and ticking
@@ -131,3 +134,16 @@ Until Cubiq introduces region-aware execution (see [ROADMAP.md](ROADMAP.md)), Cu
 
 Any future concurrency feature must first document its ownership rules here, including which thread owns which
 state and how work moves between owners.
+
+### Thread-safety contract of the lifecycle diagnostics
+
+- A lifecycle phase belongs to the thread that opened it: the main thread while the server bootstraps, the server
+  thread during startup, `/reload` and a normal shutdown, and the `Server Shutdown Thread` when a stuck server is
+  stopped by a signal. Phases are normally closed by that thread with try-with-resources; closing a phase also
+  closes the phases opened inside it.
+- `LifecycleMonitor` keeps one entry per thread. All of an entry's state is guarded by the entry's lock, and no
+  other lock is taken while it is held. Listeners and logging run after the lock has been released.
+- The watchdog runs on its own daemon thread (`Cubiq Lifecycle Watchdog`). It only reads snapshots of the entries,
+  never changes server state, and drops the entries of threads that have terminated.
+- `LifecycleController` changes the server's lifecycle state atomically. It reports only in the states in which
+  Paper's watchdog is not armed (starting, reloading, stopping).

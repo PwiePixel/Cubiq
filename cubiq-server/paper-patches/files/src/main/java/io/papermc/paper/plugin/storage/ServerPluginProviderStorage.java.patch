@@ -1,0 +1,13 @@
+--- a/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
++++ b/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
+@@ -56,7 +_,9 @@
+     public void processProvided(PluginProvider<JavaPlugin> provider, JavaPlugin provided) {
+         try {
+             provided.getLogger().info(String.format("Loading server plugin %s", provided.getPluginMeta().getDisplayName()));
+-            provided.onLoad();
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.pluginStep(studio.cubiq.lifecycle.PluginStep.LOAD, provided)) { // Cubiq - Lifecycle diagnostics
++                provided.onLoad();
++            } // Cubiq - Lifecycle diagnostics
+         } catch (Throwable ex) {
+             // Don't mark that provider as ERRORED, as this apparently still needs to run the onEnable logic.
+             provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);

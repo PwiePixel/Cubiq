@@ -32,10 +32,11 @@ Low-risk features that give server owners information upstream does not provide.
 reports, and is covered by tests. In order of priority:
 
 - [x] Configuration check for `bukkit.yml`, `spigot.yml` and `purpur.yml`
-- [ ] Lifecycle hang detector: thread dumps when startup, `/reload`, a plugin's enable or disable, or shutdown stalls.
-      The upstream watchdog is only armed between `Done` and the start of shutdown, so hangs in these phases are
-      never reported.
-- [ ] Per-plugin lifecycle timing (bootstrap, load, enable, disable) and a startup and shutdown phase summary
+- [x] [Lifecycle watchdog](FEATURES.md#lifecycle-diagnostics): stack traces when startup, `/reload`, a plugin's
+      bootstrap, load, enable or disable, loading a world or shutdown stops making progress. The upstream watchdog is
+      only armed between `Done` and the start of shutdown, so hangs in these phases were never reported.
+- [x] Per-plugin lifecycle timing (bootstrap, load, enable, disable) with summaries after startup and shutdown
+- [ ] A breakdown of startup and shutdown time by phase (worlds, plugins, saving) and an optional JSON report
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
 - [ ] Tick time percentiles and tick-thread utilization in addition to the averages of `/mspt`

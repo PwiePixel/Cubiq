@@ -1,0 +1,13 @@
+--- a/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java
++++ b/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java
+@@ -33,7 +_,9 @@
+             public boolean load(PluginProvider<PluginBootstrap> provider, PluginBootstrap provided) {
+                 try {
+                     PluginBootstrapContextImpl context = PluginBootstrapContextImpl.create(provider, PluginInitializerManager.instance().pluginDirectoryPath()); // Paper - lifecycle events
+-                    provided.bootstrap(context);
++                    try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.pluginStep(studio.cubiq.lifecycle.PluginStep.BOOTSTRAP, provider.getMeta())) { // Cubiq - Lifecycle diagnostics
++                        provided.bootstrap(context);
++                    } // Cubiq - Lifecycle diagnostics
+                     context.lockLifecycleEventRegistration(); // Paper - lifecycle events
+                     return true;
+                 } catch (Throwable e) {
