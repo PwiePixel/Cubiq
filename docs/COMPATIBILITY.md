@@ -73,7 +73,8 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
   watchdog reports nothing and that the server stops cleanly (`scripts/smoke-test.sh`),
 - a lifecycle smoke test that starts the server with a test plugin whose bootstrap, load, enable and disable each
   take three seconds, and checks that the lifecycle watchdog reports every step with the plugin's stack frames and
-  that both summaries name the plugin (`scripts/lifecycle-smoke-test.sh`),
+  that both summaries name the plugin, and a second run that stops the server with `/restart` instead of `stop`
+  (`scripts/lifecycle-smoke-test.sh`),
 - a watchdog smoke test that blocks the server thread for 15 seconds on a lock held by another thread and checks
   that the watchdog reports it with the CPU use, the lock and the thread that holds it, without a restart, and
   that the watchdog thread used at most 1.5 seconds of CPU time meanwhile (`scripts/watchdog-smoke-test.sh`),

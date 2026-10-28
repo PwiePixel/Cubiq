@@ -36,8 +36,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-classpath=$(find "$directory/libraries" -name '*.jar' -printf '%p:')
-mapfile -t sources < <(find "$scripts/watchdog-test-plugin/src" -name '*.java')
+classpath=$(find "$directory/libraries" -name '*.jar' -exec printf '%s:' {} +)
+sources=()
+while IFS= read -r source; do
+    sources+=("$source")
+done < <(find "$scripts/watchdog-test-plugin/src" -name '*.java')
 "${bin}javac" --release 25 -nowarn -d "$work/classes" -cp "$classpath" "${sources[@]}"
 cp "$scripts/watchdog-test-plugin/plugin.yml" "$work/classes/"
 mkdir -p "$directory/plugins"

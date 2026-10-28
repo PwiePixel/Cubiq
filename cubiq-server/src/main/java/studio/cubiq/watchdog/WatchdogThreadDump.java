@@ -18,6 +18,11 @@ import org.jspecify.annotations.Nullable;
  * When the server thread waits for a lock, the thread that holds it is usually the actual cause, so it is dumped
  * right after the server thread.</p>
  *
+ * <p>The early warnings capture the server thread without the {@code java.util.concurrent} locks it holds: to find
+ * them, HotSpot scans the whole heap while all threads are paused, which takes seconds on a large heap and would
+ * make the lag worse every few seconds. The lock a thread waits for and the thread that holds it are known without
+ * that scan. Upstream's full dump on a long timeout still captures them.</p>
+ *
  * <p>The methods never throw, because they run on the watchdog thread, which must survive any problem in a report.
  * If the lock information cannot be captured, the plain stack trace is used.</p>
  */
@@ -72,9 +77,8 @@ public final class WatchdogThreadDump {
     }
 
     private static @Nullable ThreadInfo threadInfo(final ThreadMXBean threads, final long threadId) {
-        final ThreadInfo[] infos = threads.getThreadInfo(
-            new long[] {threadId}, threads.isObjectMonitorUsageSupported(), threads.isSynchronizerUsageSupported()
-        );
+        // Without the locked synchronizers, which need the scan of the whole heap
+        final ThreadInfo[] infos = threads.getThreadInfo(new long[] {threadId}, threads.isObjectMonitorUsageSupported(), false);
         return infos.length == 1 ? infos[0] : null;
     }
 

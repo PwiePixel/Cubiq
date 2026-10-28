@@ -34,17 +34,22 @@ cleanup() {
 trap cleanup EXIT
 
 # Compile the test plugin against the API and libraries of this server
-classpath=$(find "$directory/libraries" -name '*.jar' -printf '%p:')
-mapfile -t sources < <(find "$scripts/smoke-test-plugin/src" -name '*.java')
+classpath=$(find "$directory/libraries" -name '*.jar' -exec printf '%s:' {} +)
+sources=()
+while IFS= read -r source; do
+    sources+=("$source")
+done < <(find "$scripts/smoke-test-plugin/src" -name '*.java')
 "${bin}javac" --release 25 -nowarn -d "$work/classes" -cp "$classpath" "${sources[@]}"
 cp "$scripts/smoke-test-plugin/paper-plugin.yml" "$work/classes/"
 mkdir -p "$directory/plugins"
 "${bin}jar" --create --file "$plugin" -C "$work/classes" .
 
 # Report steps after one second without progress; each step of the plugin takes three seconds
-SMOKE_EXPECT_NO_WATCHDOG_REPORTS=false "$scripts/smoke-test.sh" "$jar" "$directory" \
-    -Dcubiq.lifecycleWatchdog.warnAfter=1 \
-    "-DcubiqSmokeTest.stepDelayMillis=$step_delay_millis"
+run_server() {
+    SMOKE_EXPECT_NO_WATCHDOG_REPORTS=false SMOKE_STOP_COMMAND=$1 "$scripts/smoke-test.sh" "$jar" "$directory" \
+        -Dcubiq.lifecycleWatchdog.warnAfter=1 \
+        "-DcubiqSmokeTest.stepDelayMillis=$step_delay_millis"
+}
 
 log="$directory/smoke-test.log"
 missing=0
@@ -54,6 +59,16 @@ expect() {
         missing=1
     fi
 }
+check() {
+    grep -E 'Lifecycle watchdog: .*(has not finished|finished after)|Plugins took|Stopped the server in' "$log" || true
+    if [[ $missing -ne 0 ]]; then
+        echo "----- lifecycle diagnostics in the log -----" >&2
+        grep -A 12 'Lifecycle watchdog' "$log" >&2 || true
+        exit 1
+    fi
+}
+
+run_server stop
 for step in Bootstrapping Loading Enabling Disabling; do
     expect "Lifecycle watchdog: $step plugin LifecycleSmokeTest v1.0 has not finished after"
     expect "Lifecycle watchdog: $step plugin LifecycleSmokeTest v1.0 finished after"
@@ -63,16 +78,21 @@ expect "LifecycleSmokeTest.jar//studio.cubiq.smoketest.LifecycleSmokeTestBootstr
 expect "LifecycleSmokeTest.jar//studio.cubiq.smoketest.LifecycleSmokeTestPlugin.onLoad("
 expect "LifecycleSmokeTest.jar//studio.cubiq.smoketest.LifecycleSmokeTestPlugin.onEnable("
 expect "LifecycleSmokeTest.jar//studio.cubiq.smoketest.LifecycleSmokeTestPlugin.onDisable("
+# The plugin's steps sleep, so the reports do not call them stuck
+expect "The thread that runs it is waiting, possibly for work on another thread"
 expect "Plugins took "
 expect "to start (bootstrap "
 expect "Plugin: LifecycleSmokeTest "
 expect "Stopped the server in "
 expect "Plugins took 3."
+check
 
-grep -E 'Lifecycle watchdog: .*(has not finished|finished after)|Plugins took|Stopped the server in' "$log" || true
-if [[ $missing -ne 0 ]]; then
-    echo "----- lifecycle diagnostics in the log -----" >&2
-    grep -A 12 'Lifecycle watchdog' "$log" >&2 || true
-    exit 1
-fi
+# /restart stops the server on a path of its own; without a restart script it only stops the server
+run_server restart
+expect "Lifecycle watchdog: Disabling plugin LifecycleSmokeTest v1.0 has not finished after"
+expect "Lifecycle watchdog: Disabling plugin LifecycleSmokeTest v1.0 finished after"
+expect "Stopped the server in "
+expect "Plugins took 3."
+expect "to stop. Plugin: LifecycleSmokeTest "
+check
 echo "Lifecycle diagnostics reported every slow step"

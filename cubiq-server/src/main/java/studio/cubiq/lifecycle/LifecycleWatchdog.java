@@ -28,7 +28,7 @@ final class LifecycleWatchdog {
     private final BooleanSupplier active;
     private final long warnAfterNanos;
     private final long warnEveryNanos;
-    private final Function<Thread, String> threadDump;
+    private final Function<Thread, ThreadDumps.Dump> threadDump;
     private final Consumer<String> sink;
     private final Map<Thread, Report> reports = new HashMap<>();
 
@@ -48,7 +48,7 @@ final class LifecycleWatchdog {
         final BooleanSupplier active,
         final long warnAfterNanos,
         final long warnEveryNanos,
-        final Function<Thread, String> threadDump,
+        final Function<Thread, ThreadDumps.Dump> threadDump,
         final Consumer<String> sink
     ) {
         this.monitor = monitor;
@@ -85,11 +85,14 @@ final class LifecycleWatchdog {
                 && now - previous.reportedNanos() < this.warnEveryNanos) {
                 continue;
             }
-            open.phase().reported = true;
+            final ThreadDumps.Dump stackTrace = this.threadDump.apply(thread);
+            // If the thread made progress while its stack trace was taken, the stack trace may already show the next
+            // step, so the report is dropped
+            if (!this.monitor.markReported(open)) {
+                continue;
+            }
             this.reports.put(thread, new Report(open.phase(), open.lastProgressNanos(), now));
-            this.sink.accept(LifecycleMessages.stalled(
-                open.phase(), idleNanos, now - open.phase().startNanos(), thread.getName(), this.threadDump.apply(thread)
-            ));
+            this.sink.accept(LifecycleMessages.stalled(open.phase(), idleNanos, now - open.phase().startNanos(), thread.getName(), stackTrace));
         }
         this.reports.keySet().retainAll(watched);
     }

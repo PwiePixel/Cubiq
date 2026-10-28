@@ -1,0 +1,10 @@
+--- a/src/main/java/org/spigotmc/RestartCommand.java
++++ b/src/main/java/org/spigotmc/RestartCommand.java
+@@ -51,6 +_,7 @@
+     // Paper start - sync copied from above with minor changes, async added
+     private static void shutdownServer(boolean isRestarting) {
+         if (MinecraftServer.getServer().isSameThread()) {
++            studio.cubiq.lifecycle.ServerLifecycle.stopping(); // Cubiq - Lifecycle diagnostics - the watchdog is already stopped, so watch the shutdown from here, including the kick events of plugins
+             // Kick all players
+             for (ServerPlayer p : com.google.common.collect.ImmutableList.copyOf(MinecraftServer.getServer().getPlayerList().getPlayers())) {
+                 p.connection.disconnect(CraftChatMessage.fromStringOrEmpty(SpigotConfig.restartMessage, true), org.bukkit.event.player.PlayerKickEvent.Cause.RESTART_COMMAND); // Paper - kick event reason (cause is never used)

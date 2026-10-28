@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,8 +22,8 @@ class LifecycleMonitorTest {
         (phase, durationNanos) -> this.closed.add(phase.description() + " after " + TimeUnit.NANOSECONDS.toMillis(durationNanos) + " ms")
     );
 
-    private static PluginTiming timing(final String plugin, final PluginStep step, final long millis) {
-        return new PluginTiming(plugin, step, TimeUnit.MILLISECONDS.toNanos(millis));
+    private static PluginTiming timing(final String plugin, final PluginStep step, final long startNanos, final long millis) {
+        return new PluginTiming(plugin, step, startNanos, TimeUnit.MILLISECONDS.toNanos(millis));
     }
 
     private LifecycleMonitor.OpenPhase onlyOpenPhase() {
@@ -55,12 +56,28 @@ class LifecycleMonitorTest {
     }
 
     @Test
+    void aPhaseIsOnlyMarkedAsReportedWhileItsThreadMakesNoProgress() {
+        try (LifecyclePhase startup = this.monitor.begin("Starting the server")) {
+            final LifecycleMonitor.OpenPhase seen = this.onlyOpenPhase();
+            this.clock.advanceMillis(10);
+            this.monitor.beginPluginStep(PluginStep.LOAD, "Example", "Example v1.0").close();
+
+            assertFalse(this.monitor.markReported(seen), "the thread made progress since");
+            assertFalse(startup.reported);
+
+            assertTrue(this.monitor.markReported(this.onlyOpenPhase()));
+            assertTrue(startup.reported);
+        }
+    }
+
+    @Test
     void pluginStepsAreTimed() {
+        final long started = this.clock.getAsLong();
         final LifecyclePhase enable = this.monitor.beginPluginStep(PluginStep.ENABLE, "Example", "Example v1.0");
         this.clock.advanceMillis(1500);
         enable.close();
 
-        assertEquals(List.of(timing("Example", PluginStep.ENABLE, 1500)), this.monitor.drainPluginTimings());
+        assertEquals(List.of(timing("Example", PluginStep.ENABLE, started, 1500)), this.monitor.drainPluginTimings());
         assertEquals(List.of(), this.monitor.drainPluginTimings(), "draining removes the timings");
         assertEquals(List.of("Enabling plugin Example v1.0 after 1500 ms"), this.closed);
     }
@@ -68,6 +85,7 @@ class LifecycleMonitorTest {
     @Test
     void timeSpentInStepsOfOtherPluginsIsNotCounted() {
         // A plugin that enables another plugin from its onEnable
+        final long started = this.clock.getAsLong();
         final LifecyclePhase outer = this.monitor.beginPluginStep(PluginStep.ENABLE, "Outer", "Outer v1.0");
         this.clock.advanceMillis(100);
         final LifecyclePhase inner = this.monitor.beginPluginStep(PluginStep.ENABLE, "Inner", "Inner v1.0");
@@ -77,13 +95,17 @@ class LifecycleMonitorTest {
         outer.close();
 
         assertEquals(
-            List.of(timing("Inner", PluginStep.ENABLE, 300), timing("Outer", PluginStep.ENABLE, 300)),
+            List.of(
+                timing("Inner", PluginStep.ENABLE, started + TimeUnit.MILLISECONDS.toNanos(100), 300),
+                timing("Outer", PluginStep.ENABLE, started, 300)
+            ),
             this.monitor.drainPluginTimings()
         );
     }
 
     @Test
     void nestedPluginStepsAreNotCountedThroughOtherPhases() {
+        final long started = this.clock.getAsLong();
         final LifecyclePhase outer = this.monitor.beginPluginStep(PluginStep.ENABLE, "Outer", "Outer v1.0");
         final LifecyclePhase server = this.monitor.begin("Something the server does for the plugin");
         final LifecyclePhase inner = this.monitor.beginPluginStep(PluginStep.LOAD, "Inner", "Inner v1.0");
@@ -94,13 +116,14 @@ class LifecycleMonitorTest {
         outer.close();
 
         assertEquals(
-            List.of(timing("Inner", PluginStep.LOAD, 400), timing("Outer", PluginStep.ENABLE, 100)),
+            List.of(timing("Inner", PluginStep.LOAD, started, 400), timing("Outer", PluginStep.ENABLE, started, 100)),
             this.monitor.drainPluginTimings()
         );
     }
 
     @Test
     void closingAPhaseClosesThePhasesOpenedInsideIt() {
+        final long started = this.clock.getAsLong();
         final LifecyclePhase startup = this.monitor.begin("Starting the server");
         final LifecyclePhase enable = this.monitor.beginPluginStep(PluginStep.ENABLE, "Example", "Example v1.0");
         this.clock.advanceMillis(50);
@@ -110,7 +133,7 @@ class LifecycleMonitorTest {
 
         assertEquals(List.of("Enabling plugin Example v1.0 after 50 ms", "Starting the server after 50 ms"), this.closed);
         assertEquals(List.of(), this.monitor.openPhases());
-        assertEquals(List.of(timing("Example", PluginStep.ENABLE, 50)), this.monitor.drainPluginTimings());
+        assertEquals(List.of(timing("Example", PluginStep.ENABLE, started, 50)), this.monitor.drainPluginTimings());
     }
 
     @Test

@@ -168,7 +168,7 @@ public final class LifecycleMonitor {
             final PluginStep step = closedOne.pluginStep();
             final String pluginName = closedOne.pluginName();
             if (record && step != null && pluginName != null) {
-                this.timings.add(new PluginTiming(pluginName, step, closedPhase.exclusiveNanos()));
+                this.timings.add(new PluginTiming(pluginName, step, closedOne.startNanos(), closedPhase.exclusiveNanos()));
             }
             this.listener.phaseClosed(closedOne, closedPhase.durationNanos());
         }
@@ -199,6 +199,28 @@ public final class LifecycleMonitor {
             }
         }
         return open;
+    }
+
+    /**
+     * Marks the innermost phase of a thread as reported, unless the thread has made progress since the phase was
+     * returned by {@link #openPhases()}. A phase that is marked while it is open gets a "finished" message when it is
+     * closed, which the lock guarantees.
+     *
+     * @param open the innermost phase of a thread, as returned by {@link #openPhases()}
+     * @return whether the phase was marked
+     */
+    boolean markReported(final OpenPhase open) {
+        final ThreadPhases phases = this.threads.get(open.thread());
+        if (phases == null) {
+            return false;
+        }
+        synchronized (phases) {
+            if (phases.removed || phases.innermost != open.phase() || phases.lastProgressNanos != open.lastProgressNanos()) {
+                return false;
+            }
+            open.phase().reported = true;
+            return true;
+        }
     }
 
     /**

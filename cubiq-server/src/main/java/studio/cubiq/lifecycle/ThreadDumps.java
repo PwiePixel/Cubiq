@@ -8,12 +8,26 @@ import java.lang.management.ThreadMXBean;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Formats stack traces of live threads, including the locks they hold and wait for, like {@code jstack} does.
+ * Formats stack traces of live threads, including the monitors they hold and the lock they wait for, like
+ * {@code jstack} does.
+ *
+ * <p>The {@code java.util.concurrent} locks that a thread holds are left out: to find them, HotSpot scans the whole
+ * heap while all threads are paused, which takes seconds on a large heap. The lock that a thread waits for and the
+ * thread that holds it are known without that scan.</p>
  */
 final class ThreadDumps {
 
     /** Limits the size of a single dump, for example of a thread in a deep recursion. */
     static final int MAX_FRAMES = 200;
+
+    /**
+     * A formatted stack trace.
+     *
+     * @param state the state of the thread when the stack trace was taken
+     * @param text  the formatted stack trace
+     */
+    record Dump(Thread.State state, String text) {
+    }
 
     private ThreadDumps() {
     }
@@ -25,14 +39,25 @@ final class ThreadDumps {
      * @param thread the thread
      * @return the formatted stack trace
      */
-    static String dump(final Thread thread) {
+    static Dump dump(final Thread thread) {
+        return dump(ManagementFactory.getThreadMXBean(), thread);
+    }
+
+    /**
+     * Like {@link #dump(Thread)}, with the given management interface instead of the JVM's.
+     *
+     * @param threads the management interface to capture the thread with
+     * @param thread  the thread
+     * @return the formatted stack trace
+     */
+    static Dump dump(final ThreadMXBean threads, final Thread thread) {
         final StringBuilder out = new StringBuilder();
-        final ThreadMXBean threads = ManagementFactory.getThreadMXBean();
         final ThreadInfo info = threadInfo(threads, thread.threadId());
         if (info == null) {
             // Not available from the management interface, for example for a virtual thread
-            appendThread(out, thread.getName(), thread.threadId(), thread.getState(), thread.getStackTrace());
-            return out.toString();
+            final Thread.State state = thread.getState();
+            appendThread(out, thread.getName(), thread.threadId(), state, thread.getStackTrace());
+            return new Dump(state, out.toString());
         }
         append(out, info);
         final long ownerId = info.getLockOwnerId();
@@ -43,13 +68,12 @@ final class ThreadDumps {
                 append(out, owner);
             }
         }
-        return out.toString();
+        return new Dump(info.getThreadState(), out.toString());
     }
 
     private static @Nullable ThreadInfo threadInfo(final ThreadMXBean threads, final long threadId) {
-        final ThreadInfo[] infos = threads.getThreadInfo(
-            new long[] {threadId}, threads.isObjectMonitorUsageSupported(), threads.isSynchronizerUsageSupported()
-        );
+        // Without the locked synchronizers, which need the scan of the whole heap
+        final ThreadInfo[] infos = threads.getThreadInfo(new long[] {threadId}, threads.isObjectMonitorUsageSupported(), false);
         return infos.length == 1 ? infos[0] : null;
     }
 
@@ -80,13 +104,6 @@ final class ThreadDumps {
             }
         }
         appendOmitted(out, stack.length);
-        final LockInfo[] synchronizers = info.getLockedSynchronizers();
-        if (synchronizers.length > 0) {
-            out.append("\tLocked synchronizers:\n");
-            for (final LockInfo synchronizer : synchronizers) {
-                out.append("\t- ").append(synchronizer).append('\n');
-            }
-        }
     }
 
     private static void appendThread(

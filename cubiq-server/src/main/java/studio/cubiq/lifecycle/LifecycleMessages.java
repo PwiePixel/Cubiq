@@ -31,7 +31,7 @@ final class LifecycleMessages {
      * @return the report
      */
     static String stalled(
-        final LifecyclePhase phase, final long idleNanos, final long runningNanos, final String threadName, final String stackTrace
+        final LifecyclePhase phase, final long idleNanos, final long runningNanos, final String threadName, final ThreadDumps.Dump stackTrace
     ) {
         final StringBuilder out = new StringBuilder("Lifecycle watchdog: ").append(phase.description());
         if (idleNanos >= runningNanos) {
@@ -40,8 +40,17 @@ final class LifecycleMessages {
             out.append(" has made no progress for ").append(seconds(idleNanos))
                 .append(" (running for ").append(seconds(runningNanos)).append(").");
         }
-        out.append("\nIf this message repeats with the same stack trace, the step is probably stuck. Stack trace of thread \"")
-            .append(threadName).append("\", which runs it:\n").append(stackTrace);
+        if (stackTrace.state() == Thread.State.WAITING || stackTrace.state() == Thread.State.TIMED_WAITING) {
+            // For example a plugin's onDisable that waits until its own thread has written a backlog to a database:
+            // the stack trace stays the same while the other thread makes progress
+            out.append("\nThe thread that runs it is waiting, possibly for work on another thread, for example a plugin saving its data,")
+                .append(" so the step is not necessarily stuck if this message repeats with the same stack trace. Stack trace of thread \"")
+                .append(threadName).append("\":\n");
+        } else {
+            out.append("\nIf this message repeats with the same stack trace, the step is probably stuck. Stack trace of thread \"")
+                .append(threadName).append("\", which runs it:\n");
+        }
+        out.append(stackTrace.text());
         // The logger adds the final line break
         if (out.charAt(out.length() - 1) == '\n') {
             out.setLength(out.length() - 1);

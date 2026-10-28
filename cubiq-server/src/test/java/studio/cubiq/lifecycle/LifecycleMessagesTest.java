@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class LifecycleMessagesTest {
 
     private static PluginTiming timing(final String plugin, final PluginStep step, final long millis) {
-        return new PluginTiming(plugin, step, TimeUnit.MILLISECONDS.toNanos(millis));
+        return new PluginTiming(plugin, step, 0L, TimeUnit.MILLISECONDS.toNanos(millis));
     }
 
     @Test
@@ -75,6 +75,48 @@ class LifecycleMessagesTest {
         assertEquals(
             "Stopped the server in 6.0 s. Plugins took 1.2 s to stop. Plugin: Example 1.2 s.",
             LifecycleMessages.shutdownSummary(TimeUnit.SECONDS.toNanos(6), List.of(timing("Example", PluginStep.DISABLE, 1200)))
+        );
+    }
+
+    @Test
+    void theReportOfARunningThreadSaysThatARepeatedStackTraceMeansStuck() {
+        final LifecyclePhase phase = new LifecyclePhase(null, "Enabling plugin Example v1.0", PluginStep.ENABLE, "Example", null, 0L, null);
+
+        final String report = LifecycleMessages.stalled(
+            phase,
+            TimeUnit.SECONDS.toNanos(30),
+            TimeUnit.SECONDS.toNanos(30),
+            "Server thread",
+            new ThreadDumps.Dump(Thread.State.RUNNABLE, "\"Server thread\" #1 RUNNABLE\n")
+        );
+
+        assertEquals(
+            "Lifecycle watchdog: Enabling plugin Example v1.0 has not finished after 30 s.\n"
+                + "If this message repeats with the same stack trace, the step is probably stuck. Stack trace of thread \"Server thread\", which runs it:\n"
+                + "\"Server thread\" #1 RUNNABLE",
+            report
+        );
+    }
+
+    @Test
+    void theReportOfAWaitingThreadDoesNotCallTheStepStuck() {
+        // For example a plugin whose onDisable waits until its own thread has written a backlog to a database
+        final LifecyclePhase phase = new LifecyclePhase(null, "Disabling plugin Example v1.0", PluginStep.DISABLE, "Example", null, 0L, null);
+
+        final String report = LifecycleMessages.stalled(
+            phase,
+            TimeUnit.SECONDS.toNanos(90),
+            TimeUnit.SECONDS.toNanos(95),
+            "Server thread",
+            new ThreadDumps.Dump(Thread.State.TIMED_WAITING, "\"Server thread\" #1 TIMED_WAITING\n")
+        );
+
+        assertEquals(
+            "Lifecycle watchdog: Disabling plugin Example v1.0 has made no progress for 90 s (running for 95 s).\n"
+                + "The thread that runs it is waiting, possibly for work on another thread, for example a plugin saving its data,"
+                + " so the step is not necessarily stuck if this message repeats with the same stack trace. Stack trace of thread \"Server thread\":\n"
+                + "\"Server thread\" #1 TIMED_WAITING",
+            report
         );
     }
 

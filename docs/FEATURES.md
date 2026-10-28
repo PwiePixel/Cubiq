@@ -75,20 +75,22 @@ Stopped the server in 3.0 s. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeT
 With more plugins, the line names the five slowest ones. The time of a plugin is the sum of its bootstrap (Paper
 plugins only), `onLoad`, enabling (`onEnable` and the `PluginEnableEvent`) and disabling (`onDisable` and removing
 the plugin's tasks, services and listeners). Time that a plugin spends enabling or disabling another plugin counts
-for the other plugin. Without plugins, only the shutdown line is logged.
+for the other plugin. The shutdown line only counts the plugins that the shutdown disabled, not a reload or a plugin
+manager that was still busy when the server began to stop. Without plugins, only the shutdown line is logged.
 
 ### Lifecycle watchdog
 
 While the server starts, reloads or stops, Cubiq watches each step: bootstrapping the server, bootstrapping,
 loading, enabling and disabling each plugin, loading and preparing each world, and saving the worlds on shutdown.
-When a thread has neither finished its current step nor started or finished another one for 30 seconds, Cubiq
-logs the step and the stack trace of that thread, including the locks it holds and waits for. If the thread waits
-for a lock that another thread holds, the stack trace of that thread follows. Stack frames of plugin code start
-with the name of the plugin's jar. An abridged example:
+A shutdown by `/restart` is watched from the moment it stops Paper's watchdog, including the kick events that
+plugins handle. When a thread has neither finished its current step nor started or finished another one for 30
+seconds, Cubiq logs the step and the stack trace of that thread, including the monitors it holds and the lock it
+waits for. If the thread waits for a lock that another thread holds, the stack trace of that thread follows. Stack
+frames of plugin code start with the name of the plugin's jar. An abridged example:
 
 ```
 Lifecycle watchdog: Enabling plugin LifecycleSmokeTest v1.0 has not finished after 30 s.
-If this message repeats with the same stack trace, the step is probably stuck. Stack trace of thread "Server thread", which runs it:
+The thread that runs it is waiting, possibly for work on another thread, for example a plugin saving its data, so the step is not necessarily stuck if this message repeats with the same stack trace. Stack trace of thread "Server thread":
 "Server thread" #51 TIMED_WAITING
 	at java.base@25.0.5/java.lang.Thread.sleep(Thread.java:540)
 	at LifecycleSmokeTest.jar//studio.cubiq.smoketest.StepDelay.waitInStep(StepDelay.java:19)
@@ -97,8 +99,10 @@ If this message repeats with the same stack trace, the step is probably stuck. S
 	...
 ```
 
-As long as the step does not finish, the report is repeated every 60 seconds with a new stack trace. When a
-reported step finishes after all, Cubiq logs how long it took, for example
+As long as the step does not finish, the report is repeated every 60 seconds with a new stack trace. For a thread
+that runs code, a stack trace that stays the same means that the step is probably stuck; the report says so. A
+thread that waits, as in the example, may wait for work on another thread that still progresses. When a reported
+step finishes after all, Cubiq logs how long it took, for example
 `Lifecycle watchdog: Enabling plugin LifecycleSmokeTest v1.0 finished after 45.2 s.` The watchdog only reports: it
 never stops, restarts or interrupts anything. While the server runs normally, Paper's watchdog is responsible and
 Cubiq's watchdog reports nothing.
@@ -117,7 +121,10 @@ Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAf
 ### Limitations
 
 - Slow but healthy work can be reported, for example generating a large world, a plugin that migrates a database
-  on its first start, or saving many chunks on shutdown. Repeated stack traces show whether the step progresses.
+  on its first start, or saving many chunks on shutdown. Repeated stack traces show whether the step progresses,
+  unless the thread waits for another thread.
+- The `java.util.concurrent` locks that a thread holds are not listed, because finding them pauses all threads for
+  a scan of the whole heap. The lock that a thread waits for and the thread that holds it are shown.
 - Work between the steps listed above, for example running the tasks that plugins scheduled for the first tick,
   belongs to the enclosing phase (`Starting the server`, `Reloading the server` or `Stopping the server`). Its
   report says how long nothing has progressed.
@@ -140,8 +147,11 @@ reports more useful:
 - **Busy or waiting.** Every report says how much CPU time the server thread used since its last tick, for example
   `The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a
   lock, a file, the network or a database.` A server thread near 100% is busy, for example in an endless loop.
-- **Locks.** The dump of the server thread now includes the locks it holds and the lock it waits for, and when
+- **Locks.** The dump of the server thread now includes the monitors it holds and the lock it waits for, and when
   another thread holds that lock, that thread is dumped right after it, because it is usually the actual cause.
+  The `java.util.concurrent` locks that a thread holds are left out of the early warnings: finding them pauses all
+  threads for a scan of the whole heap, which would make the lag worse. Upstream's full dump on a long timeout
+  still lists them.
   The labels of the dumps are corrected: upstream called the thread id `PID` and listed the locks a thread holds as
   monitors it is "waiting on". An abridged example from Cubiq's watchdog smoke test:
 

@@ -19,12 +19,18 @@ class LifecycleWatchdogTest {
     });
     private final List<String> reports = new ArrayList<>();
     private boolean active = true;
+    private Thread.State threadState = Thread.State.RUNNABLE;
+    private Runnable whileTheStackTraceIsTaken = () -> {
+    };
     private final LifecycleWatchdog watchdog = new LifecycleWatchdog(
         this.monitor,
         () -> this.active,
         TimeUnit.SECONDS.toNanos(WARN_AFTER_SECONDS),
         TimeUnit.SECONDS.toNanos(WARN_EVERY_SECONDS),
-        thread -> "<stack trace of " + thread.getName() + ">",
+        thread -> {
+            this.whileTheStackTraceIsTaken.run();
+            return new ThreadDumps.Dump(this.threadState, "<stack trace of " + thread.getName() + ">");
+        },
         this.reports::add
     );
 
@@ -99,6 +105,48 @@ class LifecycleWatchdogTest {
 
         assertEquals(2, this.reports.size());
         assertTrue(this.reports.get(1).startsWith("Lifecycle watchdog: Enabling plugin Example v1.0 has not finished"), this.reports.get(1));
+    }
+
+    @Test
+    void theReportOfAWaitingThreadDoesNotCallTheStepStuck() {
+        this.threadState = Thread.State.TIMED_WAITING;
+        try (LifecyclePhase _ = this.monitor.beginPluginStep(PluginStep.DISABLE, "Example", "Example v1.0")) {
+            this.clock.advanceSeconds(WARN_AFTER_SECONDS);
+            this.watchdog.check();
+        }
+
+        assertEquals(1, this.reports.size());
+        assertTrue(this.reports.getFirst().contains("\nThe thread that runs it is waiting, possibly for work on another thread"), this.reports.getFirst());
+        assertFalse(this.reports.getFirst().contains("probably stuck"), this.reports.getFirst());
+    }
+
+    @Test
+    void aStepThatEndsWhileTheStackTraceIsTakenIsNotReported() {
+        final LifecyclePhase enable = this.monitor.beginPluginStep(PluginStep.ENABLE, "Example", "Example v1.0");
+        this.clock.advanceSeconds(WARN_AFTER_SECONDS);
+        // The stack trace would show what the thread does after the step
+        this.whileTheStackTraceIsTaken = enable::close;
+
+        this.watchdog.check();
+
+        assertEquals(List.of(), this.reports);
+        assertFalse(enable.reported, "no 'finished' message follows");
+    }
+
+    @Test
+    void aThreadThatMakesProgressWhileTheStackTraceIsTakenIsNotReported() {
+        try (LifecyclePhase startup = this.monitor.begin("Starting the server")) {
+            this.clock.advanceSeconds(WARN_AFTER_SECONDS);
+            this.whileTheStackTraceIsTaken = () -> {
+                this.clock.advanceMillis(1);
+                this.monitor.beginPluginStep(PluginStep.ENABLE, "Example", "Example v1.0").close();
+            };
+
+            this.watchdog.check();
+
+            assertEquals(List.of(), this.reports);
+            assertFalse(startup.reported);
+        }
     }
 
     @Test

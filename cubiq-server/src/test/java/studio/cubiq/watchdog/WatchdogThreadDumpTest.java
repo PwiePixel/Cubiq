@@ -5,9 +5,11 @@ import java.lang.management.ThreadInfo;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -70,6 +72,79 @@ class WatchdogThreadDumpTest {
             release.countDown();
             holder.join();
             server.join();
+        }
+    }
+
+    @Test
+    void theOwnerOfAConcurrentLockIsFoundWithoutScanningTheHeap() throws InterruptedException {
+        final ReentrantLock lock = new ReentrantLock();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = new Thread(() -> {
+            lock.lock();
+            try {
+                locked.countDown();
+                release.await();
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.unlock();
+            }
+        }, "Lock holder");
+        final Thread server = new Thread(() -> {
+            lock.lock();
+            lock.unlock();
+        }, "Server thread under test");
+        holder.start();
+        try {
+            locked.await();
+            server.start();
+            awaitState(server, Thread.State.WAITING);
+
+            final List<String> lines = WatchdogThreadDump.serverThread(server);
+
+            assertTrue(containsLineStartingWith(lines, "\tWaiting on: java.util.concurrent.locks.ReentrantLock$NonfairSync@"), String.join("\n", lines));
+            assertTrue(lines.contains("The server thread waits for a lock held by \"Lock holder\", which is likely the cause:"), String.join("\n", lines));
+            assertTrue(lines.contains("Current Thread: Lock holder"), String.join("\n", lines));
+            // Early warnings leave out the concurrent locks a thread holds, because finding them scans the whole heap
+            // with all threads paused
+            assertFalse(containsLineStartingWith(lines, "\tLocked synchronizers:"), String.join("\n", lines));
+        } finally {
+            release.countDown();
+            holder.join();
+            server.join();
+        }
+    }
+
+    @Test
+    void theConcurrentLocksOfAFullDumpAreListed() throws InterruptedException {
+        final ReentrantLock lock = new ReentrantLock();
+        final CountDownLatch locked = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final Thread holder = new Thread(() -> {
+            lock.lock();
+            try {
+                locked.countDown();
+                release.await();
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.unlock();
+            }
+        }, "Lock holder");
+        holder.start();
+        try {
+            locked.await();
+            // Upstream's dump of all threads on a long timeout captures them
+            final ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(new long[] {holder.threadId()}, true, true)[0];
+
+            final List<String> lines = WatchdogThreadDump.lines(info);
+
+            assertTrue(lines.contains("\tLocked synchronizers:"), String.join("\n", lines));
+            assertTrue(containsLineStartingWith(lines, "\t\tjava.util.concurrent.locks.ReentrantLock$NonfairSync@"), String.join("\n", lines));
+        } finally {
+            release.countDown();
+            holder.join();
         }
     }
 

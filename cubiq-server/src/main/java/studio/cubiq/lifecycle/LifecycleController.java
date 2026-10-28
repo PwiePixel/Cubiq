@@ -98,7 +98,7 @@ final class LifecycleController {
      * @param threadDump formats the stack trace of a thread
      * @param log        where to log to
      */
-    LifecycleController(final Settings settings, final LongSupplier clock, final Function<Thread, String> threadDump, final Log log) {
+    LifecycleController(final Settings settings, final LongSupplier clock, final Function<Thread, ThreadDumps.Dump> threadDump, final Log log) {
         this(settings, clock, threadDump, log, watchdog -> watchdog.start(
             WATCHDOG_INTERVAL_MILLIS,
             ex -> log.warn("The lifecycle watchdog failed. It keeps running, but further errors are not logged", ex)
@@ -112,7 +112,7 @@ final class LifecycleController {
     LifecycleController(
         final Settings settings,
         final LongSupplier clock,
-        final Function<Thread, String> threadDump,
+        final Function<Thread, ThreadDumps.Dump> threadDump,
         final Log log,
         final Consumer<LifecycleWatchdog> watchdogStarter
     ) {
@@ -208,12 +208,18 @@ final class LifecycleController {
      */
     LifecyclePhase reloading() {
         this.startWatchdog();
-        this.state.compareAndSet(State.RUNNING, State.RELOADING);
-        // Timings of plugins enabled or disabled at runtime are not summarized
-        this.monitor.drainPluginTimings();
+        // A reload while the server starts or stops, for example from a task that a plugin scheduled for the first
+        // tick, is part of that phase: it neither changes the state nor discards the timings of that phase's summary
+        final boolean reloadsRunningServer = this.state.compareAndSet(State.RUNNING, State.RELOADING);
+        if (reloadsRunningServer) {
+            // Timings of plugins enabled or disabled at runtime are not summarized
+            this.monitor.drainPluginTimings();
+        }
         final LifecyclePhase phase = this.monitor.begin("Reloading the server");
-        synchronized (this) {
-            this.reload = phase;
+        if (reloadsRunningServer) {
+            synchronized (this) {
+                this.reload = phase;
+            }
         }
         return phase;
     }
@@ -262,7 +268,11 @@ final class LifecycleController {
         }
         final long durationNanos = Math.max(0L, this.monitor.now() - phase.startNanos());
         phase.close();
-        final List<PluginTiming> timings = this.monitor.drainPluginTimings();
+        // Only the plugins that the shutdown disabled. A step that began before, for example during a reload or a
+        // plugin enabled at runtime that another thread's shutdown overtook, is not part of the shutdown.
+        final List<PluginTiming> timings = this.monitor.drainPluginTimings().stream()
+            .filter(timing -> timing.step() == PluginStep.DISABLE && timing.startNanos() - phase.startNanos() >= 0L)
+            .toList();
         if (this.settings.summaries()) {
             this.log.info(LifecycleMessages.shutdownSummary(durationNanos, timings));
         }
@@ -279,8 +289,10 @@ final class LifecycleController {
                 this.reload = null;
             }
         }
-        if (reloadEnded) {
-            this.state.compareAndSet(State.RELOADING, State.RUNNING);
+        // If the server started to stop during the reload, the reload's timings are left to the shutdown summary,
+        // which only takes the plugins disabled by the shutdown
+        if (reloadEnded && this.state.compareAndSet(State.RELOADING, State.RUNNING)) {
+            // Timings of the reload are not summarized
             this.monitor.drainPluginTimings();
         }
     }

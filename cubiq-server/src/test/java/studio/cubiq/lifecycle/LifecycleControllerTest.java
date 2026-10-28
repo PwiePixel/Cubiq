@@ -25,7 +25,7 @@ class LifecycleControllerTest {
     private final LifecycleController controller = this.controller(SETTINGS);
 
     private LifecycleController controller(final LifecycleController.Settings settings) {
-        return new LifecycleController(settings, this.clock, thread -> "<stack trace>", new LifecycleController.Log() {
+        return new LifecycleController(settings, this.clock, thread -> new ThreadDumps.Dump(Thread.State.RUNNABLE, "<stack trace>"), new LifecycleController.Log() {
             @Override
             public void info(final String message) {
                 LifecycleControllerTest.this.log.add("INFO " + message);
@@ -97,6 +97,64 @@ class LifecycleControllerTest {
         assertEquals(List.of("INFO Stopped the server in 2.0 s. Plugins took 1.2 s to stop. Plugin: Example 1.2 s."), this.log);
         assertEquals(LifecycleController.State.STOPPING, this.controller.state());
         assertEquals(List.of(), this.controller.monitor().openPhases());
+    }
+
+    @Test
+    void aReloadWhileTheServerStartsIsPartOfTheStartup() {
+        this.controller.startupBegins();
+        this.runPluginStep(PluginStep.ENABLE, "Example", 1500);
+        // For example from a task that a plugin scheduled for the first tick, which runs before startup has finished
+        try (LifecyclePhase _ = this.controller.reloading()) {
+            assertEquals(LifecycleController.State.STARTING, this.controller.state());
+            this.runPluginStep(PluginStep.DISABLE, "Example", 100);
+            this.runPluginStep(PluginStep.ENABLE, "Example", 200);
+        }
+        assertEquals(LifecycleController.State.STARTING, this.controller.state());
+
+        this.controller.startupFinished();
+
+        assertEquals(List.of("INFO Plugins took 1.8 s to start (enable 1.7 s, disable 100 ms). Plugin: Example 1.8 s."), this.log);
+    }
+
+    @Test
+    void aShutdownDuringAReloadSummarizesOnlyThePluginsTheShutdownDisabled() throws InterruptedException {
+        this.controller.startupBegins();
+        this.controller.startupFinished();
+        final LifecyclePhase reload = this.controller.reloading();
+        this.runPluginStep(PluginStep.DISABLE, "Example", 400);
+        // While the reload still runs, another thread stops the server, for example after SIGTERM
+        final Thread shutdown = new Thread(() -> {
+            this.controller.stopping();
+            this.runPluginStep(PluginStep.DISABLE, "Other", 1200);
+        }, "Server Shutdown Thread");
+        shutdown.start();
+        shutdown.join();
+        this.runPluginStep(PluginStep.ENABLE, "Example", 300);
+        reload.close();
+        assertEquals(LifecycleController.State.STOPPING, this.controller.state(), "the end of the reload does not end the shutdown");
+
+        this.controller.stopped();
+
+        assertEquals(List.of("INFO Stopped the server in 1.5 s. Plugins took 1.2 s to stop. Plugin: Other 1.2 s."), this.log);
+    }
+
+    @Test
+    void aPluginStepThatBeganBeforeTheShutdownIsNotPartOfItsSummary() throws InterruptedException {
+        this.controller.startupBegins();
+        this.controller.startupFinished();
+        // A plugin manager enables a plugin at runtime, and another thread stops the server meanwhile
+        final LifecyclePhase runtimeEnable = this.controller.pluginStep(PluginStep.ENABLE, "Runtime", "Runtime v1.0");
+        this.clock.advanceMillis(5000);
+        final Thread shutdown = new Thread(this.controller::stopping, "Server Shutdown Thread");
+        shutdown.start();
+        shutdown.join();
+        this.clock.advanceMillis(1000);
+        runtimeEnable.close();
+        this.runPluginStep(PluginStep.DISABLE, "Example", 300);
+
+        this.controller.stopped();
+
+        assertEquals(List.of("INFO Stopped the server in 1.3 s. Plugins took 300 ms to stop. Plugin: Example 300 ms."), this.log);
     }
 
     @Test
