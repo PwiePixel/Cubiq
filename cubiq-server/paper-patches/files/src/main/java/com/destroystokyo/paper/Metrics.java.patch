@@ -1,0 +1,14 @@
+--- a/src/main/java/com/destroystokyo/paper/Metrics.java
++++ b/src/main/java/com/destroystokyo/paper/Metrics.java
+@@ -592,7 +_,10 @@
+             String serverUUID = config.getString("serverUuid");
+             boolean logFailedRequests = config.getBoolean("logFailedRequests", false);
+             // Only start Metrics, if it's enabled in the config
+-            if (config.getBoolean("enabled", true)) {
++            // Cubiq start - Rebrand - Cubiq does not have a registered bStats server-implementation and must not report as Purpur.
++            // The config file above is still created because plugins that shade bStats read it.
++            if (false && config.getBoolean("enabled", true)) {
++            // Cubiq end - Rebrand
+                 Metrics metrics = new Metrics("Purpur", serverUUID, logFailedRequests, Bukkit.getLogger()); // Purpur - Purpur config files
+ 
+                 metrics.addCustomChart(new Metrics.SimplePie("minecraft_version", () -> {

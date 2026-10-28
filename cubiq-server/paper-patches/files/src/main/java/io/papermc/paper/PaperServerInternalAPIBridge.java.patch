@@ -1,0 +1,11 @@
+--- a/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
++++ b/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
+@@ -203,7 +_,7 @@
+ 
+     @Override
+     public VersionFetcher getVersionFetcher() {
+-        return new org.purpurmc.purpur.PurpurVersionFetcher(); // Purpur - use old Paper version checker
++        return new studio.cubiq.version.CubiqVersionFetcher(); // Purpur - use old Paper version checker // Cubiq - Rebrand - Cubiq has no release API yet, never query Paper or Purpur for Cubiq builds
+     }
+ 
+     @Override

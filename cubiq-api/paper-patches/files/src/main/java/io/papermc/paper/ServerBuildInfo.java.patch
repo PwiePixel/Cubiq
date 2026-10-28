@@ -1,0 +1,15 @@
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -23,6 +_,12 @@
+      */
+     Key BRAND_PURPUR_ID = Key.key("purpurmc", "purpur");
+     // Purpur end
++    // Cubiq start - Rebrand
++    /**
++     * The brand id for Cubiq.
++     */
++    Key BRAND_CUBIQ_ID = Key.key("cubiqstudio", "cubiq");
++    // Cubiq end - Rebrand
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *

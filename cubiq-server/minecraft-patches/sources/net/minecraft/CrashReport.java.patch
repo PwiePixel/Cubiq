@@ -1,0 +1,11 @@
+--- a/net/minecraft/CrashReport.java
++++ b/net/minecraft/CrashReport.java
+@@ -30,7 +_,7 @@
+     private boolean trackingStackTrace = true;
+     private StackTraceElement[] uncategorizedStackTrace = new StackTraceElement[0];
+     private final SystemReport systemReport = new SystemReport();
+-    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO PAPER! REPORT TO PURPUR INSTEAD!", ""); // Purpur - Rebrand
++    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO PAPER OR PURPUR! REPORT TO CUBIQ INSTEAD: " + studio.cubiq.Cubiq.ISSUES_URL, ""); // Purpur - Rebrand // Cubiq - Rebrand
+ 
+     public CrashReport(final String title, final Throwable t) {
+         this.title = title;

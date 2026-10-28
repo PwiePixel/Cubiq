@@ -1,0 +1,33 @@
+Cubiq
+Copyright 2026 Cubiq Studio and Cubiq contributors
+
+This product is developed by Cubiq Studio.
+Source code: https://github.com/PwiePixel/Cubiq
+
+Cubiq is built on top of the following projects, whose copyright and license
+notices are preserved in the licenses/ directory:
+
+  * Purpur (https://github.com/PurpurMC/Purpur)
+    MIT License, Copyright (c) 2019-2024 PurpurMC.
+    See licenses/Purpur-LICENSE.txt.
+
+  * Paper (https://github.com/PaperMC/Paper)
+    GNU General Public License version 3; contributions of the authors listed
+    in licenses/Paper-LICENSE.md are also available under the MIT License.
+    See licenses/Paper-LICENSE.md, licenses/GPL-3.0.txt and licenses/Paper-MIT.md.
+
+  * Spigot, CraftBukkit and Bukkit, from which Paper inherits its GNU General
+    Public License version 3 licensing.
+
+Cubiq's own contributions are licensed under the Apache License, Version 2.0
+(see LICENSE). Cubiq server builds combine these contributions with the
+GPLv3-licensed code listed above and are therefore distributed under the terms
+of the GNU General Public License version 3 (licenses/GPL-3.0.txt).
+
+Cubiq server builds do not contain the Minecraft server. On first start, the
+Paperclip launcher downloads it from Mojang and applies Cubiq's patches locally.
+Running a Minecraft server requires accepting the Minecraft End User License
+Agreement (https://aka.ms/MinecraftEULA).
+
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG
+OR MICROSOFT.
