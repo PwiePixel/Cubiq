@@ -31,7 +31,7 @@ This page records what has been verified, what is inherited unchanged, and where
 | Server brand | Changed, verified | `ServerBuildInfo#brandId()` is `cubiqstudio:cubiq` and `Bukkit.getName()` returns `Cubiq`. `ServerBuildInfo#isBrandCompatible` accepts the Paper, Purpur and Cubiq brand ids, so plugins that check for Paper or Purpur that way keep working. |
 | `/version` update check | Changed, verified | Cubiq does not query the Paper or Purpur download APIs, which would report misleading results for Cubiq builds. There is no release API for Cubiq yet. |
 | bStats server metrics | Changed | Cubiq does not submit server-implementation metrics, because it has no registered bStats page and must not report as Purpur. `plugins/bStats/config.yml` is still created, so plugins that use bStats are unaffected. |
-| Configuration files (`server.properties`, `bukkit.yml`, `spigot.yml`, `config/paper-*.yml`, `purpur.yml`) | Inherited | Read and written as by Purpur. Cubiq adds no configuration file. The [configuration check](FEATURES.md#configuration-check) only logs and never changes them. |
+| Configuration files (`server.properties`, `bukkit.yml`, `spigot.yml`, `config/paper-*.yml`, `purpur.yml`) | Changed | Read and written as by Purpur, with one fix: when Paper updates `paper-global.yml` from a version before 31 and moves `allow-nether` out of `server.properties`, Paper and Purpur write `server.properties` with only the settings that Minecraft writes back. That loses all other settings, including Paper's own `rcon.ip`, so that RCON listens on `server-ip` from the next start. Cubiq keeps them and only removes `allow-nether`. Cubiq adds no configuration file. The [configuration check](FEATURES.md#configuration-check) only logs and never changes them. |
 | Chunk system system properties (`-DPaper.WorkerThreadCount`, `-DPaper.MaxViewDistance`, `-DPaper.NumaScheduling`) | Inherited | Same names as on Paper. The chunk system builds these names from its platform brand, which Cubiq deliberately leaves at `Paper`. |
 | Console and log output | Changed | Cubiq adds messages of the `Cubiq` logger: the result of the configuration check, how long the plugins took to start and stop, and reports of the [lifecycle watchdog](FEATURES.md#lifecycle-diagnostics). Upstream messages are unchanged apart from the rebranded crash and watchdog texts and the [watchdog dumps](FEATURES.md#watchdog-improvements), which gain a CPU line and lock information and use the labels `Thread ID`, `Blocked on`, `Waiting on` and `Locked monitors`. |
 | Watchdog (`spigot.yml` `timeout-time`, `restart-on-crash`; `paper-global.yml` `watchdog`) | Changed | Same settings, early warnings, timeouts and restart behavior. It no longer spins on a CPU core while the server does not respond. |
@@ -73,9 +73,9 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
   watchdog reports nothing and that the server stops cleanly (`scripts/smoke-test.sh`),
 - a configuration check smoke test that puts a mistake into each kind of checked file, four of them into
   `server.properties`, and checks that the configuration check reports each of them with the expected message, then
-  starts again with `paper-global.yml` set back to version 30, so that Paper rewrites `server.properties`, and checks
-  that the settings Paper removes are still reported, except `allow-nether`, whose value Paper moves
-  (`scripts/config-smoke-test.sh`),
+  starts again with `paper-global.yml` set back to version 30, so that Paper moves `allow-nether` and rewrites
+  `server.properties`, and checks that the other settings, including `rcon.ip`, stay in the file and that
+  `allow-nether` is not reported (`scripts/config-smoke-test.sh`),
 - a lifecycle smoke test that starts the server with a test plugin whose bootstrap, load, enable and disable each
   take three seconds, and checks that the lifecycle watchdog reports every step with the plugin's stack frames and
   that both summaries name the plugin, and a second run that stops the server with `/restart` instead of `stop`

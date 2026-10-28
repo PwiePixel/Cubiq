@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Puts a mistake into each kind of configuration file that the configuration check covers, starts a Cubiq server with
 # them and checks that the configuration check reports each mistake with the expected message. A second start
-# simulates a server whose Paper configuration is from an older version, for which Paper rewrites server.properties.
+# simulates a server whose Paper configuration is from an older version, for which Paper rewrites server.properties,
+# and checks that the other settings of the file are kept.
 #
 # Usage: scripts/config-smoke-test.sh <paperclip-jar> <server-directory>
 #
@@ -93,23 +94,30 @@ if [[ $missing -ne 0 ]]; then
 fi
 
 # Start again like a server whose Paper configuration is from before Paper moved allow-nether out of
-# server.properties: Paper moves its value to paper-global.yml and writes server.properties again with only the
-# settings Minecraft writes back. The settings without effect are lost, so they must still be reported, but not
-# allow-nether.
+# server.properties: Paper moves its value to paper-global.yml and removes it from server.properties. It wrote the file
+# with only the settings Minecraft writes back, which lost the other settings; Cubiq keeps them, including rcon.ip.
 replace_line config/paper-global.yml '^_version: ' '_version: 30'
-printf 'allow-nether=true\n' >> server.properties
+printf 'allow-nether=true\nrcon.ip=127.0.0.1\n' >> server.properties
 SMOKE_EXPECT_NO_WATCHDOG_REPORTS=true "$scripts/smoke-test.sh" "$jar" "$directory"
 
 expect "Configuration check: found 8 problems in server.properties, bukkit.yml, purpur.yml, spigot.yml, config/paper-global.yml, config/paper-world-defaults.yml, world/dimensions/minecraft/overworld/paper-world.yml, "
-expect "  server.properties: Unknown setting 'max-player' has no effect. Did you mean 'max-players'? The server removed it from the file while starting."
-expect "  server.properties: Setting 'pvp' has no effect anymore. Use the game rule pvp instead. The server removed it from the file while starting."
+expect "  server.properties: Unknown setting 'max-player' has no effect. Did you mean 'max-players'?"
+expect "  server.properties: Setting 'pvp' has no effect anymore. Use the game rule pvp instead."
 if grep -qF "server.properties: Setting 'allow-nether'" "$log"; then
     echo "FAILED: allow-nether was reported although Paper moved its value" >&2
     missing=1
 fi
-for key in allow-nether pvp max-player; do
-    if grep -q "^$key=" server.properties; then
-        echo "FAILED: Paper did not remove $key from server.properties, so this run did not test the update" >&2
+if grep -qF "The server removed it from the file while starting." "$log"; then
+    echo "FAILED: a setting was reported as removed, although only allow-nether may be removed" >&2
+    missing=1
+fi
+if grep -q '^allow-nether=' server.properties || ! grep -qx '_version: 31' config/paper-global.yml; then
+    echo "FAILED: Paper did not update paper-global.yml and move allow-nether, so this run did not test the update" >&2
+    missing=1
+fi
+for line in 'pvp=false' 'max-player=50' 'rcon.ip=127.0.0.1'; do
+    if ! grep -qx -- "$line" server.properties; then
+        echo "FAILED: Paper's update removed $line from server.properties" >&2
         missing=1
     fi
 done

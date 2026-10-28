@@ -31,9 +31,9 @@ import studio.cubiq.Cubiq;
  * <p>When Minecraft has loaded the file, {@link #loaded} compares its settings with the settings that Minecraft read
  * and the values it could not use, which {@link PropertiesUsage} recorded. Minecraft then writes the file again, with
  * the values it uses and the settings it does not know. When Paper updates {@code paper-global.yml} from an older
- * version while the server starts, it can write the file once more with only the settings that Minecraft writes back,
- * for example when it moves the value of {@code allow-nether} to its own configuration. The findings for the other
- * settings that were removed are still reported, with a note, because their values are lost.</p>
+ * version while the server starts, it moves the value of {@code allow-nether} to its own configuration and removes the
+ * setting from the file, so it is not reported. Findings for other settings that are removed from the file while the
+ * server starts, such as legacy settings, are still reported, with a note, because their values are lost.</p>
  */
 @NullMarked
 public final class ServerPropertiesCheck {

@@ -64,6 +64,9 @@ reports, and is covered by tests. In order of priority:
 - [x] Extend the configuration check to Paper's configuration files (`paper-global.yml`, world defaults and
       per-world files)
 - [x] Extend the configuration check to `server.properties`
+- [x] Keep the settings of `server.properties` that Paper dropped when it moved `allow-nether` out of the file while
+      updating `paper-global.yml` from version 30 or older, including Paper's own `rcon.ip`, which made RCON listen on
+      `server-ip` afterwards
 - [ ] Extend the configuration check to `commands.yml`
 - [ ] A command to re-run the configuration check after reloads, and an optional machine-readable report
 - [ ] Document configuration differences between Paper, Purpur and Cubiq defaults

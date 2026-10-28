@@ -92,6 +92,7 @@ change to inherited behavior easy to find. The current hooks are:
 | Configuration tracking | `org.spigotmc.SpigotConfig`, `org.purpurmc.purpur.PurpurConfig`, `org.bukkit.craftbukkit.CraftServer` | Create `TrackedYamlConfiguration`s |
 | Configuration check | `net.minecraft.server.MinecraftServer` after the `Done` message | Run `ConfigurationCheck` |
 | Paper configuration check | `paper-server: io.papermc.paper.configuration.Configurations` after each file is loaded | Compare the file with the settings Paper knows (`PaperConfigurationCheck`) |
+| Paper's update of `paper-global.yml` | `paper-server: io.papermc.paper.configuration.transformation.global.versioned.V31_AllowNetherPropertiesToConfig` | Keep the other settings of `server.properties` when moving `allow-nether` out of it |
 | `server.properties` check | `net.minecraft.server.dedicated.Settings` (`getStringRaw`, value conversion), `DedicatedServerSettings` after the file is loaded | Record which settings Minecraft reads and which values it cannot use as written (`PropertiesUsage`); compare them with the file (`ServerPropertiesCheck`) |
 | Restart | `org.spigotmc.RestartCommand` | Watch the shutdown by `/restart` from the moment Paper's watchdog stops |
 | Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |

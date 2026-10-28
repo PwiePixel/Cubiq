@@ -229,8 +229,8 @@ class ServerPropertiesCheckTest {
         Files.writeString(file, "max-player=50\npvp=false\nallow-nether=false\nview-distance=10\n");
         final Properties properties = file(Files.readString(file));
         ServerPropertiesCheck.loaded(file, properties, read(properties, "max-players", "view-distance"));
-        // When Paper updates paper-global.yml from an older version, it moves the value of allow-nether to its own
-        // configuration and writes server.properties with only the settings Minecraft writes back
+        // Paper moves the value of allow-nether to its own configuration when it updates paper-global.yml from an older
+        // version; without Cubiq's fix, it also removes the other settings that Minecraft does not write back
         Files.writeString(file, "max-players=20\nview-distance=10\n");
         final String name = CheckedFile.displayName(file);
 

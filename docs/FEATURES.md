@@ -77,13 +77,12 @@ How it works:
   reads and checks each value that Minecraft converts against the text in the file, without changing either. When
   Minecraft has loaded the file, the settings in it that Minecraft did not read are reported, together with the values
   that it did not use as written.
-- When Paper updates `paper-global.yml` from an older version, it moves the value of `allow-nether` from
-  `server.properties` to `misc.enable-nether` (configurations before version 31, if the setting is there) and the
-  value of its own `logging.log-player-ip-addresses` to `log-ips` in `server.properties` (before version 29, if the
-  setting is there). Each of these steps writes `server.properties` again with only the settings that Minecraft writes
-  back, so the values of all other settings are lost. The settings among them that Minecraft does not read are still
-  reported, with the note that the server removed them from the file while starting. `rcon.ip`, which Paper reads
-  without writing it back, is lost as well, and is not reported.
+- When Paper updates `paper-global.yml` from a version before 31 and `server.properties` contains `allow-nether`, it
+  moves the value to `misc.enable-nether` and removes `allow-nether` from `server.properties`, so the check does not
+  report it. Paper writes the file with only the settings that Minecraft writes back, which lost all other settings,
+  including `rcon.ip`; Cubiq keeps them (see [COMPATIBILITY.md](COMPATIBILITY.md)). Settings that are removed from the
+  file while the server starts all the same, such as legacy settings that Minecraft moves elsewhere, are reported with
+  the note that the server removed them.
 - Settings in a world section (`world-settings.<world>.<setting>`) are checked against the settings of
   `world-settings.default`, so settings for worlds that are not loaded are checked as well.
 - Sections that the server reads as a whole, such as maps of blocks or entity types, may contain any key.

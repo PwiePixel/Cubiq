@@ -73,8 +73,8 @@ class ServerPropertiesFilesTest {
     /**
      * Like {@link #start()}.
      *
-     * @param paperUpdatesItsConfiguration whether to write the file again like Paper does when it updates
-     *                                     {@code paper-global.yml} from an older version
+     * @param paperUpdatesItsConfiguration whether to write the file again like Paper did before Cubiq's fix, when it
+     *                                     updated {@code paper-global.yml} from an older version
      */
     private List<ConfigurationFinding> start(final boolean paperUpdatesItsConfiguration) {
         ConfigurationCheck.resetForTests();
@@ -83,8 +83,8 @@ class ServerPropertiesFilesTest {
         final DedicatedServerSettings settings = new DedicatedServerSettings(parser.parse("--config", this.file().toString()));
         settings.forceSave();
         if (paperUpdatesItsConfiguration) {
-            // What V29_LogIPs and V31_AllowNetherPropertiesToConfig do: the loaded settings become the defaults of
-            // the new ones, and Properties.store only writes the settings that DedicatedServerProperties reads
+            // What V31_AllowNetherPropertiesToConfig did: the loaded settings become the defaults of the new ones,
+            // and Properties.store only writes the settings that DedicatedServerProperties writes back
             settings.update(properties -> properties.reload(RegistryHelper.registryAccess(), new Properties(properties.properties), null));
         }
         final List<CheckedFile> results = ServerPropertiesCheck.drain();
@@ -196,12 +196,12 @@ class ServerPropertiesFilesTest {
     }
 
     @Test
-    void settingsThatPaperRemovesWhenItUpdatesItsConfigurationAreReported() throws IOException {
+    void settingsThatAreRemovedWhileTheServerStartsAreReported() throws IOException {
         this.start();
         this.edit(Map.of("max-player", "50", "pvp", "false", "allow-nether", "false"));
         final String name = this.name();
 
-        // Paper moves the value of allow-nether to paper-global.yml; the other values are lost
+        // Paper moves the value of allow-nether to paper-global.yml; the other values would be lost
         assertEquals(List.of(
             ConfigurationFinding.unknownSetting(name, "max-player", "max-players").withNote(REMOVED),
             ConfigurationFinding.replacedSetting(name, "pvp", "the game rule pvp").withNote(REMOVED)
