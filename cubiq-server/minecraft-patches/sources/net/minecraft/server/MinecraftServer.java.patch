@@ -1,0 +1,121 @@
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -643,7 +_,9 @@
+             collideTeam.setSeeFriendlyInvisibles(false); // Because we want to mimic them not being on a team at all
+         }
+         // Paper end - Configurable player collision; Handle collideRule team for player collision toggle
+-        this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.ENABLING_PLUGINS)) { // Cubiq - Lifecycle diagnostics
++            this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
++        } // Cubiq - Lifecycle diagnostics
+         this.server.spark.registerCommandBeforePlugins(this.server); // Paper - spark
+         this.server.spark.enableAfterPlugins(this.server); // Paper - spark
+         io.papermc.paper.command.brigadier.PaperCommands.INSTANCE.setValid(); // Paper - reset invalid state for event fire below
+@@ -942,7 +_,9 @@
+                 LOGGER.info("Saving chunks for level '{}'/{}", level, level.dimension().identifier());
+             }
+ 
+-            level.save(null, flush, SharedConstants.DEBUG_DONT_SAVE_WORLD || level.noSave && !force, close); // Paper - add close param
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.SAVING_WORLD, level.getWorld().getName())) { // Cubiq - Lifecycle diagnostics
++                level.save(null, flush, SharedConstants.DEBUG_DONT_SAVE_WORLD || level.noSave && !force, close); // Paper - add close param
++            } // Cubiq - Lifecycle diagnostics
+             result = true;
+         }
+ 
+@@ -1001,6 +_,7 @@
+         if (!this.hasLoggedStop && this.isDebugging()) io.papermc.paper.util.TraceUtil.dumpTraceForThread("Server stopped"); // Paper - Debugging
+         this.shutdownThread = Thread.currentThread(); // Paper - Improved watchdog support
+         org.spigotmc.WatchdogThread.doStop(); // Paper - Improved watchdog support
++        studio.cubiq.lifecycle.ServerLifecycle.stopping(); // Cubiq - Lifecycle diagnostics
+         // CraftBukkit end
+         this.packetProcessor.close();
+         if (this.metricsRecorder.isRecording()) {
+@@ -1021,17 +_,23 @@
+         // CraftBukkit start
+         if (this.server != null) {
+             this.server.spark.disable(); // Paper - spark
+-            this.server.disablePlugins();
+-            this.server.waitForAsyncTasksShutdown(); // Paper - Wait for Async Tasks during shutdown
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.DISABLING_PLUGINS)) { // Cubiq - Lifecycle diagnostics
++                this.server.disablePlugins();
++            } // Cubiq - Lifecycle diagnostics
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.WAITING_FOR_PLUGIN_TASKS)) { // Cubiq - Lifecycle diagnostics
++                this.server.waitForAsyncTasksShutdown(); // Paper - Wait for Async Tasks during shutdown
++            } // Cubiq - Lifecycle diagnostics
+         }
+         // CraftBukkit end
+         this.getConnection().stop();
+         this.isSaving = true;
+         if (this.playerList != null) {
+             LOGGER.info("Saving players");
+-            this.playerList.saveAll();
+-            this.playerList.removeAll(this.isRestarting); // Paper
+-            this.getConnection().handleAllDisconnections(); // Paper
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.SAVING_PLAYERS)) { // Cubiq - Lifecycle diagnostics
++                this.playerList.saveAll();
++                this.playerList.removeAll(this.isRestarting); // Paper
++                this.getConnection().handleAllDisconnections(); // Paper
++            } // Cubiq - Lifecycle diagnostics
+         }
+ 
+         LOGGER.info("Saving worlds");
+@@ -1060,7 +_,9 @@
+         }
+         // Paper end - rewrite chunk system
+ 
+-        this.saveAllChunks(false, true, false, true); // Paper - rewrite chunk system
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.SAVING_WORLDS)) { // Cubiq - Lifecycle diagnostics
++            this.saveAllChunks(false, true, false, true); // Paper - rewrite chunk system
++        } // Cubiq - Lifecycle diagnostics
+ 
+         this.isSaving = false;
+         this.savedDataStorage.close();
+@@ -1083,7 +_,9 @@
+         // Spigot end
+         // Paper start - rewrite chunk system
+         LOGGER.info("Waiting for all RegionFile I/O tasks to complete...");
+-        ca.spottedleaf.moonrise.patches.chunk_system.io.MoonriseRegionFileIO.flush((MinecraftServer)(Object)this);
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.WAITING_FOR_REGION_FILES)) { // Cubiq - Lifecycle diagnostics
++            ca.spottedleaf.moonrise.patches.chunk_system.io.MoonriseRegionFileIO.flush((MinecraftServer)(Object)this);
++        } // Cubiq - Lifecycle diagnostics
+         LOGGER.info("All RegionFile I/O tasks to complete");
+         if ((Object)this instanceof net.minecraft.server.dedicated.DedicatedServer) {
+             ca.spottedleaf.moonrise.common.util.MoonriseCommon.haltExecutors();
+@@ -1091,6 +_,7 @@
+         // Paper end - rewrite chunk system
+         // Paper start - Improved watchdog support - move final shutdown items here
+         Util.shutdownExecutors();
++        studio.cubiq.lifecycle.ServerLifecycle.stopped(); // Cubiq - Lifecycle diagnostics - before onServerExit, after which logging may shut down
+         this.onServerExit();
+         // Paper end - Improved watchdog support - move final shutdown items here
+     }
+@@ -1261,6 +_,7 @@
+ 
+     protected void runServer() {
+         try {
++            studio.cubiq.lifecycle.ServerLifecycle.startupBegins(); // Cubiq - Lifecycle diagnostics
+             if (!this.initServer()) {
+                 throw new IllegalStateException("Failed to initialize server");
+             }
+@@ -1274,8 +_,10 @@
+             // Spigot start
+             // Paper start
+             LOGGER.info("Running delayed init tasks");
+-            new io.papermc.paper.threadedregions.RegionizedServerInitEvent().callEvent(); // Call Folia init event
+-            this.server.getScheduler().mainThreadHeartbeat(); // run all 1 tick delay tasks during init,
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.RUNNING_DELAYED_INIT_TASKS)) { // Cubiq - Lifecycle diagnostics
++                new io.papermc.paper.threadedregions.RegionizedServerInitEvent().callEvent(); // Call Folia init event
++                this.server.getScheduler().mainThreadHeartbeat(); // run all 1 tick delay tasks during init,
++            } // Cubiq - Lifecycle diagnostics
+             // this is going to be the first thing the tick process does anyway, so move done and run it after
+             // everything is init before watchdog tick.
+             // anything at 3+ won't be caught here but also will trip watchdog....
+@@ -1286,6 +_,8 @@
+             org.spigotmc.WatchdogThread.tick();
+             // Paper end
+             org.spigotmc.WatchdogThread.hasStarted = true; // Paper
++            studio.cubiq.lifecycle.ServerLifecycle.startupFinished(actualDoneTimeMs); // Cubiq - Lifecycle diagnostics
++            studio.cubiq.configcheck.ConfigurationCheck.runAfterStartup(); // Cubiq - Configuration check
+             // Paper start - Add onboarding message for initial server start
+             if (io.papermc.paper.configuration.GlobalConfiguration.isFirstStart) {
+                 LOGGER.info("*************************************************************************************");

@@ -1,0 +1,40 @@
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -167,6 +_,9 @@
+ 
+     @Override
+     protected boolean initServer() throws IOException {
++        // Cubiq start - Lifecycle diagnostics - if the setup fails, stopping the server closes the step with the startup
++        final studio.cubiq.lifecycle.LifecyclePhase serverSetup = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.SETTING_UP_THE_SERVER);
++        // Cubiq end - Lifecycle diagnostics
+         Thread consoleThread = new Thread("Server console handler") {
+             @Override
+             public void run() {
+@@ -327,9 +_,14 @@
+         }
+         // Purpur end - UPnP Port Forwarding
+ 
++        serverSetup.close(); // Cubiq - Lifecycle diagnostics
+         // CraftBukkit start
+-        this.server.loadPlugins();
+-        this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.LOADING_PLUGINS)) { // Cubiq - Lifecycle diagnostics
++            this.server.loadPlugins();
++        } // Cubiq - Lifecycle diagnostics
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.ENABLING_PLUGINS)) { // Cubiq - Lifecycle diagnostics
++            this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
++        } // Cubiq - Lifecycle diagnostics
+         // CraftBukkit end
+ 
+         // Paper start - Add Velocity IP Forwarding Support
+@@ -370,7 +_,9 @@
+         long levelNanoTime = Util.getNanos();
+         this.services.nameToIdCache().resolveOfflineUsers(!this.usesAuthentication());
+         LOGGER.info("Preparing level \"{}\"", this.getLevelIdName());
+-        this.loadLevel(this.storageSource.getLevelId()); // CraftBukkit
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.LOADING_WORLDS)) { // Cubiq - Lifecycle diagnostics
++            this.loadLevel(this.storageSource.getLevelId()); // CraftBukkit
++        } // Cubiq - Lifecycle diagnostics
+         long elapsed = Util.getNanos() - levelNanoTime;
+         String time = String.format(Locale.ROOT, "%.3fs", elapsed / 1.0E9);
+         LOGGER.info("Done preparing level \"{}\" ({})", this.getLevelIdName(), time); // Paper - Improve startup message, add total time

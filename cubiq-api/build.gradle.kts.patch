@@ -1,0 +1,19 @@
+--- a/purpur-api/build.gradle.kts
++++ b/purpur-api/build.gradle.kts
+@@ -107,7 +_,7 @@
+     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
+ 
+     // checkstyle
+-    checkstyle(project(":purpur-checkstyle"))
++    checkstyle(project(":cubiq-checkstyle")) // Cubiq
+ }
+ 
+ val generatedDir: java.nio.file.Path = rootProject.layout.projectDirectory.dir("paper-api/src/generated/java").asFile.toPath() // Purpur
+@@ -121,6 +_,7 @@
+         java {
+             srcDir(generatedDir)
+             srcDir(file("../paper-api/src/main/java"))
++            srcDir(file("../purpur-api/src/main/java")) // Cubiq
+         }
+         resources {
+             srcDir(file("../paper-api/src/main/resources"))

@@ -1,0 +1,134 @@
+--- a/src/main/java/org/spigotmc/WatchdogThread.java
++++ b/src/main/java/org/spigotmc/WatchdogThread.java
+@@ -3,7 +_,6 @@
+ import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.configuration.GlobalConfiguration;
+ import java.lang.management.ManagementFactory;
+-import java.lang.management.MonitorInfo;
+ import java.lang.management.ThreadInfo;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+@@ -23,6 +_,7 @@
+     private long lastEarlyWarning; // Paper - Keep track of short dump times to avoid spamming console with short dumps
+     private volatile long lastTick;
+     private volatile boolean stopping;
++    private final studio.cubiq.watchdog.ServerThreadCpu serverThreadCpu = new studio.cubiq.watchdog.ServerThreadCpu(); // Cubiq - Watchdog hardening
+ 
+     private WatchdogThread(long timeoutTime, boolean restart) {
+         super("Watchdog Thread"); // Purpur - use a generic name - Rebrand
+@@ -63,26 +_,31 @@
+             Logger logger = Bukkit.getServer().getLogger();
+             long currentTime = WatchdogThread.monotonicMillis();
+             MinecraftServer server = MinecraftServer.getServer();
++            this.serverThreadCpu.observe(this.lastTick, server.getRunningThread()); // Cubiq - Watchdog hardening
+             if (this.lastTick != 0 && this.timeoutTime > 0 && WatchdogThread.hasStarted && (!server.isRunning() || (currentTime > this.lastTick + this.earlyWarningEvery && !DISABLE_WATCHDOG))) { // Paper - add property to disable
+                 boolean isLongTimeout = currentTime > this.lastTick + this.timeoutTime || (!server.isRunning() && !server.hasStopped() && currentTime > this.lastTick + 1000);
+                 // Don't spam early warning dumps
+                 if (!isLongTimeout && (this.earlyWarningEvery <= 0 ||
+                     !hasStarted || currentTime < this.lastEarlyWarning + this.earlyWarningEvery ||
+-                    currentTime < this.lastTick + this.earlyWarningDelay))
++                    currentTime < this.lastTick + this.earlyWarningDelay)) {
++                    this.pauseBeforeNextCheck(); // Cubiq - Watchdog hardening - do not busy-spin while the server does not respond
+                     continue;
+-                if (!isLongTimeout && server.hasStopped())
++                }
++                if (!isLongTimeout && server.hasStopped()) {
++                    this.pauseBeforeNextCheck(); // Cubiq - Watchdog hardening - do not busy-spin while the server does not respond
+                     continue; // Don't spam early watchdog warnings during shutdown, we'll come back to this...
++                }
+                 this.lastEarlyWarning = currentTime;
+                 if (isLongTimeout) {
+                     logger.log(Level.SEVERE, "------------------------------");
+-                    logger.log(Level.SEVERE, "The server has stopped responding! This is (probably) not a Purpur bug."); // Paper // Purpur - Rebrand
++                    logger.log(Level.SEVERE, "The server has stopped responding! This is (probably) not a Cubiq bug."); // Paper // Purpur - Rebrand // Cubiq - Rebrand
+                     logger.log(Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author");
+                     logger.log(Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring");
+                     logger.log(Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once");
+                     logger.log(Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes");
+-                    logger.log(Level.SEVERE, "If you are unsure or still think this is a Purpur bug, please report this to https://github.com/PurpurMC/Purpur/issues"); // Purpur - Rebrand
++                    logger.log(Level.SEVERE, "If you are unsure or still think this is a Cubiq bug, please report this to " + studio.cubiq.Cubiq.ISSUES_URL); // Purpur - Rebrand // Cubiq - Rebrand
+                     logger.log(Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports");
+-                    logger.log(Level.SEVERE, "Purpur version: " + Bukkit.getServer().getVersion()); // Purpur - Rebrand
++                    logger.log(Level.SEVERE, "Cubiq version: " + Bukkit.getServer().getVersion()); // Purpur - Rebrand // Cubiq - Rebrand
+ 
+                     if (net.minecraft.world.level.Level.lastPhysicsProblem != null) {
+                         logger.log(Level.SEVERE, "------------------------------");
+@@ -102,14 +_,23 @@
+                     }
+                     // Paper end
+                 } else {
+-                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PURPUR - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Purpur - Rebrand
++                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO CUBIQ - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Purpur - Rebrand // Cubiq - Rebrand
+                     logger.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
+                 }
+                 // Paper end - Different message for short timeout
+                 logger.log(Level.SEVERE, "------------------------------");
+-                logger.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Purpur!):"); // Paper // Purpur - Rebrand
++                logger.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Cubiq!):"); // Paper // Purpur - Rebrand // Cubiq - Rebrand
+                 FeatureHooks.dumpAllChunkLoadInfo(MinecraftServer.getServer(), isLongTimeout); // Paper - log detailed tick information
+-                WatchdogThread.dumpThread(ManagementFactory.getThreadMXBean().getThreadInfo(MinecraftServer.getServer().getRunningThread().threadId(), Integer.MAX_VALUE), logger);
++                // Cubiq start - Watchdog hardening - tell a busy server thread from a waiting one
++                final String serverThreadCpuUse = this.serverThreadCpu.describe(server.getRunningThread());
++                if (serverThreadCpuUse != null) {
++                    logger.log(Level.SEVERE, serverThreadCpuUse);
++                }
++                // Include the locks of the server thread and dump the thread that holds the lock it waits for
++                for (final String line : studio.cubiq.watchdog.WatchdogThreadDump.serverThread(MinecraftServer.getServer().getRunningThread())) {
++                    logger.log(Level.SEVERE, line);
++                }
++                // Cubiq end - Watchdog hardening
+                 logger.log(Level.SEVERE, "------------------------------");
+ 
+                 // Paper start - Only print full dump on long timeouts
+@@ -120,7 +_,7 @@
+                         WatchdogThread.dumpThread(thread, logger);
+                     }
+                 } else {
+-                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PURPUR - THIS IS NOT A BUG OR A CRASH ---"); // Purpur - Rebrand
++                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO CUBIQ - THIS IS NOT A BUG OR A CRASH ---"); // Purpur - Rebrand // Cubiq - Rebrand
+                 }
+ 
+                 logger.log(Level.SEVERE, "------------------------------");
+@@ -156,24 +_,24 @@
+         }
+     }
+ 
++    // Cubiq start - Watchdog hardening - do not busy-spin while the server does not respond
++    // The early-warning checks above used to skip the sleep at the end of the loop, so the watchdog spun on a full
++    // core for as long as the server did not respond. With early-warning-every: 0 it also spun while the server ran
++    // normally, from every check until the next tick, and with a negative value permanently.
++    private void pauseBeforeNextCheck() {
++        try {
++            sleep(1000);
++        } catch (InterruptedException ex) {
++            this.interrupt();
++        }
++    }
++    // Cubiq end - Watchdog hardening
++
+     private static void dumpThread(ThreadInfo thread, Logger logger) {
+-        logger.log(Level.SEVERE, "------------------------------");
+-
+-        logger.log(Level.SEVERE, "Current Thread: " + thread.getThreadName());
+-        logger.log(Level.SEVERE, "\tPID: " + thread.getThreadId()
+-            + " | Suspended: " + thread.isSuspended()
+-            + " | Native: " + thread.isInNative()
+-            + " | State: " + thread.getThreadState());
+-        if (thread.getLockedMonitors().length != 0) {
+-            logger.log(Level.SEVERE, "\tThread is waiting on monitor(s):");
+-            for (MonitorInfo monitor : thread.getLockedMonitors()) {
+-                logger.log(Level.SEVERE, "\t\tLocked on:" + monitor.getLockedStackFrame());
+-            }
+-        }
+-        logger.log(Level.SEVERE, "\tStack:");
+-
+-        for (StackTraceElement stack : thread.getStackTrace()) {
+-            logger.log(Level.SEVERE, "\t\t" + stack);
+-        }
++        // Cubiq start - Watchdog hardening - label the locks a thread holds correctly and show the lock it waits for
++        for (final String line : studio.cubiq.watchdog.WatchdogThreadDump.lines(thread)) {
++            logger.log(Level.SEVERE, line);
++        }
++        // Cubiq end - Watchdog hardening
+     }
+ }

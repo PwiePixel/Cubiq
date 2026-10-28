@@ -1,0 +1,1312 @@
+{
+  "_comment": "The license texts and notices that Cubiq ships in licenses/third-party/ for code of other projects whose own files do not carry them all: bundled libraries whose jars contain no license or notice file, libraries whose jars lack notices or do not say where their source code is (noticesInJar), and, under \"embedded\", code compiled into the server jar or the Paperclip jar itself. Every file was fetched from the source recorded under \"files\": a commit of a repository, or a URL for two projects without a license file of their own. scripts/library-licenses.py checks that each bundled library without notices in its jar is covered at its bundled version and that the files are unchanged. See docs/CONTRIBUTING.md for how to update an entry.",
+  "files": {
+    "adventure-text-feature-pagination/license.txt": {
+      "commit": "f9cd98ac157843a03c9b9dd1738f601aa102b578",
+      "path": "license.txt",
+      "repository": "https://github.com/lucko/adventure-text-feature-pagination.git",
+      "sha256": "b2ea556c24a3ec26e3af24f40754e6d347a8ef843c024278cdfafde730ad74a8"
+    },
+    "adventure/license.txt": {
+      "commit": "4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "path": "license.txt",
+      "repository": "https://github.com/PaperMC/adventure.git",
+      "sha256": "6f3f7529e339bca44fb8693f606267dabf80e11ce228e12e9a4fa3316a30d6b5"
+    },
+    "alternate-current/LICENSE": {
+      "commit": "d93fd521f6cd4c0f464fb45e36bb349896580dd2",
+      "path": "LICENSE",
+      "repository": "https://github.com/SpaceWalkerRS/alternate-current.git",
+      "sha256": "a67a7a9ad4b38e95d1ca169e419ae8d50ed52e9a355ca102e0b6fc45ce14da70"
+    },
+    "android-bionic/crtbegin_so.c": {
+      "commit": "bc2a111fd9a2e718bc4170dd98aa97de7b77a84f",
+      "path": "libc/arch-common/bionic/crtbegin_so.c",
+      "repository": "https://github.com/aosp-mirror/platform_bionic.git",
+      "sha256": "7339e128550f8f90a254fef776c8a23b96a13190e93981cb20a588a2e6342bf3"
+    },
+    "android-bionic/crtbrand.S": {
+      "commit": "bc2a111fd9a2e718bc4170dd98aa97de7b77a84f",
+      "path": "libc/arch-common/bionic/crtbrand.S",
+      "repository": "https://github.com/aosp-mirror/platform_bionic.git",
+      "sha256": "c4d083478b33ee6c44113fb8dbecd5a156226ab98eed780a2aa7f11e534c8bcb"
+    },
+    "android-bionic/crtend_so.S": {
+      "commit": "bc2a111fd9a2e718bc4170dd98aa97de7b77a84f",
+      "path": "libc/arch-common/bionic/crtend_so.S",
+      "repository": "https://github.com/aosp-mirror/platform_bionic.git",
+      "sha256": "1c23bd1c4af44550e23df0cdb65eda97d5bc5ca82395d297f2139d68a0d25a29"
+    },
+    "ansi/license.txt": {
+      "commit": "251d81eaad2c615afa26c4f6576537c81063d3a4",
+      "path": "license.txt",
+      "repository": "https://github.com/KyoriPowered/ansi.git",
+      "sha256": "b2ea556c24a3ec26e3af24f40754e6d347a8ef843c024278cdfafde730ad74a8"
+    },
+    "apple-apsl/APPLE_LICENSE": {
+      "commit": "71dec0ac89e8e5c52085ae4b560139df9afbab2f",
+      "path": "APPLE_LICENSE",
+      "repository": "https://github.com/apple-oss-distributions/dyld.git",
+      "sha256": "e5881019d8766c1e88a5fe1dbca4ba40c78011d41fcb18f6e9f50df60182685b"
+    },
+    "apple-csu/dyld_glue.s": {
+      "commit": "ece0e9db9c1280f3e89671deec77b3562294c45e",
+      "path": "dyld_glue.s",
+      "repository": "https://github.com/apple-oss-distributions/Csu.git",
+      "sha256": "b5a7b2b43c057c1290359a473ed00a501af81f169968a9be7d2ea8acec1c9e93"
+    },
+    "asm-9.5/LICENSE.txt": {
+      "commit": "443339a964352dcec4dd3915de8f13188920d3ac",
+      "path": "LICENSE.txt",
+      "repository": "https://gitlab.ow2.org/asm/asm.git",
+      "sha256": "293b6af371eee28b0ff16f0334ea19e20a3d5522143faa4b95b346855507879a"
+    },
+    "asm-9.7/LICENSE.txt": {
+      "commit": "bde266f0d59dd12739ad15a39f1da43a61143eed",
+      "path": "LICENSE.txt",
+      "repository": "https://gitlab.ow2.org/asm/asm.git",
+      "sha256": "293b6af371eee28b0ff16f0334ea19e20a3d5522143faa4b95b346855507879a"
+    },
+    "asm/LICENSE.txt": {
+      "commit": "4e6de6cb3dcddb00a2bbf7bbb9ee40f0c15281c5",
+      "path": "LICENSE.txt",
+      "repository": "https://gitlab.ow2.org/asm/asm.git",
+      "sha256": "293b6af371eee28b0ff16f0334ea19e20a3d5522143faa4b95b346855507879a"
+    },
+    "async-profiler/LICENSE": {
+      "commit": "11aaea310cb75843f0e7532365d8cedc8d0e14c8",
+      "path": "LICENSE",
+      "repository": "https://github.com/async-profiler/async-profiler.git",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    "brigadier/LICENSE": {
+      "commit": "9ba4f13c0fe82b07c08c2dc2d8043f075ffd0d98",
+      "path": "LICENSE",
+      "repository": "https://github.com/Mojang/brigadier.git",
+      "sha256": "d25deed12d803f6c973597348627b1939e2d19bbc28fda83c93ea0cde44702da"
+    },
+    "bungeecord/LICENSE": {
+      "commit": "966774373519ed9fed12de395206b8668fbb0d90",
+      "path": "LICENSE",
+      "repository": "https://github.com/SpigotMC/BungeeCord.git",
+      "sha256": "c3134e1f3e978c8bd093cec890bf48bc18910407cc70f1ea0e3ef464dc9c1d74"
+    },
+    "bytesocks-java-client/LICENSE.txt": {
+      "commit": "44eb19a539e42178e8e0fdf3804f0b28acbff636",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/lucko/bytesocks-java-client.git",
+      "sha256": "a2804a1d916905faf00896fca9a6dc494b8ea23753995ea49da2b3002e894fd4"
+    },
+    "commons-codec/PureJavaCrc32C.java": {
+      "commit": "2614a4ca9d79c2b96a3147d206b4fb27443f8ce8",
+      "path": "src/main/java/org/apache/commons/codec/digest/PureJavaCrc32C.java",
+      "repository": "https://github.com/apache/commons-codec.git",
+      "sha256": "372175a77604e7e5c70875ad4279d7066b4b3903be2e4b1396ecf8220450fb66"
+    },
+    "commons-compress-1.5/NOTICE.txt": {
+      "commit": "163c4eee17c041cb7c1ccfedd983816038cc1eca",
+      "path": "NOTICE.txt",
+      "repository": "https://github.com/apache/commons-compress.git",
+      "sha256": "378eb5857b6d9be8200a3a31e46067978f20e24e9823d8f483be76f2ed3e908c"
+    },
+    "commons-logging/NOTICE.txt": {
+      "commit": "9be283a2368ac4cd20c40a79aae1e7b06a1d6af1",
+      "path": "NOTICE.txt",
+      "repository": "https://github.com/apache/commons-logging.git",
+      "sha256": "58eb4cd3dfd50dda91707416fc9964aedee916d279bbfa079cfefab978c3bd59"
+    },
+    "configurate/LICENSE": {
+      "commit": "8587250162d2c1bc453b731559e096b583038b25",
+      "path": "LICENSE",
+      "repository": "https://github.com/SpongePowered/Configurate.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "configurate/LICENSE_HEADER": {
+      "commit": "8587250162d2c1bc453b731559e096b583038b25",
+      "path": "LICENSE_HEADER",
+      "repository": "https://github.com/SpongePowered/Configurate.git",
+      "sha256": "a5e485a899c5e56697b47c1dae6db92062124c07f0ba074d488e9a0a015c3949"
+    },
+    "datafixerupper/LICENSE": {
+      "commit": "b6c712effbac69b119439e47f9ed1025c13b7a3f",
+      "path": "LICENSE",
+      "repository": "https://github.com/Mojang/DataFixerUpper.git",
+      "sha256": "d1b7f2c4a38e319ccc90d93ffcc90f984843769e2d0aa5f576cec229d54bcdcd"
+    },
+    "disruptor/LICENCE.txt": {
+      "commit": "a87bf422e42451b9e2d2d1f0f8de5b61ab561da2",
+      "path": "LICENCE.txt",
+      "repository": "https://github.com/LMAX-Exchange/disruptor.git",
+      "sha256": "ffdbc6d3d15b227e50b3b85a712785067122b04d69ad92d78080278de2be2347"
+    },
+    "error-prone/AUTHORS": {
+      "commit": "7cec0a04b56cd79e72461ad771e532f503f0b407",
+      "path": "AUTHORS",
+      "repository": "https://github.com/google/error-prone.git",
+      "sha256": "2f373ac66cffa585ec51ab09e98d45e573977520e16b35e8212d856805002ad9"
+    },
+    "error-prone/COPYING": {
+      "commit": "7cec0a04b56cd79e72461ad771e532f503f0b407",
+      "path": "COPYING",
+      "repository": "https://github.com/google/error-prone.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "fastutil/LICENSE-2.0": {
+      "commit": "aa30fa7d93bf06fec45c4f6f572a1f6a38047d9f",
+      "path": "LICENSE-2.0",
+      "repository": "https://github.com/vigna/fastutil.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "freebsd-11.4-csu/crti.S": {
+      "commit": "8c639945a44588f6cfdddfb057bb5aad88735da0",
+      "path": "lib/csu/aarch64/crti.S",
+      "repository": "https://github.com/freebsd/freebsd-src.git",
+      "sha256": "e49bd0ec20370c0576410902b1029cb64acce5e75cb67216ad3c8964741d42f7"
+    },
+    "freebsd-9.3-csu/crti.S": {
+      "commit": "2318891ec48af954532c881bc325619271e277ca",
+      "path": "lib/csu/amd64/crti.S",
+      "repository": "https://github.com/freebsd/freebsd-src.git",
+      "sha256": "8a65a605ce1e7ede9e86a46dd2eb287f9f53dbfa0ffebfd0a52e30b3947aada4"
+    },
+    "gcc-11.2.0/COPYING.RUNTIME": {
+      "commit": "7ca388565af176bd4efd4f8db1e5e9e11e98ef45",
+      "path": "COPYING.RUNTIME",
+      "repository": "https://github.com/gcc-mirror/gcc.git",
+      "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+    },
+    "gcc-7.5.0/COPYING.RUNTIME": {
+      "commit": "b2d961e7342b5ba4e57adfa81cb189b738d10901",
+      "path": "COPYING.RUNTIME",
+      "repository": "https://github.com/gcc-mirror/gcc.git",
+      "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+    },
+    "gcc-7.5.0/tree.cc": {
+      "commit": "b2d961e7342b5ba4e57adfa81cb189b738d10901",
+      "path": "libstdc++-v3/src/c++98/tree.cc",
+      "repository": "https://github.com/gcc-mirror/gcc.git",
+      "sha256": "a6da75440c663d5e66585c11f42059f36b2f0f0a176c5c57fe37b096180af5db"
+    },
+    "geantyref/LICENSE": {
+      "commit": "f2bb0872b97d51c59f704aad6bf5af9edb32ac1b",
+      "path": "LICENSE",
+      "repository": "https://github.com/leangen/geantyref.git",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    "guava/COPYING": {
+      "commit": "b62d52926b904a8def90fd427acad53d79fa0e9f",
+      "path": "COPYING",
+      "repository": "https://github.com/google/guava.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "j2objc/AUTHORS": {
+      "commit": "1671e9afb72a16126d448f468db3e582358fba47",
+      "path": "AUTHORS",
+      "repository": "https://github.com/google/j2objc.git",
+      "sha256": "823e4d45d213b624b4edf6d1a14bdccbd6a673f433f84f78f16cedad1d66c57b"
+    },
+    "j2objc/LICENSE": {
+      "commit": "1671e9afb72a16126d448f468db3e582358fba47",
+      "path": "LICENSE",
+      "repository": "https://github.com/google/j2objc.git",
+      "sha256": "22418fba3d2030cc22690f1c0c38ae423d5540110e9d61519027e3210ac29726"
+    },
+    "jansi/license.txt": {
+      "commit": "69a3dea31f0de973e89d17a3024fa776640ef32a",
+      "path": "license.txt",
+      "repository": "https://github.com/fusesource/jansi.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "javax-inject/LICENSE-2.0.txt": {
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    },
+    "jcl-over-slf4j/LICENSE.txt": {
+      "commit": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
+      "path": "jcl-over-slf4j/LICENSE.txt",
+      "repository": "https://github.com/qos-ch/slf4j.git",
+      "sha256": "59899c6091b540582ed617e8eeaac4919dc985ccfc35459ee9752b699be5205b"
+    },
+    "jline-3.20.0/LICENSE.txt": {
+      "commit": "a3e55d56cbd8d7b9fa74a627af03d5c97c4248d9",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/jline/jline3.git",
+      "sha256": "7d9ca7d4eb3a2534869e7823b81b299321d49ceb3d169d11b995513fabd9fc7e"
+    },
+    "jline/LICENSE.txt": {
+      "commit": "2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/jline/jline3.git",
+      "sha256": "44e55d448e3324fa5b8f26b42556ee4a758aa27bbcb86babe32c144b5aa11ac0"
+    },
+    "json-simple/AUTHORS.txt": {
+      "commit": "5c4fc7ef8beb45a3a7006e6e8fee2127e8153dd1",
+      "path": "AUTHORS.txt",
+      "repository": "https://github.com/fangyidong/json-simple.git",
+      "sha256": "3ab062465c923158ff451076841c0f30a4b1fe6f57e2f2b3e90dd8499d88cdde"
+    },
+    "json-simple/LICENSE.txt": {
+      "commit": "5c4fc7ef8beb45a3a7006e6e8fee2127e8153dd1",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/fangyidong/json-simple.git",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "leafpile/LICENSE": {
+      "commit": "3a4ccf8b9ca9675552991097ded283646ec56197",
+      "path": "LICENSE",
+      "repository": "https://github.com/Tuinity/LeafPile.git",
+      "sha256": "33bc26d4498c183b703d1760ee45b8774d21d6e0178ca393dc715271840c7a21"
+    },
+    "libdeflate/COPYING": {
+      "commit": "9be1c54e6086cd1f9e1e7dece96eb6d1355c93f7",
+      "path": "COPYING",
+      "repository": "https://github.com/ebiggers/libdeflate.git",
+      "sha256": "4ad69099cb4374836fd27583d9991e2838cd86b6e4666ab26b2d32582c91e73a"
+    },
+    "llvm-compiler-rt-14.0.0/LICENSE.TXT": {
+      "commit": "329fda39c507e8740978d10458451dcdb21563be",
+      "path": "compiler-rt/LICENSE.TXT",
+      "repository": "https://github.com/llvm/llvm-project.git",
+      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d"
+    },
+    "log4j-core/LICENSE": {
+      "commit": "c1ad2a66cc90e643ec319b9e131764c9710bebc5",
+      "path": "log4j-core/src/main/resources/META-INF/LICENSE",
+      "repository": "https://github.com/apache/logging-log4j2.git",
+      "sha256": "e118ad8e5f2d3c71f0e7d6202d5829e7580ccd9e3609a546c692788e657afbe2"
+    },
+    "log4j-core/NOTICE": {
+      "commit": "c1ad2a66cc90e643ec319b9e131764c9710bebc5",
+      "path": "log4j-core/src/main/resources/META-INF/NOTICE",
+      "repository": "https://github.com/apache/logging-log4j2.git",
+      "sha256": "47481ebb980fb2d78204a80da2ccdb897c41aa34f43e0e5bcc06c1a32ea9ff48"
+    },
+    "mingw-w64/COPYING.MinGW-w64-runtime.txt": {
+      "commit": "acc9b9d9eb63a13d8122cbac4882eb5f4ee2f679",
+      "path": "COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt",
+      "repository": "https://github.com/mingw-w64/mingw-w64.git",
+      "sha256": "e9b2dc02451ea29092a1f25fa0f3c07207ed421f1807dffb0c4e6dce69dee7bd"
+    },
+    "netty/LICENSE.txt": {
+      "commit": "3703d79669ee024f6483c9d8697ac58ba546df33",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/netty/netty.git",
+      "sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+    },
+    "netty/NOTICE.txt": {
+      "commit": "3703d79669ee024f6483c9d8697ac58ba546df33",
+      "path": "NOTICE.txt",
+      "repository": "https://github.com/netty/netty.git",
+      "sha256": "1775b0d91666fcb82493a5198f761b59a6d4d050bae6a4d26ecc377354068571"
+    },
+    "option/license.txt": {
+      "commit": "c1f7a76af0882a4bf4466b0c1dc07af15261d775",
+      "path": "license.txt",
+      "repository": "https://github.com/KyoriPowered/option.git",
+      "sha256": "71c1374a3b176c6728754ac99275b321fddbb3e4c2a139e734a3566640e6c1b9"
+    },
+    "plexus-interpolation/InterpolatorFilterReader.java": {
+      "commit": "159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "path": "src/main/java/org/codehaus/plexus/interpolation/InterpolatorFilterReader.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-interpolation.git",
+      "sha256": "1a87b15156b16b23ec388e92d8e313dd28bf243d06ba3b6b90e3e70786a1ffc5"
+    },
+    "plexus-interpolation/LICENSE-2.0.txt": {
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    },
+    "plexus-interpolation/MultiDelimiterInterpolatorFilterReader.java": {
+      "commit": "159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "path": "src/main/java/org/codehaus/plexus/interpolation/multi/MultiDelimiterInterpolatorFilterReader.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-interpolation.git",
+      "sha256": "8db2657aa1ce3a25529eecb0e7f850f9c8e8fe1fe62d948cc63a06df076afaa3"
+    },
+    "plexus-interpolation/OperatingSystemUtils.java": {
+      "commit": "159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "path": "src/main/java/org/codehaus/plexus/interpolation/os/OperatingSystemUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-interpolation.git",
+      "sha256": "0a45da191b859a99b49b129c491bf58d0913cf05200109ddda702469fd982167"
+    },
+    "plexus-interpolation/Os.java": {
+      "commit": "159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "path": "src/main/java/org/codehaus/plexus/interpolation/os/Os.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-interpolation.git",
+      "sha256": "411287070ddf1be20e4bdab1051c38724c0ccf6c62a1c508f392485cc20635a6"
+    },
+    "plexus-interpolation/StringUtils.java": {
+      "commit": "159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "path": "src/main/java/org/codehaus/plexus/interpolation/util/StringUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-interpolation.git",
+      "sha256": "247a0a0dd511990af83461198dbadd6f8b27486037137f975b51b67f7740e6da"
+    },
+    "plexus-utils/DirectoryScanner.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/DirectoryScanner.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "0bdf1a37dab2d253b35a7f5a2b4588e00f7542bfe838dd4900be3c875a6df7c2"
+    },
+    "plexus-utils/ExceptionUtils.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/ExceptionUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "61da769859d219b96dd2f98040974b4c312b354c3a137310a72ec5d012adc1b4"
+    },
+    "plexus-utils/Expand.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/Expand.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "161a25706596be06fb192fe9c1f2fcc0b2d258d83d6ac7bb3e6612e95b429f58"
+    },
+    "plexus-utils/FileUtils.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/FileUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "91ad8518adeaa78b4a7bd6383fe1c63588cbc5e1fd65d691270f9843b9f8b7ad"
+    },
+    "plexus-utils/IOUtil.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/IOUtil.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "3865536bece7514a896dfcc82efe1c5f0e2e9f256182cfa9ae04b82e9335b032"
+    },
+    "plexus-utils/InterpolationFilterReader.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/InterpolationFilterReader.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "6a2e45ce4e4fb789c048ef75e08a711c4e7ed27b40c731502313bba15fb58383"
+    },
+    "plexus-utils/Os.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/Os.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "39792874efe35ac13739cbf5034e96c93baf59702acfb6f54302494c917ae93b"
+    },
+    "plexus-utils/SelectorUtils.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/SelectorUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "4cd935d4134bb1dc7c59f23cd8c7924496bb965ee48ee09f0b32b7c403c04ad6"
+    },
+    "plexus-utils/StringInputStream.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/StringInputStream.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "f069282aa8761c92313db1c341fae29e34fd603826224e89a51c381d803e15e5"
+    },
+    "plexus-utils/StringUtils.java": {
+      "commit": "8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "path": "src/main/java/org/codehaus/plexus/util/StringUtils.java",
+      "repository": "https://github.com/codehaus-plexus/plexus-utils.git",
+      "sha256": "e9f3be2ec69d608febb6daf354502052dbacf5f47ca39d557236429d50417238"
+    },
+    "protobuf-java-4.36.2/LICENSE": {
+      "commit": "2c74169b34066ceb8ddb6b882fcb3fb32d737a55",
+      "path": "LICENSE",
+      "repository": "https://github.com/protocolbuffers/protobuf.git",
+      "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+    },
+    "protobuf/LICENSE": {
+      "commit": "2d4414f384dc499af113b5991ce3eaa9df6dd931",
+      "path": "LICENSE",
+      "repository": "https://github.com/protocolbuffers/protobuf.git",
+      "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+    },
+    "rhino/DToA.java": {
+      "commit": "5a917b5003e585a19eab2fd009915687fad00199",
+      "path": "src/org/mozilla/javascript/DToA.java",
+      "repository": "https://github.com/mozilla/rhino.git",
+      "sha256": "09e909ce95544554c0ae4ddb01b7770b00776b8a62af9484861d8875775ca69b"
+    },
+    "sisu-inject/LICENSE.txt": {
+      "commit": "14439cd38535c22cc908eacf99b70daf66d949b3",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/eclipse/sisu.inject.git",
+      "sha256": "44277b2bec6093e4ac313afec251a4de599d24c4e768f8574d95b13a9d2d97b5"
+    },
+    "sisu-inject/about.html": {
+      "commit": "14439cd38535c22cc908eacf99b70daf66d949b3",
+      "path": "org.eclipse.sisu.inject/about.html",
+      "repository": "https://github.com/eclipse/sisu.inject.git",
+      "sha256": "28219f909fdf4d41c0a4c3bda3e9b9c5cd0d47427ccec43ea0c8c291b4621564"
+    },
+    "snakeyaml/LICENSE.txt": {
+      "commit": "a34989252e6f59e36a3aaf788a903b7a37a73d33",
+      "path": "LICENSE.txt",
+      "repository": "https://bitbucket.org/snakeyaml/snakeyaml.git",
+      "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+    },
+    "spark-api/LICENSE.txt": {
+      "commit": "635800af986351f08dba33aa2e8ec5dd691bbffb",
+      "path": "spark-api/LICENSE.txt",
+      "repository": "https://github.com/lucko/spark.git",
+      "sha256": "1b9e46e553953fee57548b88037bf393bff9a954bad5c678f989b3b1200d06f6"
+    },
+    "spark/HEADER.txt": {
+      "commit": "72969655c9f93562190c0e8dfb6981089d510b83",
+      "path": "HEADER.txt",
+      "repository": "https://github.com/lucko/spark.git",
+      "sha256": "96285dc026fc25db56827a8f4b298bc665d9bb98a861ac663d64d542956bc7d4"
+    },
+    "spark/LICENSE.txt": {
+      "commit": "72969655c9f93562190c0e8dfb6981089d510b83",
+      "path": "LICENSE.txt",
+      "repository": "https://github.com/lucko/spark.git",
+      "sha256": "c53a65c2fd561c87eaabf1072ef5dcab8653042bc15308465f52413585eb6271"
+    },
+    "sqlite-jdbc/NOTICE": {
+      "commit": "b9983e601eee9bc412cf76f96aa0adb4e4a49932",
+      "path": "NOTICE",
+      "repository": "https://github.com/xerial/sqlite-jdbc.git",
+      "sha256": "a0670cf020edf700524c43c85321c2ba027a8bace5682001db60875d4a9fe52b"
+    },
+    "terminalconsoleappender/LICENSE": {
+      "commit": "21a800dfbe641da0d9fd0e83761085162e739263",
+      "path": "LICENSE",
+      "repository": "https://github.com/Minecrell/TerminalConsoleAppender.git",
+      "sha256": "62b82b4c79254f85ff95a97bbb736eb959181cbf0ca6ec6b8422d61ad6bac82d"
+    },
+    "upnp4j/LICENSE": {
+      "commit": "ad676b09904c0575bee236b448342b25c43986cb",
+      "path": "LICENSE",
+      "repository": "https://github.com/theomega24/upnp4j.git",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    "upnp4j/README.md": {
+      "commit": "ad676b09904c0575bee236b448342b25c43986cb",
+      "path": "README.md",
+      "repository": "https://github.com/theomega24/upnp4j.git",
+      "sha256": "946c49b0b041c0730aaddb9b59523f5bc6847a5d8ce3f42e65626d85ca1ae48c"
+    },
+    "velocity/LICENSE": {
+      "commit": "a078053e26eff94b106afcaf594f9fde2897c592",
+      "path": "LICENSE",
+      "repository": "https://github.com/PaperMC/Velocity.git",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "waifupnp/README.md": {
+      "commit": "3a9ca3523179c24f2c71c07f73552941f52130b8",
+      "path": "README.md",
+      "repository": "https://github.com/adolfintel/WaifUPnP.git",
+      "sha256": "00f51f700cb00825edf2910fcbaf14dfa82824583f53279ce42545b659143a40"
+    }
+  },
+  "libraries": {
+    "ca.spottedleaf.leafpile:common": {
+      "version": "1.3.2",
+      "license": "GPL-3.0-only AND Apache-2.0",
+      "source": "https://github.com/Tuinity/LeafPile.git 3a4ccf8b9ca9675552991097ded283646ec56197",
+      "files": [
+        "leafpile/LICENSE",
+        "fastutil/LICENSE-2.0"
+      ],
+      "copyright": [
+        "Copyright (C) 2002-2024 Sebastiano Vigna"
+      ],
+      "note": "The constants and the murmurHash3, mix and invMix methods of HashUtil are copied from fastutil's HashCommon (Apache-2.0); fastutil has no NOTICE file."
+    },
+    "ca.spottedleaf.leafpile:concurrentutil": {
+      "version": "1.3.2",
+      "license": "GPL-3.0-only",
+      "source": "https://github.com/Tuinity/LeafPile.git 3a4ccf8b9ca9675552991097ded283646ec56197",
+      "files": [
+        "leafpile/LICENSE"
+      ],
+      "copyright": [],
+      "note": ""
+    },
+    "ca.spottedleaf.leafpile:converter": {
+      "version": "1.3.2",
+      "license": "GPL-3.0-only",
+      "source": "https://github.com/Tuinity/LeafPile.git 3a4ccf8b9ca9675552991097ded283646ec56197",
+      "files": [
+        "leafpile/LICENSE"
+      ],
+      "copyright": [],
+      "note": ""
+    },
+    "ca.spottedleaf.leafpile:ioutil": {
+      "version": "1.3.2",
+      "license": "GPL-3.0-only",
+      "source": "https://github.com/Tuinity/LeafPile.git 3a4ccf8b9ca9675552991097ded283646ec56197",
+      "files": [
+        "leafpile/LICENSE"
+      ],
+      "copyright": [],
+      "note": ""
+    },
+    "com.google.errorprone:error_prone_annotations": {
+      "version": "2.48.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/google/error-prone.git 7cec0a04b56cd79e72461ad771e532f503f0b407",
+      "files": [
+        "error-prone/COPYING",
+        "error-prone/AUTHORS"
+      ],
+      "copyright": [
+        "Copyright 2014 The Error Prone Authors.",
+        "Copyright 2015 The Error Prone Authors.",
+        "Copyright 2016 The Error Prone Authors.",
+        "Copyright 2017 The Error Prone Authors.",
+        "Copyright 2018 The Error Prone Authors.",
+        "Copyright 2021 The Error Prone Authors.",
+        "Copyright 2023 The Error Prone Authors."
+      ],
+      "note": ""
+    },
+    "com.google.guava:listenablefuture": {
+      "version": "9999.0-empty-to-avoid-conflict-with-guava",
+      "license": "Apache-2.0",
+      "source": "https://github.com/google/guava.git b62d52926b904a8def90fd427acad53d79fa0e9f",
+      "files": [
+        "guava/COPYING"
+      ],
+      "copyright": [],
+      "note": "An empty marker artifact that contains no code."
+    },
+    "com.google.j2objc:j2objc-annotations": {
+      "version": "3.1",
+      "license": "Apache-2.0",
+      "source": "https://github.com/google/j2objc.git 1671e9afb72a16126d448f468db3e582358fba47",
+      "files": [
+        "j2objc/LICENSE",
+        "j2objc/AUTHORS"
+      ],
+      "copyright": [
+        "Copyright 2012 Google Inc. All Rights Reserved."
+      ],
+      "note": "LICENSE covers the whole J2ObjC distribution; for the annotations, its first part, the Apache License 2.0, applies."
+    },
+    "com.google.protobuf:protobuf-java": {
+      "version": "4.29.0",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/protocolbuffers/protobuf.git 2d4414f384dc499af113b5991ce3eaa9df6dd931",
+      "files": [
+        "protobuf/LICENSE"
+      ],
+      "copyright": [
+        "Copyright 2008 Google Inc.  All rights reserved.",
+        "Copyright 2024 Google LLC.  All rights reserved.",
+        "Copyright 2023 Google Inc.  All rights reserved."
+      ],
+      "note": ""
+    },
+    "com.googlecode.json-simple:json-simple": {
+      "version": "1.1.1",
+      "license": "Apache-2.0",
+      "source": "https://github.com/fangyidong/json-simple.git 5c4fc7ef8beb45a3a7006e6e8fee2127e8153dd1",
+      "files": [
+        "json-simple/LICENSE.txt",
+        "json-simple/AUTHORS.txt"
+      ],
+      "copyright": [],
+      "note": ""
+    },
+    "com.lmax:disruptor": {
+      "version": "3.4.4",
+      "license": "Apache-2.0",
+      "source": "https://github.com/LMAX-Exchange/disruptor.git a87bf422e42451b9e2d2d1f0f8de5b61ab561da2",
+      "files": [
+        "disruptor/LICENCE.txt"
+      ],
+      "copyright": [
+        "Copyright 2011 LMAX Ltd.",
+        "Copyright 2012 LMAX Ltd.",
+        "Copyright 2013 LMAX Ltd.",
+        "Copyright 2021 LMAX Ltd.",
+        "Copyright 2016 Gil Tene"
+      ],
+      "note": ""
+    },
+    "com.mysql:mysql-connector-j": {
+      "version": "9.2.0",
+      "license": "GPL-2.0-only WITH Universal-FOSS-exception-1.0",
+      "source": "https://github.com/mysql/mysql-connector-j.git a3909bfeb62d5a517ab444bb88ba7ecf26100297",
+      "noticesInJar": true,
+      "files": [],
+      "copyright": [],
+      "note": "Listed for its source code, which the GPLv2 requires to be available. The jar contains its license information, including the licenses of the third-party code it contains and Oracle's written offer for the source code, and records the commit it was built from in INFO_SRC."
+    },
+    "com.velocitypowered:velocity-native": {
+      "version": "4.1.0",
+      "license": "GPL-3.0-or-later AND MIT",
+      "source": "https://github.com/PaperMC/Velocity.git a078053e26eff94b106afcaf594f9fde2897c592",
+      "files": [
+        "velocity/LICENSE",
+        "libdeflate/COPYING"
+      ],
+      "copyright": [
+        "Copyright (C) 2018-2021 Velocity Contributors",
+        "Copyright (C) 2018-2023 Velocity Contributors",
+        "Copyright (C) 2019-2023 Velocity Contributors",
+        "Copyright (C) 2020-2021 Velocity Contributors",
+        "Copyright 2016 Eric Biggers",
+        "Copyright 2024 Google LLC"
+      ],
+      "note": "The velocity-compress native libraries contain libdeflate 1.21 (MIT), linked statically. The Linux velocity-cipher libraries link the system's OpenSSL (libcrypto) dynamically, and the macOS one uses CommonCrypto from macOS; none of them contains OpenSSL code."
+    },
+    "commons-codec:commons-codec": {
+      "version": "1.16.0",
+      "license": "Apache-2.0 AND LicenseRef-Intel-BSD",
+      "source": "https://github.com/apache/commons-codec.git 2614a4ca9d79c2b96a3147d206b4fb27443f8ce8",
+      "noticesInJar": true,
+      "files": [
+        "commons-codec/PureJavaCrc32C.java"
+      ],
+      "copyright": [
+        "Copyright (c) 2004-2006 Intel Corporation"
+      ],
+      "note": "Some portions of PureJavaCrc32C are \"Copyright (c) 2004-2006 Intel Corporation and licensed under the BSD license\", as the file says without naming a version of the BSD license; the jar's LICENSE and NOTICE files do not mention them."
+    },
+    "dev.omega24:upnp4j": {
+      "version": "1.0",
+      "license": "LGPL-3.0-only AND LGPL-2.1-or-later",
+      "source": "https://github.com/theomega24/upnp4j.git ad676b09904c0575bee236b448342b25c43986cb",
+      "files": [
+        "upnp4j/LICENSE",
+        "upnp4j/README.md",
+        "waifupnp/README.md"
+      ],
+      "copyright": [
+        "Copyright (C) 2015-2018 Federico Dossena",
+        "Copyright (C) 2015 Federico Dossena (adolfintel.com)."
+      ],
+      "note": "A continuation of WaifUPnP by Federico Dossena (LGPL-2.1-or-later), whose license notice is in waifupnp/README.md. The LGPL-3.0 builds on the GPL-3.0, whose text is in GPL-3.0.txt."
+    },
+    "io.leangen.geantyref:geantyref": {
+      "version": "1.3.16",
+      "license": "Apache-2.0",
+      "source": "https://github.com/leangen/geantyref.git f2bb0872b97d51c59f704aad6bf5af9edb32ac1b",
+      "files": [
+        "geantyref/LICENSE"
+      ],
+      "copyright": [],
+      "note": ""
+    },
+    "io.netty:netty-codec-haproxy": {
+      "version": "4.2.16.Final",
+      "license": "Apache-2.0",
+      "source": "https://github.com/netty/netty.git 3703d79669ee024f6483c9d8697ac58ba546df33",
+      "files": [
+        "netty/LICENSE.txt",
+        "netty/NOTICE.txt"
+      ],
+      "copyright": [
+        "Copyright 2014 The Netty Project",
+        "Copyright 2016 The Netty Project",
+        "Copyright 2020 The Netty Project",
+        "Copyright 2024 The Netty Project"
+      ],
+      "note": "NOTICE.txt also lists components of other Netty modules, which this jar does not contain."
+    },
+    "javax.inject:javax.inject": {
+      "version": "1",
+      "license": "Apache-2.0",
+      "source": "https://github.com/javax-inject/javax-inject.git 1e4a33307a1a2c5f38dd87e9458591a02b6f2f41",
+      "files": [
+        "javax-inject/LICENSE-2.0.txt"
+      ],
+      "copyright": [
+        "Copyright (C) 2009 The JSR-330 Expert Group"
+      ],
+      "note": "The project has no license file. The Apache License 2.0 text is the one that its POM and source headers refer to."
+    },
+    "me.lucko:spark-api": {
+      "version": "0.1-20240720.200737-2",
+      "license": "MIT",
+      "source": "https://github.com/lucko/spark.git 635800af986351f08dba33aa2e8ec5dd691bbffb",
+      "files": [
+        "spark-api/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) lucko (Luck) <luck@lucko.me>",
+        "Copyright (c) contributors"
+      ],
+      "note": ""
+    },
+    "me.lucko:spark-paper": {
+      "version": "1.10.191",
+      "license": "GPL-3.0-or-later AND MIT AND Apache-2.0 AND BSD-3-Clause AND GPL-3.0-or-later WITH GCC-exception-3.1 AND LicenseRef-HP-SGI-STL",
+      "source": "https://github.com/lucko/spark.git 72969655c9f93562190c0e8dfb6981089d510b83",
+      "files": [
+        "spark/LICENSE.txt",
+        "spark/HEADER.txt",
+        "spark-api/LICENSE.txt",
+        "async-profiler/LICENSE",
+        "asm-9.7/LICENSE.txt",
+        "protobuf-java-4.36.2/LICENSE",
+        "adventure-text-feature-pagination/license.txt",
+        "bytesocks-java-client/LICENSE.txt",
+        "gcc-7.5.0/COPYING.RUNTIME",
+        "gcc-7.5.0/tree.cc"
+      ],
+      "copyright": [
+        "Copyright (c) lucko (Luck) <luck@lucko.me>",
+        "Copyright (c) contributors",
+        "Copyright The async-profiler authors",
+        "Copyright (c) 2000-2011 INRIA, France Telecom",
+        "Copyright 2008 Google Inc.  All rights reserved.",
+        "Copyright (c) 2017-2020 KyoriPowered",
+        "Copyright (c) 1994 Hewlett-Packard Company",
+        "Copyright (c) 1996,1997 Silicon Graphics Computer Systems, Inc."
+      ],
+      "note": "Contains spark-api (MIT) and, relocated under me.lucko.spark.paper.lib: ASM 9.7 (BSD-3-Clause), protobuf-java 4.36.2 (BSD-3-Clause), the Java API of async-profiler 4.5 (Apache-2.0), adventure-text-feature-pagination (MIT) and bytesocks-java-client (MIT). The async-profiler native libraries contain async-profiler 4.5 (Apache-2.0); the Linux ones link libstdc++ and libgcc statically, under the GCC Runtime Library Exception 3.1, and the red-black tree and other STL code of libstdc++ in them carries the permission notices of Hewlett-Packard (1994) and Silicon Graphics (1996, 1997), which gcc-7.5.0/tree.cc contains. spark's TPS calculation is taken from Paper under the MIT license (Paper-MIT.md)."
+    },
+    "net.kyori:adventure-api": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-key": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-logger-slf4j": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-minimessage": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-ansi": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-commons": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-gson": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-json": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-legacy": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:adventure-text-serializer-plain": {
+      "version": "5.2.0",
+      "license": "MIT",
+      "source": "https://github.com/PaperMC/adventure.git 4bcbbd74339547bc061a9cc0a4aecf88f1f1a63c",
+      "files": [
+        "adventure/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2025 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:ansi": {
+      "version": "1.1.1",
+      "license": "MIT",
+      "source": "https://github.com/KyoriPowered/ansi.git 251d81eaad2c615afa26c4f6576537c81063d3a4",
+      "files": [
+        "ansi/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2017-2020 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.kyori:option": {
+      "version": "1.1.0",
+      "license": "MIT",
+      "source": "https://github.com/KyoriPowered/option.git c1f7a76af0882a4bf4466b0c1dc07af15261d775",
+      "files": [
+        "option/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2023 KyoriPowered"
+      ],
+      "note": ""
+    },
+    "net.md-5:bungeecord-chat": {
+      "version": "1.21-R0.2-deprecated+build.21",
+      "license": "LicenseRef-BungeeCord",
+      "source": "https://github.com/SpigotMC/BungeeCord.git 966774373519ed9fed12de395206b8668fbb0d90",
+      "files": [
+        "bungeecord/LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) 2012, md_5. All rights reserved."
+      ],
+      "note": "BungeeCord's license is the BSD 3-Clause License with an additional clause against commercial software hosting services. The jar also contains English language strings of Minecraft (mojang-translations), for which no license was found."
+    },
+    "net.minecrell:terminalconsoleappender": {
+      "version": "1.3.0",
+      "license": "MIT",
+      "source": "https://github.com/Minecrell/TerminalConsoleAppender.git 21a800dfbe641da0d9fd0e83761085162e739263",
+      "files": [
+        "terminalconsoleappender/LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) 2017 Minecrell <https://github.com/Minecrell>"
+      ],
+      "note": ""
+    },
+    "org.codehaus.plexus:plexus-interpolation": {
+      "version": "1.26",
+      "license": "Apache-2.0 AND Apache-1.1 AND MIT",
+      "source": "https://github.com/codehaus-plexus/plexus-interpolation.git 159e6971b0e2db261be1d01deb9149f27f8fb752",
+      "files": [
+        "plexus-interpolation/LICENSE-2.0.txt",
+        "plexus-interpolation/InterpolatorFilterReader.java",
+        "plexus-interpolation/MultiDelimiterInterpolatorFilterReader.java",
+        "plexus-interpolation/Os.java",
+        "plexus-interpolation/StringUtils.java",
+        "plexus-interpolation/OperatingSystemUtils.java"
+      ],
+      "copyright": [
+        "Copyright 2001-2008 Codehaus Foundation.",
+        "Copyright 2014 The Codehaus Foundation.",
+        "Copyright 2014 Codehaus Foundation.",
+        "Copyright 2007 The Codehaus Foundation.",
+        "Copyright 2001-2009 Codehaus Foundation.",
+        "Copyright 2001-2006 Codehaus Foundation.",
+        "Copyright 2001-2004 The Apache Software Foundation.",
+        "Copyright (c) 2002-2003 The Apache Software Foundation.  All rights\nreserved.",
+        "Copyright (c) 2001-2003 The Apache Software Foundation.  All rights\nreserved.",
+        "Copyright (c) 2002 The Apache Software Foundation.  All rights\nreserved.",
+        "Copyright (c) 2004, The Codehaus"
+      ],
+      "note": "The project has no license file; the Apache License 2.0 text is the one its POM refers to. Four source files carry the Apache Software License 1.1 in lines 1-53 of their header comment (InterpolatorFilterReader.java, MultiDelimiterInterpolatorFilterReader.java, Os.java, StringUtils.java) and one the MIT license in lines 3-25 (OperatingSystemUtils.java). These headers are their only license texts, so the files are included whole. As the Apache Software License 1.1 of these files requires: \"This product includes software developed by the Apache Software Foundation (http://www.apache.org/).\" (Os.java) and \"This product includes software developed by the Apache Software Foundation (http://www.codehaus.org/).\" (InterpolatorFilterReader.java, MultiDelimiterInterpolatorFilterReader.java and StringUtils.java)"
+    },
+    "org.codehaus.plexus:plexus-utils": {
+      "version": "3.5.1",
+      "license": "Apache-2.0 AND Apache-1.1 AND xpp AND BSD-2-Clause AND BSD-3-Clause",
+      "source": "https://github.com/codehaus-plexus/plexus-utils.git 8488ff2200964f47114b9dee5604dc3314a2fe8a",
+      "noticesInJar": true,
+      "files": [
+        "plexus-utils/DirectoryScanner.java",
+        "plexus-utils/ExceptionUtils.java",
+        "plexus-utils/Expand.java",
+        "plexus-utils/FileUtils.java",
+        "plexus-utils/IOUtil.java",
+        "plexus-utils/InterpolationFilterReader.java",
+        "plexus-utils/Os.java",
+        "plexus-utils/SelectorUtils.java",
+        "plexus-utils/StringInputStream.java",
+        "plexus-utils/StringUtils.java"
+      ],
+      "copyright": [
+        "Copyright (c) 2000-2002 The Apache Software Foundation. All rights reserved.",
+        "Copyright (c) 2000-2003 The Apache Software Foundation. All rights reserved.",
+        "Copyright (c) 2001 The Apache Software Foundation. All rights reserved.",
+        "Copyright (c) 2001-2003 The Apache Software Foundation. All rights reserved.",
+        "Copyright (c) 2002 The Apache Software Foundation. All rights reserved.",
+        "Copyright (c) 2002-2003 The Apache Software Foundation. All rights reserved."
+      ],
+      "note": "The jar contains the Apache License 2.0, a NOTICE file with the acknowledgments of the Apache Software Foundation, the Indiana University Extreme! Lab, ThoughtWorks, Javolution and Rome, and the licenses of MXParser (Indiana University Extreme! Lab Software License 1.1.1), Javolution (BSD-2-Clause) and CruiseControl (BSD-3-Clause). Ten source files, whose classes are in the jar, carry the Apache Software License 1.1 in their header comment, which is their only license text, so the files are included whole: DirectoryScanner.java, ExceptionUtils.java, Expand.java, FileUtils.java, IOUtil.java, InterpolationFilterReader.java, Os.java, SelectorUtils.java, StringInputStream.java and StringUtils.java. As their license requires: \"This product includes software developed by the Apache Software Foundation (http://www.apache.org/).\" (Os.java) and \"This product includes software developed by the Apache Software Foundation (http://www.codehaus.org/).\" (the other nine)"
+    },
+    "org.eclipse.sisu:org.eclipse.sisu.inject": {
+      "version": "0.9.0.M2",
+      "license": "EPL-1.0 AND BSD-3-Clause",
+      "source": "https://github.com/eclipse/sisu.inject.git 14439cd38535c22cc908eacf99b70daf66d949b3",
+      "files": [
+        "sisu-inject/LICENSE.txt",
+        "sisu-inject/about.html",
+        "asm-9.5/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2010-present Sonatype, Inc.",
+        "Copyright (c) 2010-present Sonatype, Inc. and others",
+        "Copyright (c) 2021-present Sonatype, Inc. and others.",
+        "Copyright (c) 2008-present Stuart McCulloch",
+        "Copyright (c) 2023-present Contributors to the Eclipse Foundation",
+        "Copyright (c) 2000-2011 INRIA, France Telecom"
+      ],
+      "note": "Contains a repackaged copy of ASM 9.5 (BSD-3-Clause). about.html, which the jar contains as well, calls it ASM 9.2."
+    },
+    "org.jline:jline-native": {
+      "version": "4.4.6",
+      "license": "BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND APSL-2.0 AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception",
+      "source": "https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
+      "files": [
+        "jline/LICENSE.txt",
+        "jansi/license.txt",
+        "mingw-w64/COPYING.MinGW-w64-runtime.txt",
+        "gcc-11.2.0/COPYING.RUNTIME",
+        "llvm-compiler-rt-14.0.0/LICENSE.TXT",
+        "freebsd-9.3-csu/crti.S",
+        "apple-csu/dyld_glue.s",
+        "apple-apsl/APPLE_LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) 2002-2023, the original author or authors.",
+        "Copyright (C) 2009-2017 the original author(s).",
+        "Copyright (C) 2023 the original author(s).",
+        "Copyright 2019 the original author or authors.",
+        "Copyright (c) 2025, the original author(s).",
+        "Copyright (c) the original author(s).",
+        "Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project",
+        "Copyright 1996, 1997, 1998, 2000 John D. Polstra.",
+        "Copyright (c) 2006-2008 Apple Inc. All rights reserved.",
+        "Copyright (C) 2009 Free Software Foundation, Inc. <http://fsf.org/>"
+      ],
+      "note": "Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), Apple Csu (APSL-2.0, notice in dyld_glue.s; only in the 32-bit macOS library), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives."
+    },
+    "org.jline:jline-reader": {
+      "version": "3.20.0",
+      "license": "BSD-3-Clause AND Apache-2.0",
+      "source": "https://github.com/jline/jline3.git a3e55d56cbd8d7b9fa74a627af03d5c97c4248d9",
+      "files": [
+        "jline-3.20.0/LICENSE.txt",
+        "jansi/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2002-2018, the original author or authors.",
+        "Copyright (c) 2002-2016, the original author or authors.",
+        "Copyright (c) 2002-2017, the original author or authors.",
+        "Copyright (c) 2002-2019, the original author or authors.",
+        "Copyright (c) 2002-2020, the original author or authors.",
+        "Copyright (c) 2002-2021, the original author or authors."
+      ],
+      "note": "Some files are Apache-2.0-licensed; the Apache License 2.0 text is Jansi's license.txt."
+    },
+    "org.jline:jline-terminal": {
+      "version": "4.4.6",
+      "license": "BSD-3-Clause AND Apache-2.0",
+      "source": "https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
+      "files": [
+        "jline/LICENSE.txt",
+        "jansi/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2002-2023, the original author or authors.",
+        "Copyright (C) 2026 the original author(s).",
+        "Copyright (c) the original author(s).",
+        "Copyright (c) 2002-2025, the original author or authors.",
+        "Copyright (c) 2002-2025, the original author(s).",
+        "Copyright (c) 2025, the original author(s).",
+        "Copyright (c) 2002-2018, the original author or authors.",
+        "Copyright (c) 2002-2016, the original author or authors."
+      ],
+      "note": "Some files are Apache-2.0-licensed (derived from Jansi, Apache Karaf and Apache Harmony); the Apache License 2.0 text is Jansi's license.txt."
+    },
+    "org.jline:jline-terminal-ffm": {
+      "version": "4.4.6",
+      "license": "BSD-3-Clause AND Apache-2.0",
+      "source": "https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
+      "files": [
+        "jline/LICENSE.txt",
+        "jansi/license.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2002-2023, the original author or authors.",
+        "Copyright (C) 2026 the original author(s).",
+        "Copyright (c) the original author(s).",
+        "Copyright (c) 2025, the original author(s)."
+      ],
+      "note": "Some files are Apache-2.0-licensed (derived from Jansi); the Apache License 2.0 text is Jansi's license.txt."
+    },
+    "org.mozilla:rhino": {
+      "version": "1.7.14",
+      "license": "MPL-2.0 AND BSD-3-Clause AND dtoa",
+      "source": "https://github.com/mozilla/rhino.git 5a917b5003e585a19eab2fd009915687fad00199",
+      "noticesInJar": true,
+      "files": [
+        "rhino/DToA.java"
+      ],
+      "copyright": [
+        "Copyright (c) 1991, 2000, 2001 by Lucent Technologies."
+      ],
+      "note": "The jar contains Rhino's license (MPL-2.0) and NOTICE files, which cover the code from Google's V8 (BSD-3-Clause). DToA, Rhino's number conversion code, is David M. Gay's dtoa, whose notice must be included in all copies; DToA.java contains it."
+    },
+    "org.mozilla:rhino-engine": {
+      "version": "1.7.14",
+      "license": "MPL-2.0",
+      "source": "https://github.com/mozilla/rhino.git 5a917b5003e585a19eab2fd009915687fad00199",
+      "noticesInJar": true,
+      "files": [],
+      "copyright": [],
+      "note": "Listed for its source code, which the MPL 2.0 requires recipients to be told about; the jar contains its license and NOTICE files."
+    },
+    "org.mozilla:rhino-runtime": {
+      "version": "1.7.14",
+      "license": "MPL-2.0 AND BSD-3-Clause AND dtoa",
+      "source": "https://github.com/mozilla/rhino.git 5a917b5003e585a19eab2fd009915687fad00199",
+      "noticesInJar": true,
+      "files": [
+        "rhino/DToA.java"
+      ],
+      "copyright": [
+        "Copyright (c) 1991, 2000, 2001 by Lucent Technologies."
+      ],
+      "note": "The jar contains Rhino's license (MPL-2.0) and NOTICE files, which cover the code from Google's V8 (BSD-3-Clause). DToA, Rhino's number conversion code, is David M. Gay's dtoa, whose notice must be included in all copies; DToA.java contains it."
+    },
+    "org.ow2.asm:asm": {
+      "version": "9.9.1",
+      "license": "BSD-3-Clause",
+      "source": "https://gitlab.ow2.org/asm/asm.git 4e6de6cb3dcddb00a2bbf7bbb9ee40f0c15281c5",
+      "files": [
+        "asm/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2000-2011 INRIA, France Telecom"
+      ],
+      "note": ""
+    },
+    "org.ow2.asm:asm-commons": {
+      "version": "9.9.1",
+      "license": "BSD-3-Clause",
+      "source": "https://gitlab.ow2.org/asm/asm.git 4e6de6cb3dcddb00a2bbf7bbb9ee40f0c15281c5",
+      "files": [
+        "asm/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2000-2011 INRIA, France Telecom"
+      ],
+      "note": ""
+    },
+    "org.ow2.asm:asm-tree": {
+      "version": "9.9.1",
+      "license": "BSD-3-Clause",
+      "source": "https://gitlab.ow2.org/asm/asm.git 4e6de6cb3dcddb00a2bbf7bbb9ee40f0c15281c5",
+      "files": [
+        "asm/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2000-2011 INRIA, France Telecom"
+      ],
+      "note": ""
+    },
+    "org.slf4j:jcl-over-slf4j": {
+      "version": "1.7.36",
+      "license": "Apache-2.0",
+      "source": "https://github.com/qos-ch/slf4j.git e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
+      "files": [
+        "jcl-over-slf4j/LICENSE.txt",
+        "commons-logging/NOTICE.txt"
+      ],
+      "copyright": [
+        "Copyright 2001-2004 The Apache Software Foundation."
+      ],
+      "note": "Derived from the sources of Apache Commons Logging 1.0.4 (Apache-2.0), whose NOTICE file is commons-logging/NOTICE.txt; the module's own license file applies, not the MIT license of SLF4J."
+    },
+    "org.spongepowered:configurate-core": {
+      "version": "4.2.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/SpongePowered/Configurate.git 8587250162d2c1bc453b731559e096b583038b25",
+      "files": [
+        "configurate/LICENSE",
+        "configurate/LICENSE_HEADER"
+      ],
+      "copyright": [
+        "Copyright (C) zml and Configurate contributors"
+      ],
+      "note": ""
+    },
+    "org.spongepowered:configurate-yaml": {
+      "version": "4.2.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/SpongePowered/Configurate.git 8587250162d2c1bc453b731559e096b583038b25",
+      "files": [
+        "configurate/LICENSE",
+        "configurate/LICENSE_HEADER",
+        "snakeyaml/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (C) zml and Configurate contributors",
+        "Copyright (c) 2008, SnakeYAML",
+        "Copyright (c) 2008 Google Inc."
+      ],
+      "note": "Contains a relocated and patched fork of SnakeYAML (Apache-2.0)."
+    },
+    "org.xerial:sqlite-jdbc": {
+      "version": "3.49.1.0",
+      "license": "Apache-2.0 AND BSD-2-Clause AND blessing AND ZPL-2.1",
+      "source": "https://github.com/xerial/sqlite-jdbc.git b9983e601eee9bc412cf76f96aa0adb4e4a49932",
+      "noticesInJar": true,
+      "files": [
+        "sqlite-jdbc/NOTICE",
+        "freebsd-9.3-csu/crti.S",
+        "freebsd-11.4-csu/crti.S",
+        "android-bionic/crtbegin_so.c",
+        "android-bionic/crtbrand.S",
+        "android-bionic/crtend_so.S",
+        "mingw-w64/COPYING.MinGW-w64-runtime.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2006, David Crawshaw. All rights reserved.",
+        "Copyright 1996, 1997, 1998, 2000 John D. Polstra.",
+        "Copyright 2001 David E. O'Brien",
+        "Copyright 2014 The FreeBSD Foundation",
+        "Copyright (C) 2012 The Android Open Source Project",
+        "Copyright (C) 2013 The Android Open Source Project",
+        "Copyright (C) 2015 The Android Open Source Project",
+        "Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project"
+      ],
+      "note": "The jar contains sqlite-jdbc's Apache License 2.0 and David Crawshaw's BSD license (LICENSE.zentus), but not the project's NOTICE file. The native libraries contain SQLite, which is in the public domain, and startup and runtime code of their toolchains, linked statically: FreeBSD csu (BSD-2-Clause; 9.3 in the x86 and x86_64 libraries, notice in freebsd-9.3-csu/crti.S, and 11.4 in the aarch64 library, notice in freebsd-11.4-csu/crti.S), Android's bionic crt files (BSD-2-Clause, in the Android libraries), the mingw-w64 runtime (ZPL-2.1, in the Windows libraries), and the crt files of GCC, glibc and musl, whose runtime library exceptions and waiver require no notice."
+    },
+    "org.yaml:snakeyaml": {
+      "version": "2.2",
+      "license": "Apache-2.0",
+      "source": "https://bitbucket.org/snakeyaml/snakeyaml.git a34989252e6f59e36a3aaf788a903b7a37a73d33",
+      "files": [
+        "snakeyaml/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) 2008, SnakeYAML",
+        "Copyright (c) 2008 Google Inc.",
+        "Copyright 2003-2010 Christian d'Heureuse, Inventec Informatik AG, Zurich, Switzerland"
+      ],
+      "note": "Contains code from Google's gdata library (Apache-2.0) and Base64Coder by Christian d'Heureuse, used under its Apache-2.0 option."
+    }
+  },
+  "embedded": {
+    "Brigadier": {
+      "in": "the server jar",
+      "version": "1.3.11",
+      "license": "MIT",
+      "source": "https://github.com/Mojang/brigadier.git 9ba4f13c0fe82b07c08c2dc2d8043f075ffd0d98",
+      "files": [
+        "brigadier/LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) Microsoft Corporation. All rights reserved."
+      ],
+      "note": "Paper patches seven source files of Brigadier, the command library of Minecraft 26.3, which uses version 1.3.11, and compiles them into the server jar. Mojang publishes Brigadier's source code under the MIT license without tags for its versions, so the license file is taken from the latest commit (version line 1.3). Brigadier's jar, which Paperclip takes from Mojang's server jar, contains no license file."
+    },
+    "DataFixerUpper": {
+      "in": "the server jar",
+      "version": "10.0.21",
+      "license": "MIT",
+      "source": "https://github.com/Mojang/DataFixerUpper.git b6c712effbac69b119439e47f9ed1025c13b7a3f",
+      "files": [
+        "datafixerupper/LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) Microsoft Corporation. All rights reserved."
+      ],
+      "note": "Paper patches three source files of DataFixerUpper, a library of Minecraft 26.3, which uses version 10.0.21, and compiles them into the server jar. Mojang publishes DataFixerUpper's source code under the MIT license without tags for its versions, so the license file is taken from the latest commit (version line 11.0). DataFixerUpper's jar, which Paperclip takes from Mojang's server jar, contains no license file."
+    },
+    "JLine": {
+      "in": "the server jar",
+      "version": "4.4.6",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
+      "files": [
+        "jline/LICENSE.txt"
+      ],
+      "copyright": [
+        "Copyright (c) the original author(s)."
+      ],
+      "note": "Paper patches JLine's ShutdownHooks and compiles it into the server jar, where it replaces the class of jline-terminal 4.4.6."
+    },
+    "Apache Log4j Core": {
+      "in": "the server jar",
+      "version": "2.26.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/apache/logging-log4j2.git c1ad2a66cc90e643ec319b9e131764c9710bebc5",
+      "files": [
+        "log4j-core/LICENSE",
+        "log4j-core/NOTICE"
+      ],
+      "copyright": [
+        "Copyright 1999-2012 Apache Software Foundation"
+      ],
+      "note": "Paper's feature patch \"Add explicit flush support to Log4j AsyncAppender\" compiles modified copies of Log4j's AsyncAppender and AsyncAppenderEventDispatcher into the server jar. Log4j itself is one of the libraries that Paperclip takes from Mojang's server jar."
+    },
+    "Alternate Current": {
+      "in": "the server jar",
+      "version": "",
+      "license": "MIT",
+      "source": "https://github.com/SpaceWalkerRS/alternate-current.git d93fd521f6cd4c0f464fb45e36bb349896580dd2",
+      "files": [
+        "alternate-current/LICENSE"
+      ],
+      "copyright": [
+        "Copyright (c) 2022 Space Walker"
+      ],
+      "note": "Paper's feature patch \"Add Alternate Current redstone implementation\", written by Alternate Current's author, compiles its redstone implementation (package alternate.current.wire) into the server jar and records that it was originally licensed under the MIT license."
+    },
+    "Apache Commons Compress": {
+      "in": "the Paperclip jar",
+      "version": "1.5",
+      "license": "Apache-2.0",
+      "source": "https://github.com/apache/commons-compress.git 163c4eee17c041cb7c1ccfedd983816038cc1eca",
+      "files": [
+        "commons-compress-1.5/NOTICE.txt"
+      ],
+      "copyright": [
+        "Copyright 2002-2013 The Apache Software Foundation"
+      ],
+      "note": "Paperclip contains Commons Compress 1.5, relocated. Paperclip's build adds its license text to the Paperclip jar as commons-compress-LICENSE.txt, but not its NOTICE file."
+    }
+  }
+}

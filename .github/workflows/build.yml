@@ -1,0 +1,150 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Apply patches, build and test
+    # Branches of this repository are built on push; pull requests only need their own build when they come from a fork
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      # paperweight applies patches with git, which requires an identity.
+      # These commits only exist inside the CI workspace and are never pushed.
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Use the commit time as the build time so that the jar manifest is reproducible.
+      - name: Set reproducible build time
+        run: echo "BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Apply patches
+        run: ./gradlew applyAllPatches --stacktrace
+
+      # Rebuilding the patches from the patched sources must reproduce the committed patches exactly. The two patch
+      # sets are rebuilt in separate Gradle runs because paperweight's task graph rejects running them together, and
+      # one task at a time because each rebuild task stages its patches in this repository with git, and git allows
+      # only one process to change the index at a time.
+      - name: Check that the patches are up to date
+        run: |
+          ./gradlew rebuildPurpurPatches --max-workers=1 --stacktrace
+          ./gradlew :cubiq-server:rebuildAllServerPatches --max-workers=1 --stacktrace
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Rebuilding the patches changed them. Rebuild the patches locally and commit the result."
+            git status --short
+            git diff
+            exit 1
+          fi
+
+      - name: Build and test
+        run: ./gradlew build --stacktrace
+
+      - name: Create Paperclip jar
+        run: ./gradlew createPaperclipJar --stacktrace
+
+      # Starts real test servers. The project maintainers accept the Minecraft EULA
+      # (https://aka.ms/MinecraftEULA) for these throwaway servers; the scripts pass -Dcom.mojang.eula.agree=true.
+      # The second start covers the case where all configuration files already exist.
+      - name: Smoke test (first start)
+        env:
+          SMOKE_EXPECT_CLEAN_CONFIG: "true"
+          SMOKE_EXPECT_NO_WATCHDOG_REPORTS: "true"
+        run: scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      - name: Smoke test (second start)
+        env:
+          SMOKE_EXPECT_CLEAN_CONFIG: "true"
+          SMOKE_EXPECT_NO_WATCHDOG_REPORTS: "true"
+        run: scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # A mistake in each kind of configuration file, which the configuration check must report; runs on a copy of the
+      # server directory
+      - name: Smoke test (configuration check)
+        run: scripts/config-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # A test plugin with slow lifecycle steps, which the lifecycle watchdog must report
+      - name: Smoke test (lifecycle diagnostics)
+        run: scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # A test plugin that blocks the server thread on a lock, which the watchdog must report without spinning
+      - name: Smoke test (watchdog)
+        run: scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # The jar must contain the license texts and no Minecraft classes outside the server patch; the server jar that
+      # Paperclip created in the smoke tests is checked as well
+      - name: Check the distribution
+        run: scripts/check-distribution.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      # Every library in the jar must have a license that scripts/library-licenses.json covers and license notices, in
+      # its jar or in licenses/third-party/, and docs/LIBRARIES.md and licenses/THIRD-PARTY-NOTICES.md must be up to date
+      - name: Check the licenses of the bundled libraries
+        run: |
+          scripts/library-licenses.py cubiq-server/build/libs/cubiq-paperclip-*.jar > "$RUNNER_TEMP/LIBRARIES.md"
+          if ! diff -u docs/LIBRARIES.md "$RUNNER_TEMP/LIBRARIES.md"; then
+            echo "::error::docs/LIBRARIES.md is out of date. Regenerate it with scripts/library-licenses.py and commit it."
+            exit 1
+          fi
+          scripts/library-licenses.py --notices > "$RUNNER_TEMP/THIRD-PARTY-NOTICES.md"
+          if ! diff -u licenses/THIRD-PARTY-NOTICES.md "$RUNNER_TEMP/THIRD-PARTY-NOTICES.md"; then
+            echo "::error::licenses/THIRD-PARTY-NOTICES.md is out of date. Regenerate it with scripts/library-licenses.py --notices and commit it."
+            exit 1
+          fi
+
+      # Building the jars again from the same commit must produce an identical server jar and Paperclip jar.
+      # --rerun-tasks runs every task again, including the compilation, and --no-build-cache keeps Gradle from reusing
+      # outputs of the first build. The bundler jar is an intermediate file whose entries carry the build time.
+      - name: Check that the jars are reproducible
+        run: |
+          jars="cubiq-server/build/libs/cubiq-server-*.jar cubiq-server/build/libs/cubiq-paperclip-*.jar"
+          sha256sum $jars | tee "$RUNNER_TEMP/first-build.sha256"
+          ./gradlew :cubiq-server:createPaperclipJar --rerun-tasks --no-build-cache --stacktrace
+          sha256sum $jars | tee "$RUNNER_TEMP/second-build.sha256"
+          if ! diff "$RUNNER_TEMP/first-build.sha256" "$RUNNER_TEMP/second-build.sha256"; then
+            echo "::error::Two builds of the same commit produced different jars"
+            exit 1
+          fi
+          jar=$(ls cubiq-server/build/libs/cubiq-paperclip-*.jar)
+          echo "SHA-256 of $(basename "$jar"): \`$(sha256sum "$jar" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload smoke test logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-test-logs-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/server/smoke-test.log
+            ${{ runner.temp }}/server/logs/
+            ${{ runner.temp }}/server-config-check/smoke-test.log
+          if-no-files-found: ignore
+
+      - name: Upload server jar
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cubiq-${{ github.sha }}
+          path: cubiq-server/build/libs/cubiq-paperclip-*.jar
+          if-no-files-found: error

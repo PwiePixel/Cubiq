@@ -1,0 +1,15 @@
+--- a/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java
++++ b/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java
+@@ -24,7 +_,11 @@
+             final ConfigurationNode node = root.node("misc", "enable-nether");
+             node.set(raw.equals("true"));
+             server.settings.update((config) -> {
+-                final Properties newProps = new Properties(config.properties);
++                // Cubiq start - Keep the other settings of server.properties - as defaults of a new Properties object,
++                // which Properties.store does not write, they were lost, including unknown settings and Paper's rcon.ip
++                final Properties newProps = new Properties();
++                newProps.putAll(config.properties);
++                // Cubiq end - Keep the other settings of server.properties
+                 newProps.remove("allow-nether");
+                 return config.reload(server.registryAccess(), newProps, server.options);
+             });

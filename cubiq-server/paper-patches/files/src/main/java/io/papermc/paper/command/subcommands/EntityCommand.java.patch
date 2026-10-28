@@ -1,0 +1,11 @@
+--- a/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java
++++ b/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java
+@@ -111,7 +_,7 @@
+ 
+                 MutablePair<Integer, Map<ChunkPos, Integer>> info = list.computeIfAbsent(key, k -> MutablePair.of(0, Maps.newHashMap()));
+                 ChunkPos chunk = e.chunkPosition();
+-                info.left++;
++                info.left = info.left + 1; // Cubiq - Reproducible builds - javac names the temporary variables of info.left++ after hash codes, which differ between builds
+                 info.right.put(chunk, info.right.getOrDefault(chunk, 0) + 1);
+                 if (!level.isPositionEntityTicking(e.blockPosition()) || (e instanceof net.minecraft.world.entity.Marker && !level.paperConfig().entities.markers.tick)) { // Paper - Configurable marker ticking
+                     nonEntityTicking.merge(key, 1, Integer::sum);

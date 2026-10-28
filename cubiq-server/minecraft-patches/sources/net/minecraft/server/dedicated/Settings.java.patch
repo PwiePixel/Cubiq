@@ -1,0 +1,45 @@
+--- a/net/minecraft/server/dedicated/Settings.java
++++ b/net/minecraft/server/dedicated/Settings.java
+@@ -26,6 +_,7 @@
+ public abstract class Settings<T extends Settings<T>> {
+     private static final Logger LOGGER = LogUtils.getLogger();
+     public final Properties properties;
++    public final studio.cubiq.configcheck.PropertiesUsage usage = new studio.cubiq.configcheck.PropertiesUsage(); // Cubiq - Configuration check
+     private static final boolean skipComments = Boolean.getBoolean("Paper.skipServerPropertiesComments"); // Paper - allow skipping server.properties comments
+     // CraftBukkit start
+     private joptsimple.OptionSet options = null;
+@@ -147,6 +_,7 @@
+     }
+ 
+     public @Nullable String getStringRaw(final String key) {
++        this.usage.read(key); // Cubiq - Configuration check
+         return (String)this.getOverride(key, this.properties.getProperty(key)); // CraftBukkit
+     }
+ 
+@@ -157,7 +_,7 @@
+         }
+ 
+         this.properties.remove(key);
+-        return deserializer.apply(value);
++        return this.usage.parsed(key, value, deserializer.apply(value), null); // Cubiq - Configuration check
+     }
+ 
+     protected <V> V get(final String key, final Function<String, @Nullable V> deserializer, final Function<V, String> serializer, final V defaultValue) {
+@@ -172,7 +_,7 @@
+     private <V> V get0(final String key, final Function<String, @Nullable V> deserializer, final Function<V, String> serializer, final V defaultValue) {
+         // CraftBukkit end
+         String value = this.getStringRaw(key);
+-        V result = MoreObjects.firstNonNull(value != null ? deserializer.apply(value) : null, defaultValue);
++        V result = MoreObjects.firstNonNull(value != null ? this.usage.parsed(key, value, deserializer.apply(value), defaultValue) : null, defaultValue); // Cubiq - Configuration check
+         this.properties.put(key, serializer.apply(result));
+         return result;
+     }
+@@ -181,7 +_,7 @@
+         final String key, final Function<String, @Nullable V> deserializer, final Function<V, String> serializer, final V defaultValue
+     ) {
+         String value = this.getStringRaw(key);
+-        V result = MoreObjects.firstNonNull(value != null ? deserializer.apply(value) : null, defaultValue);
++        V result = MoreObjects.firstNonNull(value != null ? this.usage.parsed(key, value, deserializer.apply(value), defaultValue) : null, defaultValue); // Cubiq - Configuration check
+         this.properties.put(key, serializer.apply(result));
+         return new Settings<T>.MutableValue<>(key, result, serializer);
+     }

@@ -1,0 +1,37 @@
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -415,7 +_,7 @@
+             this.getLogger().info("Console input is disabled due to --noconsole command argument");
+         }
+ 
+-        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
++        this.configuration = studio.cubiq.configcheck.TrackedYamlConfiguration.loadConfiguration("bukkit.yml", this.getConfigFile()); // Cubiq - Configuration check
+         this.configuration.options().copyDefaults(true);
+         YamlConfiguration configurationDefaults = YamlConfiguration.loadConfiguration(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("configurations/bukkit.yml"), StandardCharsets.UTF_8));
+         this.configuration.setDefaults(configurationDefaults);
+@@ -943,8 +_,16 @@
+         }
+     }
+ 
++    // Cubiq start - Lifecycle diagnostics
+     @Override
+     public void reload() {
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.reloading()) {
++            this.reload0();
++        }
++    }
++
++    private void reload0() {
++        // Cubiq end - Lifecycle diagnostics
+         // Paper start - lifecycle events
+         if (io.papermc.paper.plugin.lifecycle.event.LifecycleEventRunner.INSTANCE.blocksPluginReloading()) {
+             throw new IllegalStateException(org.bukkit.command.defaults.ReloadCommand.RELOADING_DISABLED_MESSAGE);
+@@ -952,7 +_,7 @@
+         // Paper end - lifecycle events
+         org.spigotmc.WatchdogThread.hasStarted = false; // Paper - Disable watchdog early timeout on reload
+         this.reloadCount++;
+-        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
++        this.configuration = studio.cubiq.configcheck.TrackedYamlConfiguration.loadConfiguration("bukkit.yml", this.getConfigFile()); // Cubiq - Configuration check
+         this.commandsConfiguration = YamlConfiguration.loadConfiguration(this.getCommandsConfigFile());
+ 
+         this.console.settings = new DedicatedServerSettings(this.console.options);

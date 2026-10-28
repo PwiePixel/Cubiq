@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+
+*.jar binary
+# Copies of license texts must stay byte-identical to their sources (scripts/library-notices.json)
+licenses/third-party/** -text
+*.png binary
