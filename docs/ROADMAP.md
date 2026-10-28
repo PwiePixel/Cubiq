@@ -20,10 +20,12 @@ and pushed.
       source archive with the exact upstream commits for each release
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
       Paperclip jar (checked in CI)
-- [ ] Reproducible across machines: compare a local build with the CI build of the same commit and document what has
-      to match
+- [x] Reproducible across machines: builds of two commits on another machine, with a different JDK vendor and update
+      and a different operating system, produced Paperclip jars identical to those of CI; what has to match is
+      documented in [CONTRIBUTING.md](CONTRIBUTING.md)
 - [x] Add Cubiq's license files to the Paperclip jar itself, not only to the server jar that Paperclip creates
-- [x] CI checks on the distributed jar: no Minecraft classes in the Paperclip jar, license files present
+- [x] CI checks on the distributed jar: no Minecraft classes as entries of the Paperclip jar, only the server patch;
+      license files present
 - [x] CI check that rebuilding the patches from the patched sources changes nothing, so that the committed patches
       always match what was built
 - [x] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check

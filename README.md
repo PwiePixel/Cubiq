@@ -55,7 +55,8 @@ Cubiq is put together.
   ([THIRD-PARTY-NOTICES.md](licenses/THIRD-PARTY-NOTICES.md)), and [LIBRARIES.md](docs/LIBRARIES.md) lists the bundled
   libraries with their licenses, checked in CI.
 - Builds are reproducible: two builds of the same commit in the same environment produce an identical server jar and
-  Paperclip jar, which CI checks.
+  Paperclip jar, which CI checks, and builds on another machine, with a different JDK and operating system, produced
+  the same Paperclip jar as CI.
 
 ## Building
 

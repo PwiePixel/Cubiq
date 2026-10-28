@@ -197,9 +197,10 @@ When distributing a Cubiq server jar (for example as a release or CI artifact):
   (`purpurCommit` in `gradle.properties`, and the Paper commit pinned by that Purpur commit). On
   every push, CI builds the jars a second time without reusing any build output, checks that the
   server jar and the Paperclip jar are identical to the first build and reports the SHA-256 of the
-  Paperclip jar. Whether a build on another machine produces the same jar has not been verified
-  yet. Source archives and a written source offer for releases are not set up yet; they are part of
-  the release process on the roadmap.
+  Paperclip jar. Builds of two commits on another machine, with a different JDK and operating system,
+  produced the same Paperclip jar as CI when they used the same branch name and build time
+  (see [CONTRIBUTING.md](CONTRIBUTING.md)). Source archives and a written source offer for releases are
+  not set up yet; they are part of the release process on the roadmap.
 - **Modified files are marked.** Cubiq's changes to upstream files are marked with `// Cubiq`
   comments and are kept as patches, which documents what was changed.
 - **The Apache 2.0 `NOTICE` must be kept.** Derivative works of Cubiq must include the attribution

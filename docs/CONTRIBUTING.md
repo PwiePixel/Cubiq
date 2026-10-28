@@ -197,9 +197,23 @@ identical files, which CI checks on every push. Two things break this:
   `./gradlew createPaperclipJar --rerun-tasks --no-build-cache`.
 
 The manifest of the server jar records the build time, the branch and the build number. Local builds use the epoch as
-build time, CI uses the commit time (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). A local build can
-therefore only match a CI build with the same JDK build, the same branch name, `BUILD_STARTED_AT` set as in CI and
-`BUILD_NUMBER` unset. Such a comparison has not been done yet.
+build time, CI uses the commit time (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). To build a commit the way
+CI does, check it out on a branch with the same name as in CI, leave `BUILD_NUMBER` unset, and build it in a fresh
+clone:
+
+```
+export BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)
+./gradlew applyAllPatches
+./gradlew createPaperclipJar --no-build-cache
+sha256sum cubiq-server/build/libs/cubiq-paperclip-*.jar
+```
+
+The SHA-256 must be the one that the summary of the CI run of that commit shows. This was checked for two commits,
+45f6cb6 and 05279aa: builds in a fresh clone on another machine, with Amazon Corretto 25.0.5 on Ubuntu 24.04, produced
+Paperclip jars identical to those of CI, which used Eclipse Temurin 25.0.4 and 25.0.5 on Ubuntu 26.04. The directory of
+the clone and the Maven repository the dependencies came from (Maven Central or a mirror of it) differed as well. What
+has to match is the commit, the branch name, `BUILD_STARTED_AT` and `BUILD_NUMBER`. A JDK other than version 25 could
+compile classes differently, which has not been tried.
 
 Running a server locally (for example with `./gradlew :cubiq-server:runDevServer` or by starting the
 Paperclip jar) requires accepting the [Minecraft EULA](https://aka.ms/MinecraftEULA). Upstream's run
