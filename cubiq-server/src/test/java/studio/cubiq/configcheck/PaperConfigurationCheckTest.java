@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.spongepowered.configurate.BasicConfigurationNode;
@@ -30,6 +31,7 @@ class PaperConfigurationCheckTest {
     }
 
     @BeforeEach
+    @AfterEach
     void reset() {
         ConfigurationCheck.resetForTests();
     }
@@ -110,7 +112,7 @@ class PaperConfigurationCheckTest {
     void filesInTheServerDirectoryAreNamedRelativeToIt() {
         assertEquals(
             Path.of("config", "paper-global.yml").toString(),
-            PaperConfigurationCheck.displayName(Path.of("config", "paper-global.yml").toAbsolutePath())
+            CheckedFile.displayName(Path.of("config", "paper-global.yml").toAbsolutePath())
         );
     }
 
@@ -121,10 +123,25 @@ class PaperConfigurationCheckTest {
         PaperConfigurationCheck.loaded(Path.of(FILE), file, new TypeToken<Map<String, Integer>>() {}.getType(), Map.of("view-distance", 1));
 
         assertEquals(
-            List.of(new PaperConfigurationCheck.Result(FILE, List.of(ConfigurationFinding.unknownSetting(FILE, "colour", null)))),
+            List.of(new CheckedFile(FILE, List.of(ConfigurationFinding.unknownSetting(FILE, "colour", null)))),
             PaperConfigurationCheck.drain()
         );
         assertEquals(List.of(), PaperConfigurationCheck.drain(), "drained");
+    }
+
+    @Test
+    void aFileThatIsLoadedAgainBeforeTheCheckIsReportedOnce() throws SerializationException {
+        // For example when a plugin runs /reload in a task before the check
+        final ConfigurationNode file = node(Map.of("view-distance", 1, "colour", 2));
+        final Type type = new TypeToken<Map<String, Integer>>() {}.getType();
+
+        PaperConfigurationCheck.loaded(Path.of(FILE), file, type, Map.of("view-distance", 1));
+        PaperConfigurationCheck.loaded(Path.of(FILE), file, type, Map.of("view-distance", 1));
+
+        assertEquals(
+            List.of(new CheckedFile(FILE, List.of(ConfigurationFinding.unknownSetting(FILE, "colour", null)))),
+            PaperConfigurationCheck.drain()
+        );
     }
 
     @Test
@@ -160,7 +177,7 @@ class PaperConfigurationCheckTest {
 
         PaperConfigurationCheck.loaded(Path.of(FILE), file, Unserializable.class, new Unserializable());
 
-        final List<PaperConfigurationCheck.Result> results = PaperConfigurationCheck.drain();
+        final List<CheckedFile> results = PaperConfigurationCheck.drain();
         assertEquals(1, results.size());
         assertNull(results.getFirst().findings());
     }

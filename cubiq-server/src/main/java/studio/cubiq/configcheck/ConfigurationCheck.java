@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jspecify.annotations.NullMarked;
@@ -17,8 +18,9 @@ import org.slf4j.Logger;
 import studio.cubiq.Cubiq;
 
 /**
- * Reports settings in {@code bukkit.yml}, {@code spigot.yml} and {@code purpur.yml} that have no effect: unknown
- * (usually misspelled) settings and values of the wrong type.
+ * Reports settings in {@code server.properties}, {@code bukkit.yml}, {@code spigot.yml}, {@code purpur.yml} and Paper's
+ * configuration files that do not work as written: unknown (usually misspelled) settings, settings that were replaced
+ * and values of the wrong type.
  *
  * <p>The check runs once the server has started, when the configurations of all worlds have been read. It only
  * logs problems and never changes a file. Set the system property {@value #ENABLED_PROPERTY} to {@code false} to
@@ -34,6 +36,8 @@ public final class ConfigurationCheck {
     private static final ConfigurationChecker.Scope WORLD_SETTINGS = new ConfigurationChecker.Scope("world-settings", "default");
     private static final ConfigurationChecker.Scope BUKKIT_WORLDS = new ConfigurationChecker.Scope("worlds", "*");
     private static final Map<String, TrackedYamlConfiguration> CONFIGURATIONS = new ConcurrentHashMap<>();
+    /** How long checking the files that were checked when they were loaded took, for the report of the check. */
+    private static final AtomicLong CHECK_NANOS = new AtomicLong();
 
     /**
      * Whether the check is still going to run. Configurations only record their usage until then, so that nothing
@@ -72,11 +76,22 @@ public final class ConfigurationCheck {
     }
 
     /**
+     * Adds the time it took to check a file when it was loaded to the time of the check.
+     *
+     * @param nanos the time in nanoseconds
+     */
+    static void addCheckTime(final long nanos) {
+        CHECK_NANOS.addAndGet(nanos);
+    }
+
+    /**
      * Restores the state before the server started, so that tests can run the check more than once.
      */
     static void resetForTests() {
         pending = isEnabled();
         CONFIGURATIONS.clear();
+        CHECK_NANOS.set(0L);
+        ServerPropertiesCheck.resetForTests();
         PaperConfigurationCheck.resetForTests();
     }
 
@@ -104,6 +119,8 @@ public final class ConfigurationCheck {
             configurations.sort(Comparator.comparing(TrackedYamlConfiguration::name));
             final List<ConfigurationFinding> findings = new ArrayList<>();
             final List<String> checked = new ArrayList<>();
+            // server.properties was checked when Minecraft loaded it
+            add(ServerPropertiesCheck.drain(), findings, checked);
             for (final TrackedYamlConfiguration configuration : configurations) {
                 final File file = configuration.file();
                 if (file == null || !file.isFile()) {
@@ -118,16 +135,9 @@ public final class ConfigurationCheck {
                 }
             }
             // Paper's files were checked when Paper loaded them
-            for (final PaperConfigurationCheck.Result result : PaperConfigurationCheck.drain()) {
-                if (result.findings() == null) {
-                    LOGGER.warn("Configuration check: could not check {}", result.file());
-                } else {
-                    findings.addAll(result.findings());
-                    checked.add(result.file());
-                }
-            }
-            // Including the time it took to check Paper's files while they were loaded
-            final long elapsedMillis = (System.nanoTime() - start + PaperConfigurationCheck.drainCheckNanos()) / 1_000_000L;
+            add(PaperConfigurationCheck.drain(), findings, checked);
+            // Including the time it took to check files while they were loaded
+            final long elapsedMillis = (System.nanoTime() - start + CHECK_NANOS.getAndSet(0L)) / 1_000_000L;
             for (final String line : report(checked, findings, elapsedMillis)) {
                 if (findings.isEmpty()) {
                     LOGGER.info(line);
@@ -140,6 +150,17 @@ public final class ConfigurationCheck {
             LOGGER.warn("The configuration check failed", ex);
         } finally {
             configurations.forEach(TrackedYamlConfiguration::releaseUsage);
+        }
+    }
+
+    private static void add(final List<CheckedFile> results, final List<ConfigurationFinding> findings, final List<String> checked) {
+        for (final CheckedFile result : results) {
+            if (result.findings() == null) {
+                LOGGER.warn("Configuration check: could not check {}", result.file());
+            } else {
+                findings.addAll(result.findings());
+                checked.add(result.file());
+            }
         }
     }
 
@@ -184,7 +205,7 @@ public final class ConfigurationCheck {
             return lines;
         }
         lines.add("Configuration check: found " + findings.size() + (findings.size() == 1 ? " problem" : " problems")
-            + " in " + files + ". The following settings have no effect:");
+            + " in " + files + ". The following settings do not work as written:");
         for (int i = 0; i < findings.size() && i < MAX_LOGGED_FINDINGS; i++) {
             final ConfigurationFinding finding = findings.get(i);
             lines.add("  " + finding.file() + ": " + finding.message());

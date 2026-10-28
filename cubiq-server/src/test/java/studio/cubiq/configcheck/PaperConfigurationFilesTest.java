@@ -45,7 +45,7 @@ class PaperConfigurationFilesTest {
     }
 
     private static String name(final File file) {
-        return PaperConfigurationCheck.displayName(file.toPath());
+        return CheckedFile.displayName(file.toPath());
     }
 
     private static void edit(final File file, final String path, final Object value) throws IOException, InvalidConfigurationException {
@@ -65,7 +65,7 @@ class PaperConfigurationFilesTest {
     /**
      * Loads Paper's configuration files like the server does when it starts, and returns the results of the check.
      */
-    private List<PaperConfigurationCheck.Result> start() throws IOException {
+    private List<CheckedFile> start() throws IOException {
         ConfigurationCheck.resetForTests();
         final PaperConfigurations configurations = new PaperConfigurations(this.directory.resolve("config"));
         configurations.initializeGlobalConfiguration(RegistryHelper.registryAccess());
@@ -80,8 +80,8 @@ class PaperConfigurationFilesTest {
         return PaperConfigurationCheck.drain();
     }
 
-    private static List<PaperConfigurationCheck.Result> clean(final File... files) {
-        return Arrays.stream(files).map(file -> new PaperConfigurationCheck.Result(name(file), List.of())).toList();
+    private static List<CheckedFile> clean(final File... files) {
+        return Arrays.stream(files).map(file -> new CheckedFile(name(file), List.of())).toList();
     }
 
     @Test
@@ -98,16 +98,16 @@ class PaperConfigurationFilesTest {
         edit(this.worldDefaultsFile(), "entities.spawning.spawn-limits.monsters", 10);
         edit(this.worldFile(), "chunks.auto-save-intervall", 6000);
 
-        final List<PaperConfigurationCheck.Result> results = this.start();
+        final List<CheckedFile> results = this.start();
 
         assertEquals(List.of(
-            new PaperConfigurationCheck.Result(name(this.globalFile()), List.of(ConfigurationFinding.unknownSetting(
+            new CheckedFile(name(this.globalFile()), List.of(ConfigurationFinding.unknownSetting(
                 name(this.globalFile()), "chunk-loading-basic.player-max-chunk-load-rat", "chunk-loading-basic.player-max-chunk-load-rate"
             ))),
-            new PaperConfigurationCheck.Result(name(this.worldDefaultsFile()), List.of(ConfigurationFinding.unknownSetting(
+            new CheckedFile(name(this.worldDefaultsFile()), List.of(ConfigurationFinding.unknownSetting(
                 name(this.worldDefaultsFile()), "entities.spawning.spawn-limits.monsters", "entities.spawning.spawn-limits.monster"
             ))),
-            new PaperConfigurationCheck.Result(name(this.worldFile()), List.of(ConfigurationFinding.unknownSetting(
+            new CheckedFile(name(this.worldFile()), List.of(ConfigurationFinding.unknownSetting(
                 name(this.worldFile()), "chunks.auto-save-intervall", "chunks.auto-save-interval"
             )))
         ), results);

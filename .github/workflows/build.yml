@@ -82,6 +82,11 @@ jobs:
           SMOKE_EXPECT_NO_WATCHDOG_REPORTS: "true"
         run: scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
 
+      # A mistake in each kind of configuration file, which the configuration check must report; runs on a copy of the
+      # server directory
+      - name: Smoke test (configuration check)
+        run: scripts/config-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
       # A test plugin with slow lifecycle steps, which the lifecycle watchdog must report
       - name: Smoke test (lifecycle diagnostics)
         run: scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
@@ -129,6 +134,7 @@ jobs:
           path: |
             ${{ runner.temp }}/server/smoke-test.log
             ${{ runner.temp }}/server/logs/
+            ${{ runner.temp }}/server-config-check/smoke-test.log
           if-no-files-found: ignore
 
       - name: Upload server jar

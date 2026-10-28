@@ -47,9 +47,9 @@ This page records what has been verified, what is inherited unchanged, and where
   required API.
 - **`Bukkit.getTPS()` returns four values** (the averages of the last 5 seconds, 1, 5 and 15 minutes), as on
   Purpur, instead of Paper's three (1, 5 and 15 minutes). `getTPS()[0]` is therefore the 5-second average.
-- **Plugins that read `bukkit.yml`, `spigot.yml` or `purpur.yml` themselves** keep working. If they read settings
-  that the server does not use, the configuration check may report those settings; it can be disabled with
-  `-Dcubiq.configCheck=false`.
+- **Plugins that read `server.properties`, `bukkit.yml`, `spigot.yml` or `purpur.yml` themselves** keep working. If
+  they read settings that the server does not use, the configuration check may report those settings; it can be
+  disabled with `-Dcubiq.configCheck=false`.
 
 ## Switching to Cubiq
 
@@ -71,6 +71,11 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
 - a smoke test that starts the Paperclip jar twice (first start and a start with existing files), checks that the
   server reaches `Done`, that the configuration check finds no problems in the generated files, that the lifecycle
   watchdog reports nothing and that the server stops cleanly (`scripts/smoke-test.sh`),
+- a configuration check smoke test that puts a mistake into each kind of checked file, four of them into
+  `server.properties`, and checks that the configuration check reports each of them with the expected message, then
+  starts again with `paper-global.yml` set back to version 30, so that Paper rewrites `server.properties`, and checks
+  that the settings Paper removes are still reported, except `allow-nether`, whose value Paper moves
+  (`scripts/config-smoke-test.sh`),
 - a lifecycle smoke test that starts the server with a test plugin whose bootstrap, load, enable and disable each
   take three seconds, and checks that the lifecycle watchdog reports every step with the plugin's stack frames and
   that both summaries name the plugin, and a second run that stops the server with `/restart` instead of `stop`

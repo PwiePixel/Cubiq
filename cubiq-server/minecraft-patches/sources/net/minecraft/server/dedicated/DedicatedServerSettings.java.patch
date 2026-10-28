@@ -1,0 +1,10 @@
+--- a/net/minecraft/server/dedicated/DedicatedServerSettings.java
++++ b/net/minecraft/server/dedicated/DedicatedServerSettings.java
+@@ -11,6 +_,7 @@
+     public DedicatedServerSettings(joptsimple.OptionSet options) {
+         this.source = ((java.io.File) options.valueOf("config")).toPath();
+         this.properties = DedicatedServerProperties.fromFile(this.source, options);
++        studio.cubiq.configcheck.ServerPropertiesCheck.loaded(this.source, this.properties.properties, this.properties.usage); // Cubiq - Configuration check
+         // CraftBukkit end
+     }
+ 

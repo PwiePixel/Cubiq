@@ -6,21 +6,29 @@ Purpur; see [COMPATIBILITY.md](COMPATIBILITY.md).
 ## Configuration check
 
 CraftBukkit, Spigot and Purpur silently ignore settings they do not know and settings whose value has the
-wrong type. Paper keeps settings it does not know in its configuration files and ignores them as well. A
-misspelled setting therefore has no effect, and nothing tells the server owner about it.
+wrong type. Paper keeps settings it does not know in its configuration files and ignores them as well. Minecraft
+does the same with `server.properties`: it keeps settings it does not read in the file, uses the default value
+instead of most values it cannot read, reads every value of a `true`/`false` setting other than `true` (in any case) as
+`false`, and writes the values it uses back to the file. A misspelled setting therefore has no effect, and nothing
+tells the server owner about it.
 
-Once the server has started, Cubiq compares `bukkit.yml`, `spigot.yml` and `purpur.yml` with the settings the
-server actually used while starting, and Paper's configuration files with the settings Paper knows, and logs every
-setting that has no effect as a warning of the `Cubiq` logger, for example:
+Once the server has started, Cubiq compares `server.properties` with the settings Minecraft read and the values it
+could use, `bukkit.yml`, `spigot.yml` and `purpur.yml` with the settings the server actually used while starting,
+and Paper's configuration files with the settings Paper knows, and logs every setting that does not work as written
+as a warning of the `Cubiq` logger, for example:
 
 ```
-Configuration check: found 6 problems in bukkit.yml, purpur.yml, spigot.yml, config/paper-global.yml, config/paper-world-defaults.yml, world/dimensions/minecraft/overworld/paper-world.yml, world/dimensions/minecraft/the_nether/paper-world.yml, world/dimensions/minecraft/the_end/paper-world.yml (86 ms). The following settings have no effect:
+Configuration check: found 10 problems in server.properties, bukkit.yml, purpur.yml, spigot.yml, config/paper-global.yml, config/paper-world-defaults.yml, world/dimensions/minecraft/overworld/paper-world.yml, world/dimensions/minecraft/the_nether/paper-world.yml, world/dimensions/minecraft/the_end/paper-world.yml (71 ms). The following settings do not work as written:
+  server.properties: Unknown setting 'max-player' has no effect. Did you mean 'max-players'?
+  server.properties: Setting 'pvp' has no effect anymore. Use the game rule pvp instead.
+  server.properties: 'view-distance' must be a whole number, but is "twelve", so the server uses the default value 10.
+  server.properties: 'white-list' must be true or false, but is "true " (with whitespace at the end), so the server uses false.
   bukkit.yml: Unknown setting 'spawn-limits.monster' has no effect. Did you mean 'spawn-limits.monsters'?
-  purpur.yml: Unknown setting 'world-settings.default.mobs.zombie.ridabel' has no effect. Did you mean 'world-settings.default.mobs.zombie.ridable'?
+  purpur.yml: Unknown setting 'settings.use-alternate-keepaliv' has no effect. Did you mean 'settings.use-alternate-keepalive'?
   spigot.yml: 'world-settings.default.mob-spawn-range' must be a number, but is "eight", so it is ignored.
   config/paper-global.yml: Unknown setting 'chunk-loading-basic.player-max-chunk-load-rat' has no effect. Did you mean 'chunk-loading-basic.player-max-chunk-load-rate'?
-  config/paper-world-defaults.yml: Unknown setting 'entities.spawning.spawn-limits.monsters' has no effect. Did you mean 'entities.spawning.spawn-limits.monster'?
-  world/dimensions/minecraft/overworld/paper-world.yml: Unknown setting 'chunks.auto-save-intervall' has no effect. Did you mean 'chunks.auto-save-interval'?
+  config/paper-world-defaults.yml: Unknown setting 'chunks.auto-save-intervall' has no effect. Did you mean 'chunks.auto-save-interval'?
+  world/dimensions/minecraft/overworld/paper-world.yml: Unknown setting 'entities.spawning.spawn-limits.monsters' has no effect. Did you mean 'entities.spawning.spawn-limits.monster'?
 Fix or remove these settings. This check runs on every start and can be disabled with -Dcubiq.configCheck=false
 ```
 
@@ -36,6 +44,22 @@ What is reported:
 - **Values of the wrong type**: for example text where a number or `true`/`false` is expected. The server uses the
   default value instead of such a value. The expected type is taken from how the server read the setting, or, for
   settings that are only read later (for example when a player joins), from the type of their default value.
+- **Settings of `server.properties` that were replaced**, with what to use instead: `pvp` (the game rule `pvp`),
+  `spawn-monsters` (the game rule `spawn_monsters`), `enable-command-block` (the game rule `command_blocks_work`) and
+  `allow-nether` (`misc.enable-nether` in Paper's `paper-global.yml`). Game rules are set per world with `/gamerule`.
+- **Values of `server.properties` that Minecraft does not use as written**, with the value it uses instead: values it
+  cannot convert, for which it uses the default value; values of `true`/`false` settings other than `true` or
+  `false` in any case, which it reads as `false`, for example `true ` with a space at the end, so that
+  `white-list=true ` turns the whitelist off; and game modes it does not know, for which it uses `survival`. This
+  includes the legacy setting `announce-player-achievements`, which Minecraft moves to a game rule. A value is not
+  reported when the server uses what it means, for example the default `easy` for `difficulty=Easy`, which Minecraft
+  cannot read because the names are case-sensitive. Minecraft writes the value it uses to the file right away, so
+  these findings are only reported on the start after the file was edited, unless the file is read-only. For
+  `entity-broadcast-range-percentage` and `generator-settings`, Minecraft does not use the default but fails to start
+  with an error.
+- **Invisible characters**: a byte order mark, which some editors put at the start of a file, becomes part of the name
+  of the first setting of `server.properties`, so Minecraft does not read that setting. Such characters, and
+  characters such as a no-break space, are shown as `\u` escapes, for example `\ufeffmotd`.
 
 How it works:
 
@@ -49,6 +73,17 @@ How it works:
   registry entries match with and without the `minecraft:` namespace. A world file only contains the settings that
   the world overrides; it is checked without the defaults. Paper reports values of the wrong type in its files
   itself, because it cannot load such a file.
+- Minecraft reads every setting of `server.properties` through one method. Cubiq records which settings Minecraft
+  reads and checks each value that Minecraft converts against the text in the file, without changing either. When
+  Minecraft has loaded the file, the settings in it that Minecraft did not read are reported, together with the values
+  that it did not use as written.
+- When Paper updates `paper-global.yml` from an older version, it moves the value of `allow-nether` from
+  `server.properties` to `misc.enable-nether` (configurations before version 31, if the setting is there) and the
+  value of its own `logging.log-player-ip-addresses` to `log-ips` in `server.properties` (before version 29, if the
+  setting is there). Each of these steps writes `server.properties` again with only the settings that Minecraft writes
+  back, so the values of all other settings are lost. The settings among them that Minecraft does not read are still
+  reported, with the note that the server removed them from the file while starting. `rcon.ip`, which Paper reads
+  without writing it back, is lost as well, and is not reported.
 - Settings in a world section (`world-settings.<world>.<setting>`) are checked against the settings of
   `world-settings.default`, so settings for worlds that are not loaded are checked as well.
 - Sections that the server reads as a whole, such as maps of blocks or entity types, may contain any key.
@@ -57,7 +92,11 @@ How it works:
 
 Limitations:
 
-- `server.properties` and `commands.yml` are not checked yet.
+- `commands.yml` is not checked yet.
+- In `server.properties`, values that Minecraft limits to a range, such as `max-world-size`, and numeric ids of
+  difficulties and game modes outside their range are not reported.
+- If `server.properties` is read-only and Paper updates `paper-global.yml` from an older version, Paper cannot remove
+  `allow-nether` from the file, and the check reports it on that start although Paper moved its value.
 - The `paper-world.yml` of a world that a plugin loads after startup is not checked, because the check has already
   run when Paper loads it.
 - Plugins that read these files with their own code can make the check report settings that only those plugins use.

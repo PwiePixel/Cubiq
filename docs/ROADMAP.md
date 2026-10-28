@@ -40,6 +40,8 @@ reports, and is covered by tests. In order of priority:
 - [x] Configuration check for `bukkit.yml`, `spigot.yml` and `purpur.yml`
 - [x] Configuration check for Paper's configuration files (`config/paper-global.yml`,
       `config/paper-world-defaults.yml` and the `paper-world.yml` of each world)
+- [x] Configuration check for `server.properties`: unknown settings, settings that game rules or Paper's
+      configuration replaced, and values that Minecraft does not use as written
 - [x] [Lifecycle watchdog](FEATURES.md#lifecycle-diagnostics): stack traces when startup, `/reload`, a plugin's
       bootstrap, load, enable or disable, loading a world or shutdown stops making progress. The upstream watchdog is
       only armed between `Done` and the start of shutdown, so hangs in these phases were never reported.
@@ -49,7 +51,9 @@ reports, and is covered by tests. In order of priority:
 - [ ] A breakdown of startup and shutdown time by phase (worlds, plugins, saving) and an optional JSON report
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
-- [ ] Tick time percentiles and tick-thread utilization in addition to the averages of `/mspt`
+- Not planned: tick time percentiles and tick-thread utilization in `/mspt`. The bundled spark already shows the
+  minimum, median, 95th percentile and maximum tick duration of the last 10 seconds and minute in `/spark tps`;
+  compared with the 50 ms of a tick, they also show how busy the server thread is.
 - [ ] Chunk system throughput (chunks loaded and generated per second) in `/tps`, based on Folia's counters
 
 ## Phase 2: Compatibility
@@ -59,7 +63,8 @@ reports, and is covered by tests. In order of priority:
 - [ ] API conformance tests for the brand and version APIs used by plugins to detect server software
 - [x] Extend the configuration check to Paper's configuration files (`paper-global.yml`, world defaults and
       per-world files)
-- [ ] Extend the configuration check to `server.properties` and `commands.yml`
+- [x] Extend the configuration check to `server.properties`
+- [ ] Extend the configuration check to `commands.yml`
 - [ ] A command to re-run the configuration check after reloads, and an optional machine-readable report
 - [ ] Document configuration differences between Paper, Purpur and Cubiq defaults
 

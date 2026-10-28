@@ -92,6 +92,7 @@ change to inherited behavior easy to find. The current hooks are:
 | Configuration tracking | `org.spigotmc.SpigotConfig`, `org.purpurmc.purpur.PurpurConfig`, `org.bukkit.craftbukkit.CraftServer` | Create `TrackedYamlConfiguration`s |
 | Configuration check | `net.minecraft.server.MinecraftServer` after the `Done` message | Run `ConfigurationCheck` |
 | Paper configuration check | `paper-server: io.papermc.paper.configuration.Configurations` after each file is loaded | Compare the file with the settings Paper knows (`PaperConfigurationCheck`) |
+| `server.properties` check | `net.minecraft.server.dedicated.Settings` (`getStringRaw`, value conversion), `DedicatedServerSettings` after the file is loaded | Record which settings Minecraft reads and which values it cannot use as written (`PropertiesUsage`); compare them with the file (`ServerPropertiesCheck`) |
 | Restart | `org.spigotmc.RestartCommand` | Watch the shutdown by `/restart` from the moment Paper's watchdog stops |
 | Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |
 | Plugin and world steps | `PaperPluginInstanceManager` (enable, disable), `BootstrapProviderStorage`, `ServerPluginProviderStorage` (`onLoad`), `PaperWorldLoader` | Time plugin steps; give the watchdog progress and step names |
@@ -103,8 +104,9 @@ that Cubiq's roadmap builds on.
 
 ### Startup
 
-`org.bukkit.craftbukkit.Main` parses the command line, then the Minecraft bootstrap starts the dedicated server.
-`DedicatedServer#initServer` loads `server.properties`, creates the player list and with it `CraftServer` (which
+`org.bukkit.craftbukkit.Main` parses the command line, then the Minecraft bootstrap (`net.minecraft.server.Main`)
+loads `server.properties`, writes it back right away and starts the dedicated server.
+`DedicatedServer#initServer` creates the player list and with it `CraftServer` (which
 loads `bukkit.yml`), initializes Spigot's, Paper's and Purpur's configurations, loads all plugins and enables those
 with `load: STARTUP`, then loads the worlds (`MinecraftServer#loadLevel`). `MinecraftServer#initPostWorld` enables the
 remaining (`POSTWORLD`) plugins once the worlds exist, and the server finally logs `Done (<seconds>)!`. Cubiq's configuration check runs right after

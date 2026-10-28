@@ -29,7 +29,7 @@ class ConfigurationCheckReportTest {
         ), 3);
 
         assertEquals(List.of(
-            "Configuration check: found 2 problems in spigot.yml (3 ms). The following settings have no effect:",
+            "Configuration check: found 2 problems in spigot.yml (3 ms). The following settings do not work as written:",
             "  spigot.yml: Unknown setting 'settings.timout' has no effect. Did you mean 'settings.timeout'?",
             "  spigot.yml: 'settings.debug' must be true or false, but is \"maybe\", so it is ignored.",
             "Fix or remove these settings. This check runs on every start and can be disabled with -Dcubiq.configCheck=false"
@@ -45,6 +45,35 @@ class ConfigurationCheckReportTest {
         assertEquals(
             "Unknown section 'old' (3 settings) has no effect.",
             ConfigurationFinding.unknownSection("spigot.yml", "old", 3, null).message()
+        );
+    }
+
+    @Test
+    void replacedSettingsNameWhatReplacesThem() {
+        assertEquals(
+            "Setting 'pvp' has no effect anymore. Use the game rule pvp instead.",
+            ConfigurationFinding.replacedSetting("server.properties", "pvp", "the game rule pvp").message()
+        );
+    }
+
+    @Test
+    void invalidValuesNameTheValueTheServerUsesIfItIsKnown() {
+        assertEquals(
+            "'white-list' must be true or false, but is \"true \" (with whitespace at the end), so the server uses false.",
+            ConfigurationFinding.invalidValue("server.properties", "white-list", "true or false", "\"true \" (with whitespace at the end)", "false").message()
+        );
+        assertEquals(
+            "'view-distance' must be a whole number, but is \"twelve\", so the server uses the default value 10.",
+            ConfigurationFinding.invalidValue("server.properties", "view-distance", "a whole number", "\"twelve\"", "the default value 10").message()
+        );
+    }
+
+    @Test
+    void notesFollowTheMessage() {
+        assertEquals(
+            "Setting 'pvp' has no effect anymore. Use the game rule pvp instead. The server removed it from the file while starting.",
+            ConfigurationFinding.replacedSetting("server.properties", "pvp", "the game rule pvp")
+                .withNote("The server removed it from the file while starting.").message()
         );
     }
 

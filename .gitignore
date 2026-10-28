@@ -1,6 +1,7 @@
 # JVM crash related
 core.*
 hs_err_pid*
+*.hprof
 
 # IntelliJ
 /.idea/*

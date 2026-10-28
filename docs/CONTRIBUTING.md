@@ -139,15 +139,19 @@ only run them if you accept the [Minecraft EULA](https://aka.ms/MinecraftEULA).
 # First start in a new directory, then a start with the existing files
 SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
+# Two starts with a mistake in each kind of checked file, on a copy of the directory (run/smoke-config-check);
+# the second one simulates an update of paper-global.yml from an older version
+scripts/config-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 # A start with a test plugin whose lifecycle steps are slow; needs a server that was started before
 scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 # A start with a test plugin that blocks the server thread on a lock for 15 seconds
 scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 ```
 
-`smoke-test.sh` uses `java` from the `PATH` unless `JAVA` points to a Java 25 executable; the other two scripts
-compile their test plugins with `javac` from `JAVA_HOME`. The scripts fail with an excerpt of the server log when the
-server does not start or stop cleanly or an expected message is missing.
+`smoke-test.sh`, which the other scripts use to start the server, uses `java` from the `PATH` unless `JAVA` points to
+a Java 25 executable; the lifecycle and watchdog scripts compile their test plugins with `javac` from `JAVA_HOME`.
+The scripts fail with an excerpt of the server log when the server does not start or stop cleanly or an expected
+message is missing.
 
 `scripts/check-distribution.sh <paperclip-jar> [<server-directory>]` checks the jar server owners download: license
 texts and notices included, no Minecraft code, fixed entry times.

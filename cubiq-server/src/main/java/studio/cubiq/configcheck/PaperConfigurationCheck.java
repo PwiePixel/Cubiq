@@ -3,12 +3,12 @@ package studio.cubiq.configcheck;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.configurate.BasicConfigurationNode;
@@ -34,18 +34,8 @@ public final class PaperConfigurationCheck {
     private static final Logger LOGGER = Cubiq.LOGGER;
     private static final String VERSION_FIELD = "_version";
     private static final String MINECRAFT_NAMESPACE = "minecraft:";
-    private static final List<Result> RESULTS = new CopyOnWriteArrayList<>();
-    /** How long checking the files took, so that the report of the check can include it. */
-    private static final AtomicLong CHECK_NANOS = new AtomicLong();
-
-    /**
-     * The result of checking one file.
-     *
-     * @param file     the file, relative to the server directory if it is inside it
-     * @param findings the settings without effect, or {@code null} if the file could not be checked
-     */
-    record Result(String file, @Nullable List<ConfigurationFinding> findings) {
-    }
+    /** The results by file, in the order the files were loaded. */
+    private static final Map<String, CheckedFile> RESULTS = Collections.synchronizedMap(new LinkedHashMap<>());
 
     private PaperConfigurationCheck() {
     }
@@ -65,7 +55,7 @@ public final class PaperConfigurationCheck {
         }
         final long start = System.nanoTime();
         try {
-            final String name = displayName(file);
+            final String name = CheckedFile.displayName(file);
             List<ConfigurationFinding> findings;
             try {
                 final ConfigurationNode known = BasicConfigurationNode.root(fileNode.options());
@@ -75,12 +65,13 @@ public final class PaperConfigurationCheck {
                 LOGGER.debug("Could not check {}", name, ex);
                 findings = null;
             }
-            RESULTS.add(new Result(name, findings));
+            // A /reload before the check loads the files again; report each file once
+            RESULTS.putIfAbsent(name, new CheckedFile(name, findings));
         } catch (final RuntimeException | LinkageError ex) {
             // A bug in this diagnostic must never affect loading the configuration
             LOGGER.debug("The configuration check of {} failed", file, ex);
         } finally {
-            CHECK_NANOS.addAndGet(System.nanoTime() - start);
+            ConfigurationCheck.addCheckTime(System.nanoTime() - start);
         }
     }
 
@@ -89,24 +80,16 @@ public final class PaperConfigurationCheck {
      *
      * @return the results, in the order the files were loaded
      */
-    static List<Result> drain() {
-        final List<Result> results = new ArrayList<>(RESULTS);
-        RESULTS.removeAll(results);
-        return results;
-    }
-
-    /**
-     * Removes and returns how long checking the files took so far.
-     *
-     * @return the time in nanoseconds
-     */
-    static long drainCheckNanos() {
-        return CHECK_NANOS.getAndSet(0L);
+    static List<CheckedFile> drain() {
+        synchronized (RESULTS) {
+            final List<CheckedFile> results = new ArrayList<>(RESULTS.values());
+            RESULTS.clear();
+            return results;
+        }
     }
 
     static void resetForTests() {
         RESULTS.clear();
-        CHECK_NANOS.set(0L);
     }
 
     /**
@@ -219,11 +202,5 @@ public final class PaperConfigurationCheck {
             settings += settings(child);
         }
         return settings;
-    }
-
-    static String displayName(final Path file) {
-        final Path absolute = file.toAbsolutePath().normalize();
-        final Path serverDirectory = Path.of("").toAbsolutePath();
-        return (absolute.startsWith(serverDirectory) ? serverDirectory.relativize(absolute) : absolute).toString();
     }
 }
