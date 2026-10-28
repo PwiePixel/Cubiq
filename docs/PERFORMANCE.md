@@ -32,11 +32,13 @@ the CPU time the watchdog thread wasted while the server did not respond. The me
   writes a report. It does not ask for the `java.util.concurrent` locks that threads hold, because HotSpot finds
   them by scanning the whole heap while all threads are paused. The watchdog fix removes CPU use (see the results
   below).
-- **Lifecycle diagnostics**: each plugin step, world load and lifecycle phase opens and closes a small tracking
-  object (a few per plugin and world, so a few hundred on large servers), which takes an uncontended lock and
-  reads the clock. Plugins enabled or disabled at runtime are tracked the same way. The watchdog thread wakes up
-  once per second; while the server runs normally it only finds that no phase is open. Stack traces are only taken
-  when a step is reported.
+- **Lifecycle diagnostics**: each plugin step, server step, world load and lifecycle phase opens and closes a small
+  tracking object (a few per plugin and world, so a few hundred on large servers), which takes an uncontended lock
+  and reads the clock. Plugins enabled or disabled at runtime are tracked the same way, and so is saving each world,
+  also in autosaves and `/save-all`, where the step is only timed, not recorded. The breakdowns of startup and
+  shutdown add one map entry per step and world, and the JSON report, if enabled, is a small file written twice. The
+  watchdog thread wakes up once per second; while the server runs normally it only finds that no phase is open.
+  Stack traces are only taken when a step is reported.
 
 ## Available measurement tools
 
@@ -46,6 +48,12 @@ Inherited from Paper:
   monitoring and GC statistics.
 - `/mspt` and `/tps` report the average, minimum and maximum tick times and the recent TPS.
 - Java Flight Recorder (`-XX:StartFlightRecording`) works as on any JDK 25 application.
+
+Added by Cubiq:
+
+- The [breakdowns of startup and shutdown](FEATURES.md#summaries) in the log, and with
+  `-Dcubiq.lifecycleReport=<file>` the same times as [JSON](FEATURES.md#report-for-tools), which a benchmark harness
+  can read instead of parsing the log: the time to `Done`, its steps, each world and each plugin.
 
 ## Benchmark method
 
@@ -67,7 +75,8 @@ flags, the exact server builds (Cubiq commit, Paper and Purpur build numbers), a
 | Long run (several hours) | Memory growth, GC behavior, stability |
 
 **Metrics:** tick time percentiles (p50, p95, p99, maximum) rather than only averages, TPS, CPU time per tick,
-allocation rate, GC pause times and frequency, heap after GC, and time to `Done`.
+allocation rate, GC pause times and frequency, heap after GC, and time to `Done` with its steps (from Cubiq's
+lifecycle report).
 
 **Procedure:** warm up before measuring, run each configuration at least five times, alternate the server builds
 between runs, report the median together with the spread, and keep the raw data. A difference is only reported as

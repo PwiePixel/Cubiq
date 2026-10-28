@@ -5,7 +5,7 @@
  
          for (ServerLevel serverLevel : this.server.getAllLevels()) {
 -            this.server.prepareLevel(serverLevel);
-+            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.serverStep("Preparing world " + serverLevel.getWorld().getName())) { // Cubiq - Lifecycle diagnostics
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.PREPARING_WORLD, serverLevel.getWorld().getName())) { // Cubiq - Lifecycle diagnostics
 +                this.server.prepareLevel(serverLevel);
 +            } // Cubiq - Lifecycle diagnostics
          }
@@ -16,7 +16,7 @@
          }
  
 -        this.server.createLevel(stem, loading, worldDataAndGenSettings);
-+        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.serverStep("Loading world " + loading.data().bukkitName())) { // Cubiq - Lifecycle diagnostics
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.LOADING_WORLD, loading.data().bukkitName())) { // Cubiq - Lifecycle diagnostics
 +            this.server.createLevel(stem, loading, worldDataAndGenSettings);
 +        } // Cubiq - Lifecycle diagnostics
      }

@@ -53,7 +53,9 @@ reports, and is covered by tests. In order of priority:
 - [x] Per-plugin lifecycle timing (bootstrap, load, enable, disable) with summaries after startup and shutdown
 - [x] [Watchdog hardening](FEATURES.md#watchdog-improvements): no busy waiting while the server does not respond, CPU
       use of the server thread, locks and the thread that holds the lock the server thread waits for
-- [ ] A breakdown of startup and shutdown time by phase (worlds, plugins, saving) and an optional JSON report
+- [x] A [breakdown of startup and shutdown time](FEATURES.md#summaries) by step (bootstrapping, data packs, server
+      setup, plugins, worlds per world, saving) in the log, and an optional [JSON report](FEATURES.md#report-for-tools)
+      for tools such as the benchmark harness
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
 - Not planned: tick time percentiles and tick-thread utilization in `/mspt`. The bundled spark already shows the

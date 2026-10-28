@@ -111,28 +111,93 @@ Disable the check by starting the server with `-Dcubiq.configCheck=false`.
 
 Paper's watchdog only watches the ticks of a server that is running. It is not armed while the server starts,
 while `/reload` runs and while the server stops, so a plugin or a step that hangs in these phases leaves the server
-stuck without any explanation. No upstream server shows either how long each plugin takes to start and stop.
+stuck without any explanation. No upstream server shows either which steps of starting and stopping take how long, or
+how long each plugin takes to start and stop.
 
 ### Summaries
 
-When the server has started, and again when it has stopped, Cubiq logs how long the plugins took. For example,
-with the test plugin of Cubiq's smoke test, whose steps each take three seconds:
+When the server has started, and again when it has stopped, Cubiq logs which steps took how long, and how long the
+plugins took. For example, with the test plugin of Cubiq's smoke test, whose steps each take three seconds:
 
 ```
+Startup took 18.3 s: bootstrapping 7.0 s, data packs 1.6 s, server setup 1.0 s, loading plugins 3.0 s, enabling plugins 3.0 s, worlds 469 ms (world 358 ms, world_nether 43 ms, world_the_end 57 ms), delayed init tasks 1 ms, other 2.1 s.
 Plugins took 9.0 s to start (bootstrap 3.0 s, load 3.0 s, enable 3.0 s). Plugin: LifecycleSmokeTest 9.0 s.
-Stopped the server in 3.0 s. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
+Stopped the server in 3.2 s: disabling plugins 3.0 s, worlds 15 ms (world 7 ms, world_nether 3 ms, world_the_end 2 ms), other 207 ms. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
 ```
+
+The startup time is the one of Paper's `Done` message, measured from the start of the server's main class. Its steps:
+
+| Step | What it includes |
+| --- | --- |
+| bootstrapping | Discovering the plugins, running the bootstrappers of Paper plugins, and Minecraft's bootstrap (registries) |
+| data packs | Loading the data packs and the registries that depend on them |
+| server setup | Loading the configuration files, the player lists and the commands, and opening the network port (including UPnP) |
+| loading plugins | The plugins' `onLoad` |
+| enabling plugins | Enabling the plugins, before and after the worlds are loaded |
+| worlds | Loading the worlds and preparing their spawn areas, per world, and saving them right after |
+| delayed init tasks | The tasks that plugins scheduled for the first tick, which Paper runs before it reports `Done` |
+| other | Everything else: starting the JVM's logging, reading `server.properties`, `eula.txt` and the world's `level.dat`, creating the server and the short pauses between the steps |
+
+The shutdown is measured from the moment the server begins to stop. Its steps are disabling the plugins, waiting for
+their asynchronous tasks (`plugin tasks`), saving the players, saving the worlds (per world) and waiting for the
+region files to be written; `other` is the rest. The lines leave out steps that took less than a millisecond.
 
 With more plugins, the line names the five slowest ones. The time of a plugin is the sum of its bootstrap (Paper
 plugins only), `onLoad`, enabling (`onEnable` and the `PluginEnableEvent`) and disabling (`onDisable` and removing
 the plugin's tasks, services and listeners). Time that a plugin spends enabling or disabling another plugin counts
 for the other plugin. The shutdown line only counts the plugins that the shutdown disabled, not a reload or a plugin
-manager that was still busy when the server began to stop. Without plugins, only the shutdown line is logged.
+manager that was still busy when the server began to stop. Without plugins, the lines about plugins are left out.
+
+### Report for tools
+
+With `-Dcubiq.lifecycleReport=<file>`, Cubiq also writes these times to a JSON file when the server has started and
+again when it has stopped, for example for benchmarks or monitoring. Times are in milliseconds with three decimals,
+and steps that took no time are included. The report of a server without plugins, abridged:
+
+```json
+{
+  "formatVersion": 1,
+  "startup": {
+    "totalMillis": 8849.0,
+    "steps": [
+      {"name": "bootstrapping", "millis": 3585.255},
+      {"name": "data packs", "millis": 1563.736},
+      {"name": "server setup", "millis": 1021.287},
+      {"name": "loading plugins", "millis": 0.292},
+      {"name": "enabling plugins", "millis": 28.56},
+      {"name": "worlds", "millis": 555.346, "details": [
+        {"name": "world", "millis": 409.319},
+        {"name": "world_nether", "millis": 57.298},
+        {"name": "world_the_end", "millis": 78.925}
+      ]},
+      {"name": "delayed init tasks", "millis": 4.371},
+      {"name": "other", "millis": 2090.153}
+    ],
+    "plugins": []
+  },
+  "shutdown": {
+    "totalMillis": 26.521,
+    "steps": [
+      {"name": "disabling plugins", "millis": 0.022},
+      {"name": "worlds", "millis": 15.122, "details": [{"name": "world", "millis": 6.254}]},
+      {"name": "other", "millis": 11.293}
+    ],
+    "plugins": []
+  }
+}
+```
+
+Together with `other`, the steps add up to `totalMillis` (see the limitations below). Each plugin is listed with the time of its steps, for example
+`{"name": "Example", "loadMillis": 12.5, "enableMillis": 310.25}`. The file is replaced atomically where the file
+system supports it, so a tool never reads half of it. `formatVersion` changes when a field changes its meaning or is
+removed; new fields can be added without a new version. A startup that failed has no `startup` part, and a server that
+is still running has no `shutdown` part. If the file cannot be written, Cubiq logs a warning and the server is not
+affected.
 
 ### Lifecycle watchdog
 
-While the server starts, reloads or stops, Cubiq watches each step: bootstrapping the server, bootstrapping,
-loading, enabling and disabling each plugin, loading and preparing each world, and saving the worlds on shutdown.
+While the server starts, reloads or stops, Cubiq watches each step: the steps of the summaries above, and
+bootstrapping, loading, enabling and disabling each plugin, loading, preparing and saving each world.
 A shutdown by `/restart` is watched from the moment it stops Paper's watchdog, including the kick events that
 plugins handle. When a thread has neither finished its current step nor started or finished another one for 30
 seconds, Cubiq logs the step and the stack trace of that thread, including the monitors it holds and the lock it
@@ -166,6 +231,7 @@ Cubiq's watchdog reports nothing.
 | `cubiq.lifecycleWatchdog.warnAfter` | `30` | Seconds without progress before a step is reported (at least 1). |
 | `cubiq.lifecycleWatchdog.warnEvery` | `60` | Seconds between reports while a step does not finish (at least 1). |
 | `cubiq.lifecycleSummary` | `true` | `false` disables the startup and shutdown summaries. |
+| `cubiq.lifecycleReport` | none | A file, for example `lifecycle-report.json`, to write the [report](#report-for-tools) to. A relative path is relative to the server directory. |
 
 Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAfter=60 -jar cubiq.jar`.
 
@@ -176,9 +242,12 @@ Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAf
   unless the thread waits for another thread.
 - The `java.util.concurrent` locks that a thread holds are not listed, because finding them pauses all threads for
   a scan of the whole heap. The lock that a thread waits for and the thread that holds it are shown.
-- Work between the steps listed above, for example running the tasks that plugins scheduled for the first tick,
-  belongs to the enclosing phase (`Starting the server`, `Reloading the server` or `Stopping the server`). Its
-  report says how long nothing has progressed.
+- Work between the steps listed above, for example creating the server or closing the network connections on
+  shutdown, belongs to the enclosing phase (`Starting the server`, `Reloading the server` or `Stopping the server`).
+  Its report says how long nothing has progressed, and the summaries count it as `other`.
+- The startup time is measured with the system clock, like the time of Paper's `Done` message, and the steps with a
+  monotonic clock. If the system clock is changed while the server starts, the steps no longer add up to the startup
+  time; `other` is then at least zero.
 - Plugins enabled or disabled while the server runs, for example by a plugin manager, are watched by Paper's
   watchdog and are not part of the summaries.
 - Work that plugins run on other threads is only visible when it blocks one of the watched steps, for example

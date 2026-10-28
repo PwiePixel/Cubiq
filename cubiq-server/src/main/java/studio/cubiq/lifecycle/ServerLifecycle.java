@@ -1,8 +1,10 @@
 package studio.cubiq.lifecycle;
 
 import io.papermc.paper.plugin.configuration.PluginMeta;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import studio.cubiq.Cubiq;
 
@@ -20,8 +22,10 @@ import studio.cubiq.Cubiq;
  *     (default 30).</li>
  *     <li>{@value LifecycleController#WARN_EVERY_PROPERTY}: seconds between reports while a step stays stuck
  *     (default 60).</li>
- *     <li>{@value LifecycleController#SUMMARY_PROPERTY}: {@code false} disables the summaries of how long the
- *     plugins took to start and stop.</li>
+ *     <li>{@value LifecycleController#SUMMARY_PROPERTY}: {@code false} disables the summaries of how long starting
+ *     and stopping the server and the plugins took.</li>
+ *     <li>{@value LifecycleController#REPORT_PROPERTY}: a file to write how long starting and stopping the server
+ *     took to, as JSON (see {@link LifecycleReport}).</li>
  * </ul>
  */
 public final class ServerLifecycle {
@@ -68,15 +72,28 @@ public final class ServerLifecycle {
     }
 
     /**
-     * Opens the phase of a step the server takes while it starts or stops, for example loading a world. Each step is
-     * progress for the watchdog, and the description tells the server owner which step does not finish.
+     * Opens the phase of a step the server takes while it starts or stops, for example loading the plugins. Each step
+     * is progress for the watchdog, its description tells the server owner which step does not finish, and the
+     * breakdowns of startup and shutdown report how long it took.
      *
-     * @param description what the server does, for example {@code Loading world world_nether}
+     * @param step the step
      * @return the open phase, to be closed when the step has finished
      */
-    public static LifecyclePhase serverStep(final String description) {
+    public static LifecyclePhase step(final ServerStep step) {
+        return step(step, null);
+    }
+
+    /**
+     * Opens the phase of a step the server takes for one subject while it starts or stops, for example loading a
+     * world.
+     *
+     * @param step    the step
+     * @param subject what the step works on, for example the name of the world, or {@code null}
+     * @return the open phase, to be closed when the step has finished
+     */
+    public static LifecyclePhase step(final ServerStep step, final @Nullable String subject) {
         try {
-            return CONTROLLER.serverStep(description);
+            return CONTROLLER.serverStep(step, subject);
         } catch (final RuntimeException | LinkageError ex) {
             return failed(ex);
         }
@@ -125,10 +142,12 @@ public final class ServerLifecycle {
 
     /**
      * Called when the server has started ({@code Done}).
+     *
+     * @param startupMillis how long the startup took, as the server reports it
      */
-    public static void startupFinished() {
+    public static void startupFinished(final long startupMillis) {
         try {
-            CONTROLLER.startupFinished();
+            CONTROLLER.startupFinished(TimeUnit.MILLISECONDS.toNanos(startupMillis));
         } catch (final RuntimeException | LinkageError ex) {
             failed(ex);
         }

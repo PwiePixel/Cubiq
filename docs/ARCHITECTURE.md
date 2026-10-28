@@ -75,7 +75,7 @@ Cubiq's own classes live in `cubiq-server/src/main/java` under `studio.cubiq`:
 | `studio.cubiq` | Project constants (`Cubiq.REPOSITORY_URL`, `Cubiq.ISSUES_URL`) and the `Cubiq` logger |
 | `studio.cubiq.version` | `CubiqVersionFetcher`, the `/version` update status for Cubiq builds |
 | `studio.cubiq.configcheck` | The configuration check, see [FEATURES.md](FEATURES.md) |
-| `studio.cubiq.lifecycle` | Lifecycle diagnostics: plugin timing and the lifecycle watchdog, see [FEATURES.md](FEATURES.md#lifecycle-diagnostics) |
+| `studio.cubiq.lifecycle` | Lifecycle diagnostics: the breakdowns of startup and shutdown and their JSON report, plugin timing and the lifecycle watchdog, see [FEATURES.md](FEATURES.md#lifecycle-diagnostics) |
 | `studio.cubiq.watchdog` | Improvements to the inherited watchdog, see [FEATURES.md](FEATURES.md#watchdog-improvements) |
 
 Changes to upstream code are kept as small as possible: a patch hook is usually one line that calls into a
@@ -96,7 +96,8 @@ change to inherited behavior easy to find. The current hooks are:
 | `server.properties` check | `net.minecraft.server.dedicated.Settings` (`getStringRaw`, value conversion), `DedicatedServerSettings` after the file is loaded | Record which settings Minecraft reads and which values it cannot use as written (`PropertiesUsage`); compare them with the file (`ServerPropertiesCheck`) |
 | Restart | `org.spigotmc.RestartCommand` | Watch the shutdown by `/restart` from the moment Paper's watchdog stops |
 | Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |
-| Plugin and world steps | `PaperPluginInstanceManager` (enable, disable), `BootstrapProviderStorage`, `ServerPluginProviderStorage` (`onLoad`), `PaperWorldLoader` | Time plugin steps; give the watchdog progress and step names |
+| Server steps | `net.minecraft.server.Main` (bootstrap, data packs), `DedicatedServer#initServer` (server setup, loading and enabling plugins, worlds), `MinecraftServer` (enabling plugins after the worlds, delayed init tasks, the steps of `stopServer`, saving each world in `saveAllChunks`), `PaperWorldLoader` (loading and preparing each world) | Time the steps of startup and shutdown (`ServerStep`); give the watchdog progress and step names |
+| Plugin steps | `PaperPluginInstanceManager` (enable, disable), `BootstrapProviderStorage`, `ServerPluginProviderStorage` (`onLoad`) | Time plugin steps; give the watchdog progress and step names |
 
 ## Inherited runtime architecture
 
@@ -154,3 +155,6 @@ state and how work moves between owners.
   never changes server state, and drops the entries of threads that have terminated.
 - `LifecycleController` changes the server's lifecycle state atomically. It reports only in the states in which
   Paper's watchdog is not armed (starting, reloading, stopping).
+- The breakdowns of startup and shutdown (`Breakdown`) are filled by the threads that close the steps, under the
+  breakdown's own lock; the controller decides by the state whether a step belongs to the startup, the shutdown or
+  neither. The JSON report is written by the thread that ends the startup or the shutdown.

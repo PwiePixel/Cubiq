@@ -70,6 +70,19 @@ final class LifecycleMessages {
     }
 
     /**
+     * Summarizes how long the server took to start and which steps took how long.
+     *
+     * @param timing how long the startup and its steps took
+     * @return the summary, for example {@code Startup took 15.3 s: bootstrapping 4.1 s, worlds 7.9 s (world 3.0 s,
+     *     world_nether 2.4 s, world_the_end 2.5 s), other 409 ms.}
+     */
+    static String startupBreakdown(final TimingReport timing) {
+        final StringBuilder out = new StringBuilder("Startup took ").append(duration(timing.totalNanos()));
+        appendBreakdown(out, timing);
+        return out.toString();
+    }
+
+    /**
      * Summarizes how long the plugins took to start.
      *
      * @param timings the timings of the plugin steps during startup
@@ -92,19 +105,54 @@ final class LifecycleMessages {
     }
 
     /**
-     * Summarizes how long the server took to stop.
+     * Summarizes how long the server took to stop, which steps took how long, and how long the plugins took.
      *
-     * @param stopNanos how long stopping the server took
-     * @param timings   the timings of the plugin steps while stopping
+     * @param timing how long the shutdown, its steps and the plugins took
      * @return the summary
      */
-    static String shutdownSummary(final long stopNanos, final List<PluginTiming> timings) {
-        final StringBuilder out = new StringBuilder("Stopped the server in ").append(duration(stopNanos)).append('.');
-        if (!timings.isEmpty()) {
-            out.append(" Plugins took ").append(duration(total(timings))).append(" to stop. ");
-            appendSlowest(out, timings);
+    static String shutdownSummary(final TimingReport timing) {
+        final StringBuilder out = new StringBuilder("Stopped the server in ").append(duration(timing.totalNanos()));
+        appendBreakdown(out, timing);
+        if (!timing.plugins().isEmpty()) {
+            out.append(" Plugins took ").append(duration(total(timing.plugins()))).append(" to stop. ");
+            appendSlowest(out, timing.plugins());
         }
         return out.toString();
+    }
+
+    /**
+     * Appends the steps of a breakdown with their details and the time no step accounts for, leaving out what took less
+     * than half a millisecond, and ends the sentence.
+     */
+    private static void appendBreakdown(final StringBuilder out, final TimingReport timing) {
+        final List<String> parts = new ArrayList<>();
+        for (final Breakdown.Entry entry : timing.steps()) {
+            if (isNegligible(entry.nanos())) {
+                continue;
+            }
+            final StringBuilder part = new StringBuilder(entry.label()).append(' ').append(duration(entry.nanos()));
+            final List<String> details = new ArrayList<>();
+            for (final Breakdown.Detail detail : entry.details()) {
+                if (!isNegligible(detail.nanos())) {
+                    details.add(detail.subject() + " " + duration(detail.nanos()));
+                }
+            }
+            if (!details.isEmpty()) {
+                part.append(" (").append(String.join(", ", details)).append(')');
+            }
+            parts.add(part.toString());
+        }
+        if (!timing.steps().isEmpty() && !isNegligible(timing.otherNanos())) {
+            parts.add("other " + duration(timing.otherNanos()));
+        }
+        if (!parts.isEmpty()) {
+            out.append(": ").append(String.join(", ", parts));
+        }
+        out.append('.');
+    }
+
+    private static boolean isNegligible(final long nanos) {
+        return Math.round(nanos / 1_000_000.0) == 0L;
     }
 
     private static long total(final List<PluginTiming> timings) {

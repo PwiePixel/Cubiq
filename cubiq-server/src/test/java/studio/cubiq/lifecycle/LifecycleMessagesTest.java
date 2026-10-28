@@ -71,16 +71,70 @@ class LifecycleMessagesTest {
 
     @Test
     void shutdownSummary() {
-        assertEquals("Stopped the server in 3.5 s.", LifecycleMessages.shutdownSummary(TimeUnit.MILLISECONDS.toNanos(3500), List.of()));
+        assertEquals(
+            "Stopped the server in 3.5 s.",
+            LifecycleMessages.shutdownSummary(new TimingReport(TimeUnit.MILLISECONDS.toNanos(3500), List.of(), List.of()))
+        );
         assertEquals(
             "Stopped the server in 6.0 s. Plugins took 1.2 s to stop. Plugin: Example 1.2 s.",
-            LifecycleMessages.shutdownSummary(TimeUnit.SECONDS.toNanos(6), List.of(timing("Example", PluginStep.DISABLE, 1200)))
+            LifecycleMessages.shutdownSummary(new TimingReport(TimeUnit.SECONDS.toNanos(6), List.of(), List.of(timing("Example", PluginStep.DISABLE, 1200))))
+        );
+        assertEquals(
+            "Stopped the server in 6.0 s: disabling plugins 1.2 s, worlds 4.0 s (world 3.5 s, world_nether 500 ms), other 800 ms. "
+                + "Plugins took 1.2 s to stop. Plugin: Example 1.2 s.",
+            LifecycleMessages.shutdownSummary(new TimingReport(
+                TimeUnit.SECONDS.toNanos(6),
+                List.of(entry("disabling plugins", 1200), entry("worlds", 4000, detail("world", 3500), detail("world_nether", 500))),
+                List.of(timing("Example", PluginStep.DISABLE, 1200))
+            ))
         );
     }
 
     @Test
+    void startupBreakdown() {
+        assertEquals(
+            "Startup took 12.0 s: bootstrapping 3.1 s, worlds 7.9 s (world 4.4 s, world_nether 3.5 s), other 1.0 s.",
+            LifecycleMessages.startupBreakdown(new TimingReport(
+                TimeUnit.SECONDS.toNanos(12),
+                List.of(entry("bootstrapping", 3100), entry("worlds", 7900, detail("world", 4400), detail("world_nether", 3500))),
+                List.of()
+            ))
+        );
+    }
+
+    @Test
+    void theBreakdownLeavesOutWhatTookNoTime() {
+        assertEquals(
+            "Startup took 2.0 s: worlds 1.5 s (world 1.5 s), other 500 ms.",
+            LifecycleMessages.startupBreakdown(new TimingReport(
+                TimeUnit.SECONDS.toNanos(2),
+                List.of(entry("delayed init tasks", 0), entry("worlds", 1500, detail("world", 1500), new Breakdown.Detail("world_the_end", 400_000L))),
+                List.of()
+            ))
+        );
+        assertEquals(
+            "Startup took 1.0 s: worlds 1.0 s.",
+            LifecycleMessages.startupBreakdown(new TimingReport(TimeUnit.SECONDS.toNanos(1), List.of(entry("worlds", 1000)), List.of())),
+            "no time is left for other"
+        );
+        assertEquals(
+            "Startup took 1.0 s: other 1.0 s.",
+            LifecycleMessages.startupBreakdown(new TimingReport(TimeUnit.SECONDS.toNanos(1), List.of(entry("players", 0)), List.of())),
+            "steps were measured, but took no time"
+        );
+    }
+
+    private static Breakdown.Entry entry(final String label, final long millis, final Breakdown.Detail... details) {
+        return new Breakdown.Entry(label, TimeUnit.MILLISECONDS.toNanos(millis), List.of(details));
+    }
+
+    private static Breakdown.Detail detail(final String subject, final long millis) {
+        return new Breakdown.Detail(subject, TimeUnit.MILLISECONDS.toNanos(millis));
+    }
+
+    @Test
     void theReportOfARunningThreadSaysThatARepeatedStackTraceMeansStuck() {
-        final LifecyclePhase phase = new LifecyclePhase(null, "Enabling plugin Example v1.0", PluginStep.ENABLE, "Example", null, 0L, null);
+        final LifecyclePhase phase = new LifecyclePhase(null, "Enabling plugin Example v1.0", PluginStep.ENABLE, "Example", null, null, null, 0L, null);
 
         final String report = LifecycleMessages.stalled(
             phase,
@@ -101,7 +155,7 @@ class LifecycleMessagesTest {
     @Test
     void theReportOfAWaitingThreadDoesNotCallTheStepStuck() {
         // For example a plugin whose onDisable waits until its own thread has written a backlog to a database
-        final LifecyclePhase phase = new LifecyclePhase(null, "Disabling plugin Example v1.0", PluginStep.DISABLE, "Example", null, 0L, null);
+        final LifecyclePhase phase = new LifecyclePhase(null, "Disabling plugin Example v1.0", PluginStep.DISABLE, "Example", null, null, null, 0L, null);
 
         final String report = LifecycleMessages.stalled(
             phase,
@@ -122,7 +176,7 @@ class LifecycleMessagesTest {
 
     @Test
     void finishedMessage() {
-        final LifecyclePhase phase = new LifecyclePhase(null, "Disabling plugin Example v1.0", PluginStep.DISABLE, "Example", null, 0L, null);
+        final LifecyclePhase phase = new LifecyclePhase(null, "Disabling plugin Example v1.0", PluginStep.DISABLE, "Example", null, null, null, 0L, null);
         assertEquals(
             "Lifecycle watchdog: Disabling plugin Example v1.0 finished after 45.2 s.",
             LifecycleMessages.finished(phase, TimeUnit.MILLISECONDS.toNanos(45_200))

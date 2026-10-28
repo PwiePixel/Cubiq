@@ -16,12 +16,14 @@ public final class LifecyclePhase implements AutoCloseable {
      * A phase that is not tracked. Returned instead of throwing when tracking fails, because a problem in a
      * diagnostic must never affect the code it observes.
      */
-    static final LifecyclePhase UNTRACKED = new LifecyclePhase(null, "untracked", null, null, null, 0L, null);
+    static final LifecyclePhase UNTRACKED = new LifecyclePhase(null, "untracked", null, null, null, null, null, 0L, null);
 
     private final @Nullable LifecycleMonitor monitor;
     private final String description;
     private final @Nullable PluginStep pluginStep;
     private final @Nullable String pluginName;
+    private final @Nullable ServerStep serverStep;
+    private final @Nullable String subject;
     private final @Nullable Thread thread;
     private final long startNanos;
     private final @Nullable LifecyclePhase parent;
@@ -38,6 +40,8 @@ public final class LifecyclePhase implements AutoCloseable {
         final String description,
         final @Nullable PluginStep pluginStep,
         final @Nullable String pluginName,
+        final @Nullable ServerStep serverStep,
+        final @Nullable String subject,
         final @Nullable Thread thread,
         final long startNanos,
         final @Nullable LifecyclePhase parent
@@ -46,6 +50,8 @@ public final class LifecyclePhase implements AutoCloseable {
         this.description = description;
         this.pluginStep = pluginStep;
         this.pluginName = pluginName;
+        this.serverStep = serverStep;
+        this.subject = subject;
         this.thread = thread;
         this.startNanos = startNanos;
         this.parent = parent;
@@ -66,6 +72,14 @@ public final class LifecyclePhase implements AutoCloseable {
 
     @Nullable String pluginName() {
         return this.pluginName;
+    }
+
+    @Nullable ServerStep serverStep() {
+        return this.serverStep;
+    }
+
+    @Nullable String subject() {
+        return this.subject;
     }
 
     @Nullable Thread thread() {

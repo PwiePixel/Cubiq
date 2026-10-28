@@ -13,3 +13,12 @@
              Bootstrap.validate();
              // Paper start - Perf: Init DataConverter asynchronously
              // Init for both of these are fairly expensive class-loading wise. Both are called again below/in MinecraftServer.spin,
+@@ -244,7 +_,7 @@
+             java.util.concurrent.atomic.AtomicReference<WorldLoader.DataLoadContext> worldLoader = new java.util.concurrent.atomic.AtomicReference<>(); // CraftBukkit
+ 
+             WorldStem worldStem;
+-            try {
++            try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.LOADING_DATA_PACKS)) { // Cubiq - Lifecycle diagnostics
+                 WorldLoader.InitConfig worldLoadConfig = loadOrCreateConfig(settings.getProperties(), levelDataTag, safeModeEnabled, packRepository);
+                 worldStem = Util.<WorldStem>blockUntilDone(
+                         executor -> WorldLoader.load(

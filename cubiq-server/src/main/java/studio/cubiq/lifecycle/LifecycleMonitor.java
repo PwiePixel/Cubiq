@@ -87,7 +87,18 @@ public final class LifecycleMonitor {
      * @return the open phase
      */
     LifecyclePhase begin(final String description) {
-        return this.begin(description, null, null);
+        return this.begin(description, null, null, null, null);
+    }
+
+    /**
+     * Opens a phase for a step of starting or stopping the server on the current thread.
+     *
+     * @param step    the step
+     * @param subject what the step works on, for example the name of a world, or {@code null}
+     * @return the open phase
+     */
+    LifecyclePhase beginServerStep(final ServerStep step, final @Nullable String subject) {
+        return this.begin(step.describe(subject), null, null, step, subject);
     }
 
     /**
@@ -99,10 +110,16 @@ public final class LifecycleMonitor {
      * @return the open phase
      */
     LifecyclePhase beginPluginStep(final PluginStep step, final String pluginName, final String pluginDisplayName) {
-        return this.begin(step.describe(pluginDisplayName), step, pluginName);
+        return this.begin(step.describe(pluginDisplayName), step, pluginName, null, null);
     }
 
-    private LifecyclePhase begin(final String description, final @Nullable PluginStep step, final @Nullable String pluginName) {
+    private LifecyclePhase begin(
+        final String description,
+        final @Nullable PluginStep step,
+        final @Nullable String pluginName,
+        final @Nullable ServerStep serverStep,
+        final @Nullable String subject
+    ) {
         final Thread thread = Thread.currentThread();
         while (true) {
             final ThreadPhases phases = this.threads.computeIfAbsent(thread, ThreadPhases::new);
@@ -112,7 +129,7 @@ public final class LifecycleMonitor {
                     continue;
                 }
                 final long now = this.clock.getAsLong();
-                final LifecyclePhase phase = new LifecyclePhase(this, description, step, pluginName, thread, now, phases.innermost);
+                final LifecyclePhase phase = new LifecyclePhase(this, description, step, pluginName, serverStep, subject, thread, now, phases.innermost);
                 phases.innermost = phase;
                 phases.lastProgressNanos = now;
                 return phase;
