@@ -130,6 +130,23 @@ authlib or DataFixerUpper), list it in `build-data/dev-imports.txt`.
   test fails without the change it covers.
 - Checkstyle is enforced for the API modules, following Paper's rules.
 
+### Smoke tests
+
+The scripts in `scripts/` start a real server from the Paperclip jar. They pass `-Dcom.mojang.eula.agree=true`, so
+only run them if you accept the [Minecraft EULA](https://aka.ms/MinecraftEULA).
+
+```bash
+# First start in a new directory, then a start with the existing files
+SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
+SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
+# A start with a test plugin whose lifecycle steps are slow; needs a server that was started before
+scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
+```
+
+`smoke-test.sh` uses `java` from the `PATH` unless `JAVA` points to a Java 25 executable; `lifecycle-smoke-test.sh`
+compiles its test plugin with `javac` from `JAVA_HOME`. Both fail with the last lines of the server log when the
+server does not start or stop cleanly or an expected message is missing.
+
 Running a server locally (for example with `./gradlew :cubiq-server:runDevServer` or by starting the
 Paperclip jar) requires accepting the [Minecraft EULA](https://aka.ms/MinecraftEULA). Upstream's run
 tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with any JDK 25 works too.
@@ -142,7 +159,7 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
    and writes the failing hunks to the `rejected/` directory of that patch set (for example
    `cubiq-server/minecraft-patches/rejected/`). Resolve them in the generated sources, rebuild the
    affected patches as described above and delete the rejects.
-3. Run `./gradlew build` and the smoke tests in [PERFORMANCE.md](PERFORMANCE.md) if relevant.
+3. Run `./gradlew build createPaperclipJar` and the [smoke tests](#smoke-tests).
 4. Check whether the upstream license files changed and refresh the copies in `licenses/`.
 
 ## Commits, branches and pull requests

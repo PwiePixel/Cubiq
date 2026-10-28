@@ -15,6 +15,7 @@ and pushed.
 - [x] First Cubiq feature: the [configuration check](FEATURES.md#configuration-check)
 - [x] Decision on the Minecraft EULA for test servers: accepted by the project owner for local tests and CI
 - [x] Smoke test in CI: start a server twice, wait for `Done`, require a clean configuration check and a clean stop
+- [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
 - [ ] Release process: version scheme, release channel, published artifacts with checksums, changelog, and a
       source archive with the exact upstream commits for each release
 - [ ] Verify that two builds of the same commit produce identical jars

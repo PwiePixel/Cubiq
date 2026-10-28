@@ -1,0 +1,8 @@
+name: LifecycleSmokeTest
+version: '1.0'
+main: studio.cubiq.smoketest.LifecycleSmokeTestPlugin
+bootstrapper: studio.cubiq.smoketest.LifecycleSmokeTestBootstrap
+api-version: '26.3'
+description: >-
+  Used by Cubiq's smoke test. Each lifecycle step of the plugin waits for as many milliseconds as the system property
+  cubiqSmokeTest.stepDelayMillis says, so that the lifecycle diagnostics have something to report.

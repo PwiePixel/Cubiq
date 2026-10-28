@@ -68,6 +68,9 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
 - the creation of the Paperclip jar,
 - a smoke test that starts the Paperclip jar twice (first start and a start with existing files), checks that the
   server reaches `Done`, that the configuration check finds no problems in the generated files, and that the server
-  stops cleanly (`scripts/smoke-test.sh`).
+  stops cleanly (`scripts/smoke-test.sh`), and that the lifecycle watchdog reports nothing,
+- a lifecycle smoke test that starts the server with a test plugin whose bootstrap, load, enable and disable each
+  take three seconds, and checks that the lifecycle watchdog reports every step with the plugin's stack frames and
+  that both summaries name the plugin (`scripts/lifecycle-smoke-test.sh`).
 
 Connecting clients and running real plugins are not automated yet.
