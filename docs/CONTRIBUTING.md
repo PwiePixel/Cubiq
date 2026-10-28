@@ -141,10 +141,12 @@ SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cub
 SMOKE_EXPECT_CLEAN_CONFIG=true scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 # A start with a test plugin whose lifecycle steps are slow; needs a server that was started before
 scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
+# A start with a test plugin that blocks the server thread on a lock for 15 seconds
+scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar run/smoke
 ```
 
-`smoke-test.sh` uses `java` from the `PATH` unless `JAVA` points to a Java 25 executable; `lifecycle-smoke-test.sh`
-compiles its test plugin with `javac` from `JAVA_HOME`. Both fail with the last lines of the server log when the
+`smoke-test.sh` uses `java` from the `PATH` unless `JAVA` points to a Java 25 executable; the other two scripts
+compile their test plugins with `javac` from `JAVA_HOME`. Both fail with the last lines of the server log when the
 server does not start or stop cleanly or an expected message is missing.
 
 Running a server locally (for example with `./gradlew :cubiq-server:runDevServer` or by starting the

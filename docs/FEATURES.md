@@ -125,3 +125,44 @@ Set them on the command line, for example `java -Dcubiq.lifecycleWatchdog.warnAf
   watchdog and are not part of the summaries.
 - Work that plugins run on other threads is only visible when it blocks one of the watched steps, for example
   when the thread of a step waits for it.
+
+## Watchdog improvements
+
+Spigot's and Paper's watchdog, which reports a server thread that has stopped ticking and restarts the server after
+`timeout-time`, is kept as it is: the same settings, the same early warnings every `early-warning-every`
+milliseconds after `early-warning-delay`, and the same restart behavior. Cubiq fixes how it waits and makes its
+reports more useful:
+
+- **No busy waiting.** While the server thread did not respond, Paper's watchdog skipped its one-second pause
+  between checks and spun on a full CPU core until the next early warning, that is exactly when the server already
+  struggles. With `early-warning-every: 0` it did so between all ticks. Cubiq's watchdog pauses between all checks;
+  see [PERFORMANCE.md](PERFORMANCE.md#results) for the measurements.
+- **Busy or waiting.** Every report says how much CPU time the server thread used since its last tick, for example
+  `The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a
+  lock, a file, the network or a database.` A server thread near 100% is busy, for example in an endless loop.
+- **Locks.** The dump of the server thread now includes the locks it holds and the lock it waits for, and when
+  another thread holds that lock, that thread is dumped right after it, because it is usually the actual cause.
+  The labels of the dumps are corrected: upstream called the thread id `PID` and listed the locks a thread holds as
+  monitors it is "waiting on". An abridged example from Cubiq's watchdog smoke test:
+
+```
+The server has not responded for 10 seconds! Creating thread dump
+...
+The server thread used 0 ms of CPU time in the last 10003 ms (0%), so it is mostly waiting, for example for a lock, a file, the network or a database.
+------------------------------
+Current Thread: Server thread
+	Thread ID: 51 | Suspended: false | Native: false | State: BLOCKED
+	Blocked on: java.lang.Object@28fe70c5 held by "WatchdogSmokeTest lock holder" (thread ID 77)
+	Stack:
+		WatchdogSmokeTest.jar//studio.cubiq.smoketest.WatchdogSmokeTestPlugin.blockServerThread(WatchdogSmokeTestPlugin.java:42)
+		...
+------------------------------
+The server thread waits for a lock held by "WatchdogSmokeTest lock holder", which is likely the cause:
+------------------------------
+Current Thread: WatchdogSmokeTest lock holder
+	Thread ID: 77 | Suspended: false | Native: false | State: TIMED_WAITING
+	Locked monitors:
+		java.lang.Object@28fe70c5 locked at WatchdogSmokeTest.jar//studio.cubiq.smoketest.WatchdogSmokeTestPlugin.holdLockInWatchdogSmokeTest(WatchdogSmokeTestPlugin.java:57)
+	Stack:
+		...
+```

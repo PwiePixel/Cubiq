@@ -71,6 +71,10 @@ jobs:
       - name: Smoke test (lifecycle diagnostics)
         run: scripts/lifecycle-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
 
+      # A test plugin that blocks the server thread on a lock, which the watchdog must report without spinning
+      - name: Smoke test (watchdog)
+        run: scripts/watchdog-smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
       - name: Upload smoke test logs
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

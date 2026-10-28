@@ -1,0 +1,8 @@
+name: WatchdogSmokeTest
+version: '1.0'
+main: studio.cubiq.smoketest.WatchdogSmokeTestPlugin
+api-version: '26.3'
+description: >-
+  Used by Cubiq's watchdog smoke test. Shortly after startup, it blocks the server thread for as many milliseconds as
+  the system property cubiqSmokeTest.stallMillis says, on a lock that another thread holds, and logs how much CPU time
+  the watchdog thread used meanwhile.

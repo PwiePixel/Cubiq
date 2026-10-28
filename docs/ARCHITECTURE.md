@@ -76,6 +76,7 @@ Cubiq's own classes live in `cubiq-server/src/main/java` under `studio.cubiq`:
 | `studio.cubiq.version` | `CubiqVersionFetcher`, the `/version` update status for Cubiq builds |
 | `studio.cubiq.configcheck` | The configuration check, see [FEATURES.md](FEATURES.md) |
 | `studio.cubiq.lifecycle` | Lifecycle diagnostics: plugin timing and the lifecycle watchdog, see [FEATURES.md](FEATURES.md#lifecycle-diagnostics) |
+| `studio.cubiq.watchdog` | Improvements to the inherited watchdog, see [FEATURES.md](FEATURES.md#watchdog-improvements) |
 
 Changes to upstream code are kept as small as possible: a patch hook is usually one line that calls into a
 `studio.cubiq` class and is marked with a `// Cubiq` comment. This keeps upstream updates cheap and makes every
@@ -87,6 +88,7 @@ change to inherited behavior easy to find. The current hooks are:
 | Version fetcher | `paper-server: io.papermc.paper.PaperServerInternalAPIBridge` | Use `CubiqVersionFetcher` |
 | bStats | `paper-server: com.destroystokyo.paper.Metrics` | Do not submit server metrics under Purpur's name |
 | Crash and watchdog text | `net.minecraft.CrashReport`, `org.spigotmc.WatchdogThread`, `CraftScheduler`, `PaperConsole` | Refer users to Cubiq |
+| Watchdog hardening | `org.spigotmc.WatchdogThread` | Pause between all checks; CPU use and locks in the dumps (`studio.cubiq.watchdog`) |
 | Configuration tracking | `org.spigotmc.SpigotConfig`, `org.purpurmc.purpur.PurpurConfig`, `org.bukkit.craftbukkit.CraftServer` | Create `TrackedYamlConfiguration`s |
 | Configuration check | `net.minecraft.server.MinecraftServer` after the `Done` message | Run `ConfigurationCheck` |
 | Lifecycle phases | `net.minecraft.server.Main` (bootstrap), `MinecraftServer` (`runServer`, `Done`, `stopServer`), `CraftServer#reload` | Report startup, reload and shutdown to `ServerLifecycle` |

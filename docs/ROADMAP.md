@@ -37,6 +37,8 @@ reports, and is covered by tests. In order of priority:
       bootstrap, load, enable or disable, loading a world or shutdown stops making progress. The upstream watchdog is
       only armed between `Done` and the start of shutdown, so hangs in these phases were never reported.
 - [x] Per-plugin lifecycle timing (bootstrap, load, enable, disable) with summaries after startup and shutdown
+- [x] [Watchdog hardening](FEATURES.md#watchdog-improvements): no busy waiting while the server does not respond, CPU
+      use of the server thread, locks and the thread that holds the lock the server thread waits for
 - [ ] A breakdown of startup and shutdown time by phase (worlds, plugins, saving) and an optional JSON report
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
