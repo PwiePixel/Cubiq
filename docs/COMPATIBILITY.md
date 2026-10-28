@@ -29,7 +29,7 @@ This page records what has been verified, what is inherited unchanged, and where
 | Folia scheduler API (`RegionScheduler`, `EntityScheduler`, `GlobalRegionScheduler`, `AsyncScheduler`) | Inherited | Implemented as in Paper: region, entity and global tasks run on the server thread. Plugins that declare `folia-supported: true` run as they do on Paper. |
 | Folia's regionized multithreading | Not supported | Cubiq ticks worlds on one server thread, like Paper. See [ROADMAP.md](ROADMAP.md). |
 | Server brand | Changed, verified | `ServerBuildInfo#brandId()` is `cubiqstudio:cubiq` and `Bukkit.getName()` returns `Cubiq`. `ServerBuildInfo#isBrandCompatible` accepts the Paper, Purpur and Cubiq brand ids, so plugins that check for Paper or Purpur that way keep working. |
-| `/version` update check | Changed, verified | Cubiq does not query the Paper or Purpur download APIs, which would report misleading results for Cubiq builds. There is no release API for Cubiq yet. |
+| `/version` update check | Changed, verified | Cubiq does not query the Paper or Purpur download APIs, which would report misleading results for Cubiq builds. A [release](CONTRIBUTING.md#releases) shows its version (`You are running Cubiq v0.0.1`) and links to Cubiq's releases; other builds say that they are development builds. Cubiq does not check for newer releases yet. |
 | bStats server metrics | Changed | Cubiq does not submit server-implementation metrics, because it has no registered bStats page and must not report as Purpur. `plugins/bStats/config.yml` is still created, so plugins that use bStats are unaffected. |
 | Configuration files (`server.properties`, `bukkit.yml`, `spigot.yml`, `config/paper-*.yml`, `purpur.yml`) | Changed | Read and written as by Purpur, with one fix: when Paper updates `paper-global.yml` from a version before 31 and moves `allow-nether` out of `server.properties`, Paper and Purpur write `server.properties` with only the settings that Minecraft writes back. That loses all other settings, including Paper's own `rcon.ip`, so that RCON listens on `server-ip` from the next start. Cubiq keeps them and only removes `allow-nether`. Cubiq adds no configuration file. The [configuration check](FEATURES.md#configuration-check) only logs and never changes them. |
 | Chunk system system properties (`-DPaper.WorkerThreadCount`, `-DPaper.MaxViewDistance`, `-DPaper.NumaScheduling`) | Inherited | Same names as on Paper. The chunk system builds these names from its platform brand, which Cubiq deliberately leaves at `Paper`. |
@@ -45,6 +45,10 @@ This page records what has been verified, what is inherited unchanged, and where
   do not recognize Purpur when they look for Paper. The supported way to detect a compatible server is
   `ServerBuildInfo.buildInfo().isBrandCompatible(ServerBuildInfo.BRAND_PAPER_ID)` or checking for a class of the
   required API.
+- **The build number counts Cubiq's releases.** A release reports a version such as `26.3-1-main@abc1234`, and
+  `ServerBuildInfo#buildNumber()` is 1 for v0.0.1, 2 for the next release and so on; other builds have no build
+  number and report `DEV` in its place, like Paper's development builds. Plugins that compare the build number with
+  Paper's builds get meaningless results, as they do on Purpur, whose build numbers are its own as well.
 - **`Bukkit.getTPS()` returns four values** (the averages of the last 5 seconds, 1, 5 and 15 minutes), as on
   Purpur, instead of Paper's three (1, 5 and 15 minutes). `getTPS()[0]` is therefore the 5-second average.
 - **Plugins that read `server.properties`, `bukkit.yml`, `spigot.yml` or `purpur.yml` themselves** keep working. If

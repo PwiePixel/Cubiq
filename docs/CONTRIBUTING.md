@@ -196,10 +196,11 @@ identical files, which CI checks on every push. Two things break this:
   only makes complete builds. Compare local jars only from complete builds, for example with
   `./gradlew createPaperclipJar --rerun-tasks --no-build-cache`.
 
-The manifest of the server jar records the build time, the branch and the build number. Local builds use the epoch as
-build time, CI uses the commit time (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). To build a commit the way
-CI does, check it out on a branch with the same name as in CI, leave `BUILD_NUMBER` unset, and build it in a fresh
-clone:
+The manifest of the server jar records the build time, the branch, the build number and, for a
+[release](#releases), its version. Local builds use the epoch as build time, CI uses the commit time
+(`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). To build a commit the way CI does, check it out on a branch
+with the same name as in CI, leave `BUILD_NUMBER` and `CUBIQ_VERSION` unset, or for a release set them to the values
+that its manifest shows as `Build-Number` and `Cubiq-Version`, and build it in a fresh clone:
 
 ```
 export BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)
@@ -208,12 +209,13 @@ export BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-
 sha256sum cubiq-server/build/libs/cubiq-paperclip-*.jar
 ```
 
-The SHA-256 must be the one that the summary of the CI run of that commit shows. This was checked for two commits,
+The SHA-256 must be the one that the summary of the CI run of that commit shows, for a release also the one in the
+`.sha256` file of the release. This was checked for two commits,
 45f6cb6 and 05279aa: builds in a fresh clone on another machine, with Amazon Corretto 25.0.5 on Ubuntu 24.04, produced
 Paperclip jars identical to those of CI, which used Eclipse Temurin 25.0.4 and 25.0.5 on Ubuntu 26.04. The directory of
 the clone and the Maven repository the dependencies came from (Maven Central or a mirror of it) differed as well. What
-has to match is the commit, the branch name, `BUILD_STARTED_AT` and `BUILD_NUMBER`. A JDK other than version 25 could
-compile classes differently, which has not been tried.
+has to match is the commit, the branch name, `BUILD_STARTED_AT`, `BUILD_NUMBER` and `CUBIQ_VERSION`. A JDK other than
+version 25 could compile classes differently, which has not been tried.
 
 Running a server locally (for example with `./gradlew :cubiq-server:runDevServer` or by starting the
 Paperclip jar) requires accepting the [Minecraft EULA](https://aka.ms/MinecraftEULA). Upstream's run
@@ -232,6 +234,34 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
 5. Regenerate [LIBRARIES.md](LIBRARIES.md) with `scripts/library-licenses.py` and review new libraries and licenses;
    collect the license notices of libraries that are new or changed their version as described in
    [Smoke tests](#smoke-tests).
+
+## Releases
+
+CI publishes every build of `main` that passes all checks as a pre-release on GitHub. The build job of
+`.github/workflows/build.yml` determines the version of the release, builds the jars with it and runs all checks; then
+the `release` job tags the commit and creates the release with the Paperclip jar of that build. Nothing is tagged or
+uploaded by hand.
+
+- **Versions** have the form `MAJOR.MINOR.PATCH` and are tagged `vMAJOR.MINOR.PATCH`. `cubiqVersion` in
+  `gradle.properties` sets `MAJOR.MINOR`, and `scripts/release-version.py` numbers its releases by the patch number,
+  after the existing release tags: 0.0.1, 0.0.2 and so on, and after raising `cubiqVersion` to 0.1, the next release
+  is 0.1.0. Raise it in the commit that starts the new version; a `cubiqVersion` below the latest release fails the
+  build. A release also gets a build number, the number of releases up to and including it (1 for v0.0.1), which the
+  version string of the server shows, for example `26.3-1-main@abc1234`.
+- **One release per commit.** A build of a commit that has a release tag already, for example when its run is started
+  again, gets the version of that release and makes no new release. Runs of `main` run one at a time, and a running
+  one is never cancelled, so two releases cannot get the same version; when more commits arrive while a run is going
+  on, GitHub keeps only the newest waiting run, and the next release contains all of them.
+- **A release contains** the Paperclip jar as `cubiq-<Minecraft version>-v<version>.jar`, its SHA-256 in a `.sha256`
+  file, and notes from `scripts/release-notes.py`: the commits since the previous release, the Purpur and Paper commits
+  it is based on, and the license notices. Releases are marked as pre-releases while Cubiq is alpha software.
+- **The jar knows its release.** CI sets `CUBIQ_VERSION` and `BUILD_NUMBER` for the build, which end up in the
+  manifest of the server jar as `Cubiq-Version` and `Build-Number`, and `/version` shows
+  `You are running Cubiq v0.0.1`. Builds without `CUBIQ_VERSION` call themselves development builds.
+- **On other branches and in pull requests,** the summary of the build job shows which version the next release from
+  `main` would get and a preview of its notes.
+- The `release` job requests the permission to write the repository's contents for its `GITHUB_TOKEN`, which it needs
+  to create the tag and the release. A ruleset that restricts creating `v*` tags would make it fail.
 
 ## Commits, branches and pull requests
 

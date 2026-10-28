@@ -16,8 +16,13 @@ and pushed.
 - [x] Decision on the Minecraft EULA for test servers: accepted by the project owner for local tests and CI
 - [x] Smoke test in CI: start a server twice, wait for `Done`, require a clean configuration check and a clean stop
 - [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
-- [ ] Release process: version scheme, release channel, published artifacts with checksums, changelog, and a
-      source archive with the exact upstream commits for each release
+- [ ] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
+      (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256 and notes that list the changes and
+      the exact upstream commits, and `/version` shows the release ([CONTRIBUTING.md](CONTRIBUTING.md#releases)).
+      Implemented and tested on a branch (version numbering, preview of the notes, a release build on a test server);
+      the release job runs for the first time when `main` contains it
+- [ ] A source archive for each release that contains the upstream sources as well, so that the corresponding source
+      does not depend on Paper's and Purpur's repositories staying available
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
       Paperclip jar (checked in CI)
 - [x] Reproducible across machines: builds of two commits on another machine, with a different JDK vendor and update

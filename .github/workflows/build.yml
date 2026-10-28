@@ -10,7 +10,8 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A run of main can become a release, so it is never cancelled; elsewhere, a newer push replaces the running build
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -19,9 +20,20 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      previous: ${{ steps.release.outputs.previous }}
+      purpur: ${{ steps.upstream.outputs.purpur }}
+      paper: ${{ steps.upstream.outputs.paper }}
     steps:
+      # The whole history and the tags: the release version continues from the release tags, and the release notes
+      # list the commits since the previous release
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 25
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
@@ -43,8 +55,47 @@ jobs:
       - name: Set reproducible build time
         run: echo "BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
+      # Every build of main that passes all checks becomes a release (job "release"), numbered after the existing
+      # release tags by scripts/release-version.py; the jar records the version (Cubiq-Version) and the number of the
+      # release (Build-Number). A commit is released only once: a build of a released commit, for example when its run
+      # is started again, gets the version of its release and makes no new release. Elsewhere, the summary only shows
+      # which version the next release from main would get.
+      - name: Determine the release version
+        id: release
+        run: |
+          python3 scripts/release-version.py --self-test
+          release=$(python3 scripts/release-version.py gradle.properties)
+          echo "$release" >> "$GITHUB_OUTPUT"
+          version=$(sed -n 's/^version=//p' <<< "$release")
+          build=$(sed -n 's/^build=//p' <<< "$release")
+          if [[ $(sed -n 's/^released=//p' <<< "$release") == true ]]; then
+            echo "CUBIQ_VERSION=$version" >> "$GITHUB_ENV"
+            echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
+            echo "This commit is released as v$version. This build gets its version and makes no new release." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ $GITHUB_REF == refs/heads/main && ($GITHUB_EVENT_NAME == push || $GITHUB_EVENT_NAME == workflow_dispatch) ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "CUBIQ_VERSION=$version" >> "$GITHUB_ENV"
+            echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
+            echo "This build becomes the release v$version if all checks pass." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Apply patches
         run: ./gradlew applyAllPatches --stacktrace
+
+      # For the release notes: the Purpur commit that Cubiq pins and the Paper commit that this Purpur commit pins
+      - name: Record the upstream commits
+        id: upstream
+        run: |
+          purpur=$(sed -n 's/^purpurCommit *= *//p' gradle.properties | tr -d '\r')
+          paper=$(sed -n 's/^paperCommit *= *//p' .gradle/caches/paperweight/upstreams/purpur/gradle.properties | tr -d '\r')
+          if [[ ! $purpur =~ ^[0-9a-f]{40}$ || ! $paper =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Could not read the pinned Purpur and Paper commits (Purpur: '$purpur', Paper: '$paper')"
+            exit 1
+          fi
+          echo "purpur=$purpur" >> "$GITHUB_OUTPUT"
+          echo "paper=$paper" >> "$GITHUB_OUTPUT"
 
       # Rebuilding the patches from the patched sources must reproduce the committed patches exactly. The two patch
       # sets are rebuilt in separate Gradle runs because paperweight's task graph rejects running them together, and
@@ -131,6 +182,27 @@ jobs:
           jar=$(ls cubiq-server/build/libs/cubiq-paperclip-*.jar)
           echo "SHA-256 of $(basename "$jar"): \`$(sha256sum "$jar" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
 
+      # What the release job would publish, so that changes to the release notes can be checked before they reach main
+      - name: Preview the release notes
+        if: steps.release.outputs.publish != 'true'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          PREVIOUS: ${{ steps.release.outputs.previous }}
+          PURPUR_COMMIT: ${{ steps.upstream.outputs.purpur }}
+          PAPER_COMMIT: ${{ steps.upstream.outputs.paper }}
+        run: |
+          mc=$(sed -n 's/^mcVersion *= *//p' gradle.properties | tr -d '\r')
+          jar="$RUNNER_TEMP/release-preview/cubiq-$mc-v$VERSION.jar"
+          mkdir -p "$(dirname "$jar")"
+          cp cubiq-server/build/libs/cubiq-paperclip-*.jar "$jar"
+          {
+            echo
+            echo "### Release notes of v$VERSION (preview)"
+            echo
+            python3 scripts/release-notes.py --version "$VERSION" --previous "$PREVIOUS" --jar "$jar" --minecraft "$mc" \
+              --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload smoke test logs
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -148,3 +220,46 @@ jobs:
           name: cubiq-${{ github.sha }}
           path: cubiq-server/build/libs/cubiq-paperclip-*.jar
           if-no-files-found: error
+
+  # Publishes the build of main as a pre-release with its Paperclip jar once all checks passed, if the build job decided
+  # to release it (see "Determine the release version")
+  release:
+    name: Release
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Download the Paperclip jar
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: cubiq-${{ github.sha }}
+          path: ${{ runner.temp }}/artifact
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+          TAG: ${{ needs.build.outputs.tag }}
+          PREVIOUS: ${{ needs.build.outputs.previous }}
+          PURPUR_COMMIT: ${{ needs.build.outputs.purpur }}
+          PAPER_COMMIT: ${{ needs.build.outputs.paper }}
+        run: |
+          mc=$(sed -n 's/^mcVersion *= *//p' gradle.properties | tr -d '\r')
+          name="cubiq-$mc-v$VERSION.jar"
+          mv "$RUNNER_TEMP"/artifact/cubiq-paperclip-*.jar "$RUNNER_TEMP/$name"
+          (cd "$RUNNER_TEMP" && sha256sum "$name" > "$name.sha256")
+          python3 scripts/release-notes.py --version "$VERSION" --previous "$PREVIOUS" --jar "$RUNNER_TEMP/$name" --minecraft "$mc" \
+            --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
+            > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" "$RUNNER_TEMP/$name" "$RUNNER_TEMP/$name.sha256" --target "$GITHUB_SHA" \
+            --title "Cubiq v$VERSION for Minecraft $mc" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
+          echo "Released [$TAG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG)." >> "$GITHUB_STEP_SUMMARY"

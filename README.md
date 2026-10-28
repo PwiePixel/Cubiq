@@ -46,7 +46,7 @@ Cubiq is put together.
 - Cubiq identifies itself as Cubiq (brand id `cubiqstudio:cubiq`). Plugins that check for Paper or
   Purpur through `ServerBuildInfo#isBrandCompatible` keep working.
 - `/version` does not query Paper's or Purpur's download APIs for Cubiq builds, which would report
-  misleading update information.
+  misleading update information. It shows which Cubiq release the server runs and links to Cubiq's releases.
 - Crash reports and watchdog messages ask users to report problems to Cubiq instead of Paper or Purpur.
 - The server does not submit server-implementation statistics to bStats under Purpur's name.
   Plugins that use bStats are not affected.
@@ -57,6 +57,22 @@ Cubiq is put together.
 - Builds are reproducible: two builds of the same commit in the same environment produce an identical server jar and
   Paperclip jar, which CI checks, and builds on another machine, with a different JDK and operating system, produced
   the same Paperclip jar as CI.
+
+## Download
+
+Every change on `main` that passes all checks in CI is published as a numbered pre-release on the
+[releases page](https://github.com/PwiePixel/Cubiq/releases), starting with v0.0.1. A release contains the Paperclip
+jar, for example `cubiq-26.3-v0.0.1.jar`, and its SHA-256 checksum, and its notes list the changes since the previous
+release and the Purpur and Paper commits it is based on. Check the jar and start it with Java 25:
+
+```bash
+sha256sum -c cubiq-26.3-v0.0.1.jar.sha256
+java -jar cubiq-26.3-v0.0.1.jar --nogui
+```
+
+Releases are alpha software like everything else in Cubiq: back up your worlds before you try one. On first start,
+the jar downloads the Minecraft server from Mojang, and running it requires accepting the
+[Minecraft EULA](https://aka.ms/MinecraftEULA).
 
 ## Building
 

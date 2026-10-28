@@ -199,8 +199,12 @@ When distributing a Cubiq server jar (for example as a release or CI artifact):
   server jar and the Paperclip jar are identical to the first build and reports the SHA-256 of the
   Paperclip jar. Builds of two commits on another machine, with a different JDK and operating system,
   produced the same Paperclip jar as CI when they used the same branch name and build time
-  (see [CONTRIBUTING.md](CONTRIBUTING.md)). Source archives and a written source offer for releases are
-  not set up yet; they are part of the release process on the roadmap.
+  (see [CONTRIBUTING.md](CONTRIBUTING.md)). The notes of each [release](CONTRIBUTING.md#releases), next to the jar,
+  name the tag of this repository that it was built from and link the Purpur and Paper commits; GitHub offers
+  archives of the tag, which contain Cubiq's patches but not the upstream sources. The GPLv3 (section 6(d)) allows the
+  corresponding source to be on another server if clear directions next to the binary say where to find it, but the
+  distributor stays obliged to keep it available. A source archive for each release that contains the upstream sources
+  as well is not set up yet; it is on the roadmap.
 - **Modified files are marked.** Cubiq's changes to upstream files are marked with `// Cubiq`
   comments and are kept as patches, which documents what was changed.
 - **The Apache 2.0 `NOTICE` must be kept.** Derivative works of Cubiq must include the attribution
