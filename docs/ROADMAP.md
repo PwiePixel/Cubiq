@@ -26,7 +26,9 @@ and pushed.
 - [x] CI checks on the distributed jar: no Minecraft classes in the Paperclip jar, license files present
 - [x] CI check that rebuilding the patches from the patched sources changes nothing, so that the committed patches
       always match what was built
-- [ ] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
+- [x] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
+      ([LIBRARIES.md](LIBRARIES.md))
+- [ ] Ship the license texts and copyright notices of all bundled libraries; 44 of the 69 bundled jars contain none
 - [ ] Resolve the open licensing questions listed in [LICENSING.md](LICENSING.md)
 - [ ] Cubiq logo for the server GUI (the GUI currently shows the logo inherited from Purpur)
 

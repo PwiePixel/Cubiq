@@ -1,0 +1,87 @@
+{
+  "licenseNames": {
+    "Apache 2.0": "Apache-2.0",
+    "Apache License, Version 2.0": "Apache-2.0",
+    "Apache-2.0": "Apache-2.0",
+    "The Apache Software License, Version 2.0": "Apache-2.0",
+    "BSD-3-Clause": "BSD-3-Clause",
+    "The BSD License <https://opensource.org/licenses/BSD-3-Clause>": "BSD-3-Clause",
+    "Eclipse Public License, Version 1.0": "EPL-1.0",
+    "GNU General Public License version 3": "GPL-3.0",
+    "The GNU General Public License, v2 with Universal FOSS Exception, v1.0": "GPL-2.0-only WITH Universal-FOSS-exception-1.0",
+    "LGPL 3.0": "LGPL-3.0",
+    "MIT License": "MIT",
+    "The MIT License": "MIT",
+    "Mozilla Public License, Version 2.0": "MPL-2.0"
+  },
+  "licenses": {
+    "Apache-2.0": {
+      "status": "allowed",
+      "note": "Apache-licensed code may be part of a GPLv3 work."
+    },
+    "BSD-3-Clause": {
+      "status": "allowed"
+    },
+    "EPL-1.0": {
+      "status": "open",
+      "note": "The FSF lists the EPL 1.0 as incompatible with the GPL. Paper bundles the same library as a separate jar. See the open questions in LICENSING.md."
+    },
+    "GPL-2.0-only WITH Universal-FOSS-exception-1.0": {
+      "status": "open",
+      "note": "GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception is meant to allow distributing it together with other open source software. Whether it covers Cubiq's distribution is not confirmed. Paper bundles the same library."
+    },
+    "GPL-3.0": {
+      "status": "allowed",
+      "note": "The license of the server as a whole."
+    },
+    "LGPL-3.0": {
+      "status": "allowed"
+    },
+    "LicenseRef-BungeeCord": {
+      "status": "open",
+      "note": "BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services; see the open questions."
+    },
+    "MIT": {
+      "status": "allowed"
+    },
+    "MPL-2.0": {
+      "status": "allowed",
+      "note": "The MPL 2.0 allows distribution under the GPL as a Secondary License (section 3.3), unless the code is marked as incompatible with Secondary Licenses."
+    }
+  },
+  "libraries": {
+    "com.velocitypowered:velocity-native": {
+      "license": "GPL-3.0",
+      "declared": "none",
+      "source": "PaperMC/Velocity ed4c46e: LICENSE",
+      "status": "allowed",
+      "note": "Velocity is licensed under the GPLv3; its native module has no license of its own. Its native libraries contain libdeflate (MIT) and use the operating system's OpenSSL, which is not bundled."
+    },
+    "me.lucko:spark-api": {
+      "license": "MIT",
+      "declared": "none",
+      "source": "lucko/spark 81df7e2: spark-api/LICENSE.txt",
+      "status": "allowed"
+    },
+    "me.lucko:spark-paper": {
+      "license": "GPL-3.0",
+      "declared": "none",
+      "source": "lucko/spark 81df7e2: LICENSE.txt",
+      "status": "allowed"
+    },
+    "net.md-5:bungeecord-chat": {
+      "license": "LicenseRef-BungeeCord",
+      "declared": "none",
+      "source": "SpigotMC/BungeeCord da0a6e8: LICENSE",
+      "status": "open",
+      "note": "BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: \"You may not use the software for commercial software hosting services without written permission from the author.\" Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well."
+    },
+    "studio.cubiq:cubiq-api": {
+      "license": "GPL-3.0",
+      "declared": "Cubiq's API",
+      "source": "LICENSING.md",
+      "status": "allowed",
+      "note": "Paper's API with Purpur's and Cubiq's changes, distributed under the GPLv3 like the server."
+    }
+  }
+}

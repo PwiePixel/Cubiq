@@ -95,6 +95,16 @@ jobs:
       - name: Check the distribution
         run: scripts/check-distribution.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
 
+      # Every library in the jar must have a license that scripts/library-licenses.json covers, and the inventory in
+      # docs/LIBRARIES.md must be up to date
+      - name: Check the licenses of the bundled libraries
+        run: |
+          scripts/library-licenses.py cubiq-server/build/libs/cubiq-paperclip-*.jar > "$RUNNER_TEMP/LIBRARIES.md"
+          if ! diff -u docs/LIBRARIES.md "$RUNNER_TEMP/LIBRARIES.md"; then
+            echo "::error::docs/LIBRARIES.md is out of date. Regenerate it with scripts/library-licenses.py and commit it."
+            exit 1
+          fi
+
       # Building the jars again from the same commit must produce an identical server jar and Paperclip jar.
       # --rerun-tasks runs every task again, including the compilation, and --no-build-cache keeps Gradle from reusing
       # outputs of the first build. The bundler jar is an intermediate file whose entries carry the build time.

@@ -83,6 +83,8 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
 - a check of the distribution: the Paperclip jar and the server jar it created contain the license texts and
   notices, and the Paperclip jar contains no Minecraft code, only a patch against Mojang's jar, which Paperclip
   downloads from Mojang (`scripts/check-distribution.sh`),
+- a check that every bundled library has a license that `scripts/library-licenses.json` covers and that
+  [LIBRARIES.md](LIBRARIES.md) is up to date (`scripts/library-licenses.py`),
 - a second build that reuses no output of the first build and must produce an identical server jar and Paperclip jar;
   the SHA-256 of the Paperclip jar is shown in the summary of the CI run.
 

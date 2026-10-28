@@ -56,12 +56,19 @@ A few upstream files carry notices that need a closer look (see the open questio
 - `GS4QueryEvent` in Paper's API was adapted from Velocity's `ProxyQueryEvent`.
 
 The Paperclip jar also contains the server's runtime libraries as separate jars, each under its own license.
-Examples, taken from the libraries' Maven metadata: Configurate (Apache 2.0), leafpile (GPLv3), Rhino (MPL 2.0),
-upnp4j (LGPL 3.0, added by Purpur) and MySQL Connector/J (GPLv2 with the Universal FOSS Exception). Some come in
-as dependencies of other libraries, for example Eclipse Sisu Inject (EPL 1.0, through the Maven model builder
-used by Paper's API) and protobuf-java (BSD-3-Clause, through MySQL Connector/J). A complete, automatically
-generated inventory of all bundled libraries and their licenses does not exist yet; it is planned (see
-[ROADMAP.md](ROADMAP.md)).
+[LIBRARIES.md](LIBRARIES.md) lists all of them with the licenses their Maven POMs declare, for example Configurate
+(Apache 2.0), leafpile (GPLv3), Rhino (MPL 2.0), upnp4j (LGPL 3.0, added by Purpur) and MySQL Connector/J (GPLv2
+with the Universal FOSS Exception). Some come in as dependencies of other libraries, for example Eclipse Sisu Inject
+(EPL 1.0, through the Maven model builder used by Paper's API) and protobuf-java (BSD-3-Clause, through MySQL
+Connector/J). `scripts/library-licenses.py` generates the list from the Paperclip jar, and CI fails when a library
+has a license that `scripts/library-licenses.json` does not cover or when the list is out of date. The libraries of
+Mojang's server jar, which Paperclip downloads from Mojang, are listed separately; Cubiq does not distribute them.
+
+Four bundled libraries declare no license in their POMs or jars. Their licenses were looked up in the projects'
+repositories (the commits are recorded in `scripts/library-licenses.json`): spark is licensed under the GPLv3 and its
+API under the MIT License, and Velocity's native module falls under Velocity's GPLv3. Its native libraries contain
+libdeflate (MIT) and use the operating system's OpenSSL, which is not bundled. The fourth, the BungeeCord chat API,
+is an open question below.
 
 Open questions that need an answer before the first release:
 
@@ -76,6 +83,17 @@ Open questions that need an answer before the first release:
   library jar is acceptable. Paper bundles the same library.
 - How to provide the attribution notices of Apache Commons Compress, whose `NOTICE` file the Paperclip jar does
   not contain.
+- Whether the Universal FOSS Exception of MySQL Connector/J (GPLv2 only) covers its distribution with the server.
+  Paper bundles the same library.
+- The license of `bungeecord-chat`, the BungeeCord chat API that the Spigot and Paper APIs expose. BungeeCord's
+  license, which covers its chat module, is the BSD 3-Clause License with an additional clause: "You may not use
+  the software for commercial software hosting services without written permission from the author." Such a
+  restriction is not part of an open source license, and the GPLv3 does not allow further restrictions on the
+  combined work. Paper bundles the same library.
+- How to ship the notices of the bundled libraries: 44 of the 69 jars in the Paperclip jar contain no license or
+  notice file, although licenses such as MIT and BSD require their notices to accompany binary copies. This includes
+  libdeflate in the native libraries of `velocity-native`. A file with the license texts and copyright notices of
+  all bundled libraries would close this gap.
 
 ## Cubiq's own license
 
@@ -149,7 +167,9 @@ separate legal review before it is adopted.
 
 ## Checklist for maintainers
 
-- Keep `licenses/` in sync with upstream when updating `purpurCommit`.
+- Keep `licenses/` in sync with upstream when updating `purpurCommit`, and regenerate
+  [LIBRARIES.md](LIBRARIES.md) with `scripts/library-licenses.py`. A new license name or license needs an entry in
+  `scripts/library-licenses.json`, reviewed against the GPLv3.
 - Record the origin and license of any code copied from another project in `NOTICE` and here.
 - Do not copy code from projects whose license is incompatible with the GPLv3.
 - Keep upstream copyright headers and `// Paper` / `// Purpur` markers intact.

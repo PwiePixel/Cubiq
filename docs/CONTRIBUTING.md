@@ -152,6 +152,11 @@ server does not start or stop cleanly or an expected message is missing.
 `scripts/check-distribution.sh <paperclip-jar> [<server-directory>]` checks the jar server owners download: license
 texts and notices included, no Minecraft code, fixed entry times.
 
+`scripts/library-licenses.py <paperclip-jar> > docs/LIBRARIES.md` regenerates the list of bundled libraries and their
+licenses from the jar and the Maven POMs in the Gradle cache. Run it after changing dependencies or updating
+upstream and commit the result. When it reports a license name or a license that `scripts/library-licenses.json` does
+not cover, check that the license is compatible with the GPLv3 before adding it there.
+
 The server jar and the Paperclip jar are reproducible: building the same commit twice in the same environment produces
 identical files, which CI checks on every push. Two things break this:
 
@@ -182,6 +187,7 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
    affected patches as described above and delete the rejects.
 3. Run `./gradlew build createPaperclipJar` and the [smoke tests](#smoke-tests).
 4. Check whether the upstream license files changed and refresh the copies in `licenses/`.
+5. Regenerate [LIBRARIES.md](LIBRARIES.md) with `scripts/library-licenses.py` and review new libraries and licenses.
 
 ## Commits, branches and pull requests
 
