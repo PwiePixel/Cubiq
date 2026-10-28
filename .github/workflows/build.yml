@@ -15,6 +15,8 @@ concurrency:
 jobs:
   build:
     name: Apply patches, build and test
+    # Branches of this repository are built on push; pull requests only need their own build when they come from a fork
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -49,6 +51,29 @@ jobs:
 
       - name: Create Paperclip jar
         run: ./gradlew createPaperclipJar --stacktrace
+
+      # Starts real test servers. The project maintainers accept the Minecraft EULA
+      # (https://aka.ms/MinecraftEULA) for these throwaway servers; the script passes -Dcom.mojang.eula.agree=true.
+      # The second start covers the case where all configuration files already exist.
+      - name: Smoke test (first start)
+        env:
+          SMOKE_EXPECT_CLEAN_CONFIG: "true"
+        run: scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      - name: Smoke test (second start)
+        env:
+          SMOKE_EXPECT_CLEAN_CONFIG: "true"
+        run: scripts/smoke-test.sh cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/server"
+
+      - name: Upload smoke test logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-test-logs-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/server/smoke-test.log
+            ${{ runner.temp }}/server/logs/
+          if-no-files-found: ignore
 
       - name: Upload server jar
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
