@@ -28,7 +28,10 @@ and pushed.
       always match what was built
 - [x] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
       ([LIBRARIES.md](LIBRARIES.md))
-- [ ] Ship the license texts and copyright notices of all bundled libraries; 44 of the 69 bundled jars contain none
+- [x] Ship the license texts and copyright notices that the bundled libraries' jars lack (44 of 69 jars contain no
+      license or notice file, 7 more lack notices or a source pointer) and those of code of other projects compiled into
+      the server jar and the Paperclip jar, collected from each project's source at the bundled version and checked in
+      CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
 - [ ] Resolve the open licensing questions listed in [LICENSING.md](LICENSING.md)
 - [ ] Cubiq logo for the server GUI (the GUI currently shows the logo inherited from Purpur)
 

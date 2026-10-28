@@ -15,12 +15,35 @@
     "Mozilla Public License, Version 2.0": "MPL-2.0"
   },
   "licenses": {
+    "Apache-1.1": {
+      "status": "open",
+      "note": "The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries. See the open questions in LICENSING.md."
+    },
     "Apache-2.0": {
       "status": "allowed",
       "note": "Apache-licensed code may be part of a GPLv3 work."
     },
+    "Apache-2.0 WITH LLVM-exception": {
+      "status": "allowed",
+      "note": "LLVM's runtime libraries; the exception waives the notice requirements for code compiled with them."
+    },
+    "APSL-2.0": {
+      "status": "open",
+      "note": "The FSF lists the Apple Public Source License 2.0 as incompatible with the GPL. The 32-bit (i386) macOS native library of jline-native contains Apple's startup code under it; Paper bundles the same library. See the open questions in LICENSING.md."
+    },
+    "blessing": {
+      "status": "allowed",
+      "note": "SQLite's dedication of its code to the public domain."
+    },
+    "BSD-2-Clause": {
+      "status": "allowed"
+    },
     "BSD-3-Clause": {
       "status": "allowed"
+    },
+    "dtoa": {
+      "status": "allowed",
+      "note": "David M. Gay's permissive license of dtoa, which requires its notice in all copies and in their documentation."
     },
     "EPL-1.0": {
       "status": "open",
@@ -34,12 +57,37 @@
       "status": "allowed",
       "note": "The license of the server as a whole."
     },
+    "GPL-3.0-only": {
+      "status": "allowed",
+      "note": "The license of the server as a whole."
+    },
+    "GPL-3.0-or-later": {
+      "status": "allowed"
+    },
+    "GPL-3.0-or-later WITH GCC-exception-3.1": {
+      "status": "allowed",
+      "note": "The runtime libraries of GCC; the GCC Runtime Library Exception allows distributing code compiled with them under any license."
+    },
+    "LGPL-2.1-or-later": {
+      "status": "allowed"
+    },
     "LGPL-3.0": {
+      "status": "allowed"
+    },
+    "LGPL-3.0-only": {
       "status": "allowed"
     },
     "LicenseRef-BungeeCord": {
       "status": "open",
       "note": "BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services; see the open questions."
+    },
+    "LicenseRef-HP-SGI-STL": {
+      "status": "allowed",
+      "note": "The permission notices of Hewlett-Packard (1994) and Silicon Graphics (1996, 1997) on the STL code of libstdc++: a permissive license that requires the notices in the documentation."
+    },
+    "LicenseRef-Intel-BSD": {
+      "status": "allowed",
+      "note": "Portions of commons-codec's PureJavaCrc32C are licensed by Intel \"under the BSD license\" without naming its version. The FSF lists the original BSD license, which has an advertising clause, as incompatible with the GPL, and the 2- and 3-clause BSD licenses as compatible. The file comes from Apache projects (Commons Codec, Hadoop), whose policy does not admit the BSD license with the advertising clause."
     },
     "MIT": {
       "status": "allowed"
@@ -47,34 +95,22 @@
     "MPL-2.0": {
       "status": "allowed",
       "note": "The MPL 2.0 allows distribution under the GPL as a Secondary License (section 3.3), unless the code is marked as incompatible with Secondary Licenses."
+    },
+    "xpp": {
+      "status": "open",
+      "note": "MXParser in plexus-utils is licensed under the Indiana University Extreme! Lab Software License 1.1.1. Like the Apache License 1.1, which the FSF lists as incompatible with the GPL because of its prohibitions on the use of names, it requires an acknowledgment and prohibits the use of the university's name for derived products. The FSF does not list this license. Paper bundles the same library. See the open questions in LICENSING.md."
+    },
+    "ZPL-2.1": {
+      "status": "allowed",
+      "note": "The FSF lists the Zope Public License 2.1 as compatible with the GPL."
     }
   },
   "libraries": {
-    "com.velocitypowered:velocity-native": {
-      "license": "GPL-3.0",
-      "declared": "none",
-      "source": "PaperMC/Velocity ed4c46e: LICENSE",
-      "status": "allowed",
-      "note": "Velocity is licensed under the GPLv3; its native module has no license of its own. Its native libraries contain libdeflate (MIT) and use the operating system's OpenSSL, which is not bundled."
-    },
-    "me.lucko:spark-api": {
-      "license": "MIT",
-      "declared": "none",
-      "source": "lucko/spark 81df7e2: spark-api/LICENSE.txt",
-      "status": "allowed"
-    },
-    "me.lucko:spark-paper": {
-      "license": "GPL-3.0",
-      "declared": "none",
-      "source": "lucko/spark 81df7e2: LICENSE.txt",
-      "status": "allowed"
-    },
     "net.md-5:bungeecord-chat": {
-      "license": "LicenseRef-BungeeCord",
-      "declared": "none",
-      "source": "SpigotMC/BungeeCord da0a6e8: LICENSE",
-      "status": "open",
-      "note": "BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: \"You may not use the software for commercial software hosting services without written permission from the author.\" Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well."
+      "note": "BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: \"You may not use the software for commercial software hosting services without written permission from the author.\" Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well. The jar also contains English language strings of Minecraft (mojang-translations), for which no license was found."
+    },
+    "org.codehaus.plexus:plexus-utils": {
+      "note": "Ten of its source files carry the Apache License 1.1, and MXParser the Indiana University Extreme! Lab Software License 1.1.1. The FSF lists the Apache License 1.1 as incompatible with the GPL because of its prohibitions on the use of names, which the Extreme! Lab license has as well; the FSF does not list the latter. Paper bundles the same library. See the open questions in LICENSING.md."
     },
     "studio.cubiq:cubiq-api": {
       "license": "GPL-3.0",

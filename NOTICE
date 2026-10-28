@@ -28,8 +28,10 @@ Cubiq's own contributions are licensed under the Apache License, Version 2.0
 GPLv3-licensed code listed above and are therefore distributed under the terms
 of the GNU General Public License version 3 (licenses/GPL-3.0.txt).
 
-Cubiq server builds do not contain the Minecraft server. On first start, the
-Paperclip launcher downloads it from Mojang and applies Cubiq's patches locally.
+Cubiq server builds do not contain Mojang's server jar or its libraries. On
+first start, the Paperclip launcher downloads the server from Mojang and applies
+Cubiq's patch to it locally. The patch contains the classes that Paper, Purpur
+and Cubiq change or add, compiled, including modified Minecraft classes.
 Running a Minecraft server requires accepting the Minecraft End User License
 Agreement (https://aka.ms/MinecraftEULA).
 

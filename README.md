@@ -50,8 +50,10 @@ Cubiq is put together.
 - Crash reports and watchdog messages ask users to report problems to Cubiq instead of Paper or Purpur.
 - The server does not submit server-implementation statistics to bStats under Purpur's name.
   Plugins that use bStats are not affected.
-- License texts and notices are packaged in the Paperclip jar and the server jar under `META-INF/license/`, and
-  [LIBRARIES.md](docs/LIBRARIES.md) lists the bundled libraries with their licenses, checked in CI.
+- License texts and notices are packaged in the Paperclip jar and the server jar under `META-INF/license/`, including
+  those that the jars of the bundled libraries lack and those of code of other projects compiled into the server
+  ([THIRD-PARTY-NOTICES.md](licenses/THIRD-PARTY-NOTICES.md)), and [LIBRARIES.md](docs/LIBRARIES.md) lists the bundled
+  libraries with their licenses, checked in CI.
 - Builds are reproducible: two builds of the same commit in the same environment produce an identical server jar and
   Paperclip jar, which CI checks.
 

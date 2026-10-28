@@ -86,10 +86,13 @@ Every push builds Cubiq from scratch (applying all patches) and runs:
   12 seconds and checks that the report calls it busy, and that the two stalls caused 2 to 4 early warnings
   (`scripts/watchdog-smoke-test.sh`),
 - a check of the distribution: the Paperclip jar and the server jar it created contain the license texts and
-  notices, and the Paperclip jar contains no Minecraft code, only a patch against Mojang's jar, which Paperclip
-  downloads from Mojang (`scripts/check-distribution.sh`),
-- a check that every bundled library has a license that `scripts/library-licenses.json` covers and that
-  [LIBRARIES.md](LIBRARIES.md) is up to date (`scripts/library-licenses.py`),
+  notices, unchanged, and the Paperclip jar contains no Minecraft or Mojang classes and no Mojang libraries as
+  entries of their own, only a patch against Mojang's jar, which Paperclip downloads from Mojang
+  (`scripts/check-distribution.sh`),
+- a check that every bundled library has a license that `scripts/library-licenses.json` covers and license notices,
+  in its jar or in `licenses/third-party/` for its bundled version, and that [LIBRARIES.md](LIBRARIES.md) and
+  `licenses/THIRD-PARTY-NOTICES.md` are up to date (`scripts/library-licenses.py`). Whether the license files in a
+  library's jar are complete is not checked automatically,
 - a second build that reuses no output of the first build and must produce an identical server jar and Paperclip jar;
   the SHA-256 of the Paperclip jar is shown in the summary of the CI run.
 

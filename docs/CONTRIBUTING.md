@@ -154,12 +154,36 @@ The scripts fail with an excerpt of the server log when the server does not star
 message is missing.
 
 `scripts/check-distribution.sh <paperclip-jar> [<server-directory>]` checks the jar server owners download: license
-texts and notices included, no Minecraft code, fixed entry times.
+texts and notices included and unchanged, no Minecraft or Mojang classes outside the server patch, fixed entry times.
 
 `scripts/library-licenses.py <paperclip-jar> > docs/LIBRARIES.md` regenerates the list of bundled libraries and their
 licenses from the jar and the Maven POMs in the Gradle cache. Run it after changing dependencies or updating
 upstream and commit the result. When it reports a license name or a license that `scripts/library-licenses.json` does
 not cover, check that the license is compatible with the GPLv3 before adding it there.
+
+The script also fails when a bundled library whose jar contains no license or notice file has no entry in
+`scripts/library-notices.json` for its bundled version, or when a library with an entry changes its version. A
+library whose jar contains license files needs an entry as well when they lack notices that apply to its code, for
+example the notices of code of other projects or of startup code in its native libraries, or when its license
+requires recipients to be told where its source code is and its jar does not say it; the script cannot detect this,
+so check every new library and version yourself. Code of other projects that Paper, Purpur or Cubiq compile into the
+server jar, or that the Paperclip jar contains, needs an entry under `embedded`. For each of them:
+
+1. Find the commit of the library's source that matches the bundled version, for example its release tag, and check
+   that it matches the jar (for example by comparing the sources jar or the classes).
+2. Collect the license and notice files of the project at that commit, and those of code of other projects that the
+   jar contains (relocated libraries, statically linked code in native libraries). Never write a license text by hand.
+3. Put them into `licenses/third-party/<project>/` unchanged, and record each file under `files` in
+   `scripts/library-notices.json` with its repository, commit, path and SHA-256, or, only for a project that has no
+   license file of its own, with the URL of the license text it refers to and its SHA-256. Fetch each file once more
+   from that source and compare it byte for byte.
+4. Update the library's entry under `libraries`: version, license expression (SPDX), source, files, copyright notices
+   (a list, possibly empty) and a note (possibly empty) on the code of other projects it contains. Set `noticesInJar`
+   to `true` when the jar contains license or notice files of its own; the entry then lists only the files that the
+   jar lacks, possibly none if the entry only records where the source code is. Entries under `embedded` also say
+   where the code is (`in`).
+5. Regenerate `licenses/THIRD-PARTY-NOTICES.md` with `scripts/library-licenses.py --notices` and
+   [LIBRARIES.md](LIBRARIES.md), and remove files that no entry uses any more; the script fails on those as well.
 
 The server jar and the Paperclip jar are reproducible: building the same commit twice in the same environment produces
 identical files, which CI checks on every push. Two things break this:
@@ -191,7 +215,9 @@ tasks request a JetBrains Runtime 25 toolchain; starting the Paperclip jar with 
    affected patches as described above and delete the rejects.
 3. Run `./gradlew build createPaperclipJar` and the [smoke tests](#smoke-tests).
 4. Check whether the upstream license files changed and refresh the copies in `licenses/`.
-5. Regenerate [LIBRARIES.md](LIBRARIES.md) with `scripts/library-licenses.py` and review new libraries and licenses.
+5. Regenerate [LIBRARIES.md](LIBRARIES.md) with `scripts/library-licenses.py` and review new libraries and licenses;
+   collect the license notices of libraries that are new or changed their version as described in
+   [Smoke tests](#smoke-tests).
 
 ## Commits, branches and pull requests
 

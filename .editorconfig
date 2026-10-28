@@ -60,3 +60,12 @@ indent_size = 2
 
 [paper-{server,api}/src/generated/java/**/*.java]
 ij_java_imports_layout = $*, |, *
+
+# Copies of license texts must stay byte-identical to their sources (scripts/library-notices.json)
+[licenses/third-party/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset

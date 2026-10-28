@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Checks the Paperclip jar that server owners download, and optionally the server jar that Paperclip created from it:
 # - the license texts and notices are included,
-# - it contains no Minecraft code: the server is only included as a patch against Mojang's jar, which Paperclip
-#   downloads from Mojang on the first start, and Mojang's libraries are not included,
+# - it contains no Minecraft or Mojang classes and no Mojang libraries as entries of their own: the server is only
+#   included as a patch against Mojang's jar, which Paperclip downloads from Mojang on the first start (the patch
+#   itself contains the classes that Paper, Purpur and Cubiq change or add; its content is not checked),
 # - every entry has the same fixed time, so that builds of the same commit are identical.
 #
 # Usage: scripts/check-distribution.sh <paperclip-jar> [<server-directory>]
@@ -18,6 +19,7 @@ fi
 
 jar=$1
 directory=${2:-}
+licenses=$(dirname "$(realpath "$0")")/../licenses
 failures=0
 
 fail() {
@@ -39,11 +41,51 @@ done
 
 # License texts and notices: Cubiq's, the upstream projects', and those of Paperclip and the libraries it includes
 for license in Cubiq-LICENSE.txt Cubiq-NOTICE.txt GPL-3.0.txt LGPL-3.0.txt Paper-LICENSE.md Paper-MIT.md \
-    Purpur-LICENSE.txt paperclip-LICENSE.txt jbsdiff-LICENSE.txt commons-compress-LICENSE.txt; do
+    Purpur-LICENSE.txt paperclip-LICENSE.txt jbsdiff-LICENSE.txt commons-compress-LICENSE.txt THIRD-PARTY-NOTICES.md; do
     has_entry "$entries" "META-INF/license/$license" || fail "$jar does not contain META-INF/license/$license"
 done
 
-# No Minecraft code: no Minecraft or Mojang classes, no Mojang libraries, and the server only as a patch
+# The license texts and notices of the bundled libraries whose jars contain none (licenses/third-party/), which must be
+# the copies recorded in scripts/library-notices.json, byte for byte, and the overview of them
+third_party=()
+while IFS= read -r file; do
+    third_party+=("${file#"$licenses/third-party/"}")
+done < <(find "$licenses/third-party" -type f | sort)
+[[ ${#third_party[@]} -gt 0 ]] || fail "$licenses/third-party contains no files"
+if ! recorded=$(python3 -c 'import json, sys
+for name, entry in json.load(open(sys.argv[1]))["files"].items():
+    print(entry["sha256"], name)' "$licenses/../scripts/library-notices.json"); then
+    fail "cannot read the recorded copies from scripts/library-notices.json"
+    recorded=""
+elif [[ -z $recorded ]]; then
+    fail "scripts/library-notices.json records no files"
+fi
+
+check_third_party() {
+    local jar=$1 entries=$2 file entry sha256
+    for file in "${third_party[@]}"; do
+        entry="META-INF/license/third-party/$file"
+        has_entry "$entries" "$entry" || fail "$jar does not contain $entry"
+    done
+    while read -r sha256 file; do
+        [[ -n $file ]] || continue
+        entry="META-INF/license/third-party/$file"
+        if ! has_entry "$entries" "$entry"; then
+            # Reported above if the file is in licenses/third-party/
+            [[ -f $licenses/third-party/$file ]] || fail "$jar does not contain $entry"
+        elif [[ $(unzip -p "$jar" "$entry" | sha256sum | cut -d ' ' -f 1) != "$sha256" ]]; then
+            fail "$entry in $jar differs from the copy recorded in scripts/library-notices.json"
+        fi
+    done <<< "$recorded"
+    if has_entry "$entries" META-INF/license/THIRD-PARTY-NOTICES.md \
+        && ! unzip -p "$jar" META-INF/license/THIRD-PARTY-NOTICES.md | cmp -s - "$licenses/THIRD-PARTY-NOTICES.md"; then
+        fail "META-INF/license/THIRD-PARTY-NOTICES.md in $jar differs from licenses/THIRD-PARTY-NOTICES.md"
+    fi
+}
+
+check_third_party "$jar" "$entries"
+
+# No Minecraft or Mojang classes and no Mojang libraries as entries, and the server only as a patch
 if minecraft=$(grep -E '^(net/minecraft|com/mojang)/' <<< "$entries"); then
     fail "$jar contains Minecraft classes: $(head -n 3 <<< "$minecraft" | tr '\n' ' ')"
 fi
@@ -74,9 +116,11 @@ if [[ -n $directory ]]; then
     else
         server_jar=${server_jars[0]}
         server_entries=$(unzip -Z1 "$server_jar")
-        for license in Cubiq-LICENSE.txt Cubiq-NOTICE.txt GPL-3.0.txt LGPL-3.0.txt Paper-LICENSE.md Paper-MIT.md Purpur-LICENSE.txt; do
+        for license in Cubiq-LICENSE.txt Cubiq-NOTICE.txt GPL-3.0.txt LGPL-3.0.txt Paper-LICENSE.md Paper-MIT.md Purpur-LICENSE.txt \
+            THIRD-PARTY-NOTICES.md; do
             has_entry "$server_entries" "META-INF/license/$license" || fail "$server_jar does not contain META-INF/license/$license"
         done
+        check_third_party "$server_jar" "$server_entries"
         # Mojang's notice that the Minecraft code is subject to the EULA stays in place
         has_entry "$server_entries" "META-INF/LICENSE" || fail "$server_jar does not contain Mojang's META-INF/LICENSE"
         unzip -p "$server_jar" META-INF/MANIFEST.MF | grep -q '^Brand-Id: cubiqstudio:cubiq' || fail "the manifest of $server_jar does not identify Cubiq"
@@ -86,4 +130,4 @@ fi
 if [[ $failures -ne 0 ]]; then
     exit 1
 fi
-echo "The distribution is complete: $(wc -l <<< "$entries") entries, license texts present, no Minecraft code, reproducible entry times"
+echo "The distribution is complete: $(wc -l <<< "$entries") entries, license texts present, no Minecraft classes outside the server patch, reproducible entry times"
