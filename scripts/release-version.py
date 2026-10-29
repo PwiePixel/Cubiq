@@ -21,9 +21,11 @@ release with released=true, so that building the commit again reproduces the rel
 commit, for example when an older run of main is started again after a newer commit was released, the commit gets no
 release of its own. Otherwise the script prints the next release: its patch number continues from the highest release
 of MAJOR.MINOR, and the first release of MAJOR.MINOR has the patch number 0, except for 0.0, whose first release is
-0.0.1. The script fails if MAJOR.MINOR is lower than the latest release, so that versions never go backwards. Tags that
-are no release tags, such as v1 or v0.0.1-rc1, are ignored. Fetch the tags first (git fetch --tags); CI clones the
-repository with all of them.
+0.0.1. The script fails if MAJOR.MINOR is lower than the latest release and the commit contains that release, so that
+versions never go backwards; for a commit without the latest release, for example on a branch that was created before
+MAJOR.MINOR was raised, it prints the next release of the latest release's MAJOR.MINOR. Tags that are no release tags,
+such as v1 or v0.0.1-rc1, are ignored. Fetch the tags first (git fetch --tags); CI clones the repository with all of
+them.
 """
 
 import argparse
@@ -91,15 +93,17 @@ def release(line, existing, at_commit, containing, merged):
         result = dict.fromkeys(("version", "tag", "build", "previous", "contained", "behind"), "")
         result.update(released="false", contained=tag(min(containing)))
         return result
+    behind = existing[-1] if existing and existing[-1] not in merged else None
     major, minor = line()
     if existing and (major, minor) < existing[-1][:2]:
-        raise ValueError(f"cubiqVersion {major}.{minor} is lower than the latest release {tag(existing[-1])}")
+        if not behind:
+            raise ValueError(f"cubiqVersion {major}.{minor} is lower than the latest release {tag(existing[-1])}")
+        major, minor = existing[-1][:2]
     patches = [version[2] for version in existing if version[:2] == (major, minor)]
     if patches:
         patch = max(patches) + 1
     else:
         patch = 1 if (major, minor) == (0, 0) else 0
-    behind = existing[-1] if existing and existing[-1] not in merged else None
     return describe((major, minor, patch), existing, False, behind)
 
 
@@ -143,6 +147,9 @@ def self_test():
           "behind": "v0.0.2"}),
         ("a commit without any release", (0, 0), ["v0.0.1"], [], [], [],
          {"version": "0.0.2", "previous": "v0.0.1", "released": "false", "behind": "v0.0.1"}),
+        ("a commit from before the version line was raised", (0, 0), ["v0.0.1", "v0.1.0"], [], [], ["v0.0.1"],
+         {"version": "0.1.1", "build": "3", "previous": "v0.1.0", "released": "false", "contained": "",
+          "behind": "v0.1.0"}),
     ]
     failures = 0
     for name, line, tags, at_commit, containing, merged, expected in cases:

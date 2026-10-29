@@ -47,7 +47,7 @@ NOTICE_FILE = re.compile(r"(^|/)(META-INF/)?[^/]*(license|notice|copying|copyrig
 BUILD_INFO_FILES = ("INFO_SRC", "META-INF/MANIFEST.MF")
 # Licenses that require the source code to accompany the binary or a written offer, and allow no later version whose
 # terms allow pointing to a server instead
-SOURCE_WITH_BINARY = re.compile(r"^L?GPL-2\.[01](-only)?( |$)")
+SOURCE_WITH_BINARY = re.compile(r"^L?GPL-2\.[01](?!\+|-or-later)")
 
 
 def child_text(element, name):

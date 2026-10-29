@@ -78,17 +78,17 @@ jar, which Paperclip downloads from Mojang, are listed separately; Cubiq does no
 
 ### License texts and notices of the libraries
 
-Of the 68 jars in the Paperclip jar, 67 are libraries of other projects, and 43 of these contain no LICENSE, NOTICE
-or COPYING file, although licenses such as MIT and BSD require their notices to accompany binary copies, and the
-Apache License 2.0 requires its text and the project's `NOTICE` file. The jars of other libraries contain license files that lack notices that apply to them: for
-example the BSD notices of the startup code in the native libraries of sqlite-jdbc, the Apache License 1.1 headers of
-ten files of plexus-utils, David M. Gay's notice on the number conversion code of Rhino, and the NOTICE of Apache
-Commons Logging, from which jcl-over-slf4j is derived. Cubiq ships these texts and notices itself:
-`licenses/third-party/` contains them, and `licenses/THIRD-PARTY-NOTICES.md` lists, for each library, its license, its
-source, its copyright notices and the files that apply. Both are in the server jar and the Paperclip jar under
-`META-INF/license/`. The same overview covers the code of other projects that is compiled into the server jar or the
-Paperclip jar itself (see [Third-party code inside the server](#third-party-code-inside-the-server) and Apache Commons
-Compress in Paperclip).
+Of the 68 jars in the Paperclip jar, 67 are libraries of other projects, and 43 of these contain no LICENSE, NOTICE or
+COPYING file, although licenses such as MIT and BSD require their notices to accompany binary copies, and the Apache
+License 2.0 requires its text and the project's `NOTICE` file. The jars of other libraries contain license files that
+lack notices that apply to them: for example the BSD notices of the startup code in the native libraries of sqlite-jdbc,
+the Apache License 1.1 headers of ten files of plexus-utils and David M. Gay's notice on the number conversion code of
+Rhino. Some also need the notices of the code they are derived from: jcl-over-slf4j, whose jar has no license file,
+needs the NOTICE of Apache Commons Logging. Cubiq ships these texts and notices itself: `licenses/third-party/` contains
+them, and `licenses/THIRD-PARTY-NOTICES.md` lists, for each library, its license, its source, its copyright notices and
+the files that apply. Both are in the server jar and the Paperclip jar under `META-INF/license/`. The same overview
+covers the code of other projects that is compiled into the server jar or the Paperclip jar itself (see [Third-party
+code inside the server](#third-party-code-inside-the-server) and Apache Commons Compress in Paperclip).
 
 The files were collected from each library's source at the bundled version, including the licenses of code of other
 projects that the jars contain, for example the relocated libraries in spark, libdeflate in the native libraries of
@@ -135,7 +135,8 @@ says so.
   distributing it together with the GPLv3 server. Because the GPLv2 (section 3) requires its source code to accompany
   the binary or a written offer, every release and the snapshot attach the source code of the bundled version,
   `mysql-connector-j-<version>-source.tar.gz`, made by `scripts/release-sources.py` from the commit of Oracle's
-  repository that the jar records as its source; the artifact of each CI run contains it next to the jar. CI checks
+  repository that the jar records as its source. The artifact of each CI run contains it next to the jar, from commit
+  14a6f5a on; the artifacts of earlier runs, which expire in January 2027, contain only the jar. CI checks
   that the commit recorded in `scripts/library-notices.json` is the one in the jar's `INFO_SRC`, and that every
   library under the GPLv2 or the LGPLv2.1 only has its source attached.
 - **`bungeecord-chat`** is distributed as in Paper. Its additional clause does not only concern Cubiq: it applies to
@@ -156,8 +157,8 @@ says so.
 - **Source code of releases.** Each release names the tag of this repository it was built from and the Purpur and
   Paper commits, and GitHub offers archives of the tag. The GPLv3- and LGPLv3-licensed libraries are referred to by the
   repositories and commits in `THIRD-PARTY-NOTICES.md` (GPLv3 section 6(d)). Releases attach no further source
-  archives, except the source code of MySQL Connector/J, see above. The same applies to the snapshot, the newest
-  development build, whose notes name the commit it was built from.
+  archives, except the source code of MySQL Connector/J, see above. The same applies to the snapshot, a development
+  build whose notes name the commit it was built from.
 
 A license itself cannot settle these questions: Cubiq can only license its own work, and the code of other projects
 stays under the licenses its authors chose. Where code under a license that the FSF lists as incompatible with the GPL

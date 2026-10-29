@@ -44,9 +44,10 @@ def notes(arguments):
         lines = [
             f"A development build of Cubiq for Minecraft {arguments.minecraft}, built from commit {commit[:7]}.",
             "",
-            "This is a snapshot, not a release: the next build of a development branch that passes all of Cubiq's checks "
-            "replaces it, so it can contain changes that are not finished, and a release published after it can be "
-            "newer. Use the numbered releases for servers you care about, and back up your worlds before you try it.",
+            "This is a snapshot, not a release: later builds of development branches replace it (see "
+            f"[Releases]({repository}/blob/{ref}/docs/CONTRIBUTING.md#releases)), so it can contain changes that are not "
+            "finished, and a release published after it can be newer. Use the numbered releases for servers you care "
+            "about, and back up your worlds before you try it.",
         ]
         source = f"commit `{commit[:7]}` of this repository"
     else:
