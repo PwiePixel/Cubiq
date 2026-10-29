@@ -6,7 +6,9 @@ Usage: scripts/library-licenses.py <paperclip-jar> > docs/LIBRARIES.md
 
 The licenses are taken from scripts/library-notices.json for the libraries that have an entry there, and otherwise
 from the Maven POMs of the libraries, following parent POMs, in the Gradle cache of the build that created the jar
-($GRADLE_USER_HOME, by default ~/.gradle). scripts/library-licenses.json maps the license names that the POMs declare to
+($GRADLE_USER_HOME, by default ~/.gradle). POMs that the cache does not hold are downloaded from the repositories of
+the build: Gradle does not need the POM of a module again once it has cached the module's metadata, and the Gradle
+cache of CI removes files that a build did not use. scripts/library-licenses.json maps the license names that the POMs declare to
 license identifiers, says which licenses are allowed and which are open questions, and records the libraries whose
 POMs declare no license.
 
@@ -30,6 +32,8 @@ import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
 import xml.etree.ElementTree as ElementTree
 import zipfile
 from pathlib import Path
@@ -39,6 +43,8 @@ POLICY = ROOT / "scripts" / "library-licenses.json"
 NOTICES = ROOT / "scripts" / "library-notices.json"
 THIRD_PARTY = ROOT / "licenses" / "third-party"
 MAVEN_NAMESPACE = "{http://maven.apache.org/POM/4.0.0}"
+# The Maven repositories of the build (build.gradle.kts), for POMs that are not in the Gradle cache
+REPOSITORIES = ("https://repo.maven.apache.org/maven2/", "https://repo.papermc.io/repository/maven-public/")
 CUBIQ_GROUP = "studio.cubiq"
 STATUSES = ("allowed", "open")
 # Files in a library jar that carry its license or notices
@@ -65,14 +71,34 @@ def find_pom(cache, group, artifact, version):
     return poms[0] if poms else None
 
 
+def download_pom(group, artifact, version):
+    """Returns the POM of a module from the first repository of the build that has it."""
+    path = f"{group.replace('.', '/')}/{artifact}/{version}/{artifact}-{version}.pom"
+    errors = []
+    for repository in REPOSITORIES:
+        try:
+            with urllib.request.urlopen(repository + path, timeout=30) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            errors.append(f"{repository}: HTTP {error.code}")
+        except OSError as error:
+            errors.append(f"{repository}: {error}")
+    raise LookupError(f"the POM of {group}:{artifact}:{version} is not in the Gradle cache, and downloading it failed ({'; '.join(errors)})")
+
+
+def load_pom(cache, group, artifact, version):
+    """Returns the root element of the POM of a module, from the Gradle cache or downloaded."""
+    pom = find_pom(cache, group, artifact, version)
+    if pom is not None:
+        return ElementTree.parse(pom).getroot()
+    return ElementTree.fromstring(download_pom(group, artifact, version))
+
+
 def declared_licenses(cache, group, artifact, version):
     """Returns the licenses that the POM of a module or of its nearest parent declares, and where they come from."""
     coordinates = f"{group}:{artifact}:{version}"
     for _ in range(20):
-        pom = find_pom(cache, group, artifact, version)
-        if pom is None:
-            raise LookupError(f"the POM of {group}:{artifact}:{version} is not in the Gradle cache")
-        root = ElementTree.parse(pom).getroot()
+        root = load_pom(cache, group, artifact, version)
         licenses_element = root.find(MAVEN_NAMESPACE + "licenses")
         if licenses_element is None:
             licenses_element = root.find("licenses")
