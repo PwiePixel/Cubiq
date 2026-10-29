@@ -16,13 +16,12 @@ and pushed.
 - [x] Decision on the Minecraft EULA for test servers: accepted by the project owner for local tests and CI
 - [x] Smoke test in CI: start a server twice, wait for `Done`, require a clean configuration check and a clean stop
 - [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
-- [ ] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
+- [x] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
       (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256, the source code of MySQL
       Connector/J that its license requires, and notes that list the changes and the exact upstream commits, and
       `/version` shows the release; a snapshot pre-release holds a recent development build
-      ([CONTRIBUTING.md](CONTRIBUTING.md#releases)). Implemented and tested on a branch (version numbering, the notes,
-      a release build on a test server, the steps of the jobs with a stand-in for `gh`), and the snapshot job has
-      published a snapshot; the release job runs for the first time when `main` contains it
+      ([CONTRIBUTING.md](CONTRIBUTING.md#releases)). CI published v0.0.1 on 2026-10-29; its jar was checked on a test
+      server
 - Not planned: a source archive with the upstream sources for each release. The project owner decided that releases
   refer to the tag and the upstream commits instead (see [LICENSING.md](LICENSING.md)).
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
