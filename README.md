@@ -1,3 +1,5 @@
+<img src="docs/assets/cubiq-logo.png" alt="Cubiq logo" width="160" align="right">
+
 # Cubiq
 
 Cubiq is Minecraft: Java Edition server software developed by **Cubiq Studio**. It is built on

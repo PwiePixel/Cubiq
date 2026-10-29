@@ -12,7 +12,7 @@ to the Cubiq maintainers, it is marked as such.
 | Paper, and through Paper: Spigot, CraftBukkit and Bukkit | GNU GPL v3; contributions by the authors listed in Paper's `LICENSE.md` are also available under MIT | `licenses/Paper-LICENSE.md`, `licenses/GPL-3.0.txt`, `licenses/Paper-MIT.md` |
 | Purpur's own patches and classes | MIT, Copyright (c) 2019-2024 PurpurMC | `licenses/Purpur-LICENSE.txt` |
 | Minecraft server | Proprietary (Mojang/Microsoft), subject to the Minecraft EULA | Not distributed by Cubiq |
-| Built Cubiq server (combined work) | GNU GPL v3 | `licenses/GPL-3.0.txt` |
+| Built Cubiq server (combined work) | GNU GPL v3 only | `licenses/GPL-3.0.txt` |
 
 ## Upstream licenses
 
@@ -56,7 +56,7 @@ texts and notices of this code under "Code compiled into the server jar and the 
   Eigencraft redstone implementation, written by its author theosib, records the same, but names no project or
   license text, and its file has no license header.
 
-A few upstream files carry notices that need a closer look (see the open questions below):
+A few upstream files carry notices that needed a closer look (see the decisions below):
 
 - `co.aikar.util.LoadingIntMap` in Paper's API, deprecated for removal, starts with "Copyright (c) 2015. Starlis
   LLC / dba Empire Minecraft" and "This source code is proprietary software and must not be redistributed
@@ -108,48 +108,52 @@ The libraries licensed under the GPL or the LGPL (leafpile, spark, `velocity-nat
 under the MPL (Rhino) are distributed as separate jars; their source code is available from the repositories and
 commits named in `THIRD-PARTY-NOTICES.md`.
 
-Open questions that need an answer before the first release:
+### Decisions on the licensing questions
 
-- Whether Paper is licensed GPLv3-only or GPLv3-or-later. Paper's `LICENSE.md` says "version 3"; some
-  Bukkit-era file headers say "or (at your option) any later version".
-- The licenses of the Moonrise and DataConverter code included in Paper, whose patches only link to their
-  repositories.
-- The license of the logo images: the server GUI currently shows the `logo.png` that Purpur ships.
-- Whether `co.aikar.util.LoadingIntMap` may be redistributed despite its "proprietary" header, or whether Cubiq
-  should remove it. Removing it could break plugins that still use the deprecated class.
-- Whether the patched classes of Mojang's authlib and logging libraries, for which Mojang publishes no license, may be
-  distributed in the server. Paper distributes them the same way.
-- Whether distributing the patch in the Paperclip jar is acceptable as it is: it contains the classes that Paper,
-  Purpur and Cubiq change or add, compiled, in large part as literal bytes rather than as differences, including
-  modified Minecraft classes and the patched classes of Mojang's libraries. Paper and Purpur distribute their servers
-  the same way.
-- Whether bundling Eclipse Sisu Inject (EPL 1.0, which the FSF lists as incompatible with the GPL) as a separate
-  library jar is acceptable. Paper bundles the same library.
-- Whether the Universal FOSS Exception of MySQL Connector/J (GPLv2 only) covers its distribution with the server.
-  Paper bundles the same library.
-- The license of `bungeecord-chat`, the BungeeCord chat API that the Spigot and Paper APIs expose. BungeeCord's
-  license, which covers its chat module, is the BSD 3-Clause License with an additional clause: "You may not use
-  the software for commercial software hosting services without written permission from the author." Such a
-  restriction is not part of an open source license, and the GPLv3 does not allow further restrictions on the
-  combined work. Paper bundles the same library.
-- How Cubiq releases provide the source code of the bundled libraries. For the GPLv3- and LGPL-licensed libraries:
-  whether pointing to the upstream repositories is enough (GPLv3 section 6(d) requires the source to stay available as
-  long as the object code is distributed), or whether releases should come with a copy of it. For MySQL Connector/J,
-  which is licensed under the GPLv2 only: its section 3 allows only accompanying the binary with the source, a written
-  offer valid for three years, or, for noncommercial distribution, passing on the offer received, which the jar
-  contains; it has no equivalent of GPLv3 section 6(d). And whether the Corresponding Source of the server (GPLv3
-  section 1) includes the source code of the other bundled libraries.
-- Whether the Apache Software License 1.1, which the FSF lists as incompatible with the GPL, and the Indiana University
-  Extreme! Lab Software License 1.1.1, which has the same kind of restrictions on the use of names, may be distributed
-  with the server: four source files of plexus-interpolation and ten of plexus-utils carry the former, and the
-  MXParser in plexus-utils the latter. Both libraries come in through Paper's plugin library loader, and Paper bundles
-  them as well.
-- Whether the 32-bit (i386) macOS native library of `jline-native`, which contains Apple's startup code (Csu) under
-  the Apple Public Source License 2.0 (listed by the FSF as incompatible with the GPL), may be distributed with the
-  server, or whether Cubiq should leave this one library out. Its 64-bit macOS libraries do not contain this code.
-  Paper bundles the same library.
-- The license of the English language strings of Minecraft that `bungeecord-chat` contains
-  (`mojang-translations`); no license for them was found.
+Collecting the notices raised the questions below. The project owner decided them on 2026-10-29. Like the rest of this
+document, they are not legal advice. Where a decision needs a change to the build that has not been made yet, the item
+says so.
+
+- **Version of the GPL.** Cubiq distributes the server under version 3 of the GPL only. Paper's `LICENSE.md` says
+  "version 3"; the Bukkit-era files whose headers say "or (at your option) any later version" may be distributed
+  under version 3 as well.
+- **Moonrise and DataConverter**, whose code Paper includes, are licensed under the GPLv3, which their repositories
+  state: `LICENSE.md` of [Tuinity/Moonrise](https://github.com/Tuinity/Moonrise) (unchanged since its first commit,
+  7c753ab) and `LICENSE` of [PaperMC/DataConverter](https://github.com/PaperMC/DataConverter), which changed from the
+  LGPLv3 to the GPLv3 in commit 3138743 (2024-04-20), checked at commits 764a70f and cc6b1f3. Paper's patches do not
+  name the commits they are based on.
+- **`co.aikar.util.LoadingIntMap`** stays despite its "proprietary" header, as in Paper, because removing it could break
+  plugins that still use the deprecated class.
+- **The patched classes of Mojang's authlib and logging libraries** are distributed in the server as Paper distributes
+  them.
+- **The patch in the Paperclip jar** is distributed as it is, the same way as Paper and Purpur distribute theirs.
+- **Eclipse Sisu Inject** (EPL 1.0; its later versions are under the EPL 2.0 without a designated secondary license,
+  which the FSF also lists as incompatible with the GPL): Cubiq leaves it out of the server if plugin libraries still
+  load without it. Until a test on a real server shows that, it is bundled as in Paper.
+- **MySQL Connector/J** stays under its own license, the GPLv2 with the Universal FOSS Exception, which allows
+  distributing it together with the GPLv3 server. Because the GPLv2 (section 3) requires its source code to accompany
+  the binary or a written offer, the source code of the bundled version is to be attached to every release; the release
+  job does not do this yet.
+- **`bungeecord-chat`** is distributed as in Paper. Its additional clause does not only concern Cubiq: it applies to
+  everyone who uses the software for commercial software hosting services, for example hosting providers that offer
+  Cubiq servers.
+- **The Apache License 1.1 and the Indiana University Extreme! Lab Software License 1.1.1** in plexus-interpolation and
+  plexus-utils: the files are distributed as in Paper; the project owner considers this acceptable.
+- **The 32-bit (i386) macOS native library of `jline-native`**, which contains Apple's startup code (Csu) under the
+  APSL 2.0, is to be left out: no Java 25 runtime exists for 32-bit macOS, so the server never loads it. The build does
+  not leave it out yet.
+- **Minecraft's English language strings in `bungeecord-chat`** (`mojang-translations`) are distributed as in Paper.
+- **Logo.** The server GUI shows Cubiq's logo, which is part of Cubiq's own work under the Apache License 2.0; Purpur's
+  logo is no longer distributed. The license grants no right to use the logo or the name Cubiq as a trademark
+  (Apache License 2.0, section 6).
+- **Source code of releases.** Each release names the tag of this repository it was built from and the Purpur and
+  Paper commits, and GitHub offers archives of the tag. The GPLv3- and LGPLv3-licensed libraries are referred to by the
+  repositories and commits in `THIRD-PARTY-NOTICES.md` (GPLv3 section 6(d)). Releases attach no further source
+  archives, except the source code of MySQL Connector/J, see above.
+
+A license itself cannot settle these questions: Cubiq can only license its own work, and the code of other projects
+stays under the licenses its authors chose. Where code under a license that the FSF lists as incompatible with the GPL
+can be left out without losing anything, leaving it out is the solution.
 
 The statements about the FSF's view of licenses in this document and in `scripts/library-licenses.json` were checked
 against the FSF's [list of licenses](https://www.gnu.org/licenses/license-list.html) on 2026-10-28: it lists the Zope
@@ -216,7 +220,7 @@ Cubiq does not distribute Mojang's server jar or the libraries it contains. The 
 binary patch (bsdiff) and, on first start, downloads the vanilla server from Mojang and applies the patch locally. The
 patch is not limited to differences: it contains the classes that Paper, Purpur and Cubiq change or add, compiled, in
 large part as literal bytes, including modified Minecraft classes and the patched classes of Mojang's libraries (see
-the open questions above). `scripts/check-distribution.sh` checks that the Paperclip jar contains no Minecraft or Mojang
+the decisions above). `scripts/check-distribution.sh` checks that the Paperclip jar contains no Minecraft or Mojang
 classes and no Mojang libraries as entries of their own, and the server only as a patch; it does not inspect the
 content of the patch. Running a Minecraft server requires accepting the Minecraft EULA. The patch files in this
 repository contain small context excerpts of the upstream code they modify, including decompiled Minecraft code, in the

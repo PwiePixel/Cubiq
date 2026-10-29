@@ -61,8 +61,8 @@ def notes(arguments):
         lines.append("- None.")
     lines += [
         "",
-        "**License:** the server as a whole is distributed under the GNU General Public License version 3; Cubiq's own "
-        "code is licensed under the Apache License 2.0. The license texts and notices are in the jar under "
+        "**License:** the server as a whole is distributed under the GNU General Public License, version 3 only; "
+        "Cubiq's own code is licensed under the Apache License 2.0. The license texts and notices are in the jar under "
         f"`META-INF/license/` and in [`licenses/`]({repository}/tree/{tag}/licenses). The source code of this release "
         f"is the tag `{tag}` of this repository together with the Purpur and Paper commits above; see "
         f"[LICENSING.md]({repository}/blob/{tag}/docs/LICENSING.md).",

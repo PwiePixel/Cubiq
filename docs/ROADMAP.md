@@ -39,8 +39,11 @@ and pushed.
       license or notice file, 7 more lack notices or a source pointer) and those of code of other projects compiled into
       the server jar and the Paperclip jar, collected from each project's source at the bundled version and checked in
       CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
-- [ ] Resolve the open licensing questions listed in [LICENSING.md](LICENSING.md)
-- [ ] Cubiq logo for the server GUI (the GUI currently shows the logo inherited from Purpur)
+- [x] Decide the licensing questions that collecting the notices raised (decisions in [LICENSING.md](LICENSING.md))
+- [ ] Carry out the licensing decisions that need build changes: attach the source code of MySQL Connector/J to
+      releases, leave out the 32-bit macOS library of jline-native, and leave out Eclipse Sisu Inject if plugin
+      libraries load without it
+- [x] Cubiq logo for the server GUI, instead of the logo inherited from Purpur
 
 ## Diagnostics and administration (ongoing)
 
