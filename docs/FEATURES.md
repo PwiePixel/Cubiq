@@ -120,9 +120,9 @@ When the server has started, and again when it has stopped, Cubiq logs which ste
 plugins took. For example, with the test plugin of Cubiq's smoke test, whose steps each take three seconds:
 
 ```
-Startup took 24.9 s: bootstrapping 10.5 s, data packs 2.6 s, server setup 1.4 s, loading plugins 3.0 s, enabling plugins 3.0 s, worlds 922 ms (world 641 ms, world_nether 150 ms, world_the_end 114 ms), initial save 60 ms, delayed init tasks 1 ms, other 3.3 s.
+Startup took 25.5 s: bootstrapping 11.5 s, data packs 2.2 s, server setup 1.5 s, loading plugins 3.0 s, enabling plugins 3.0 s, worlds 779 ms (world 610 ms, world_nether 75 ms, world_the_end 73 ms), initial save 91 ms, delayed init tasks 1 ms, other 3.4 s.
 Plugins took 9.0 s to start (bootstrap 3.0 s, load 3.0 s, enable 3.0 s). Plugin: LifecycleSmokeTest 9.0 s.
-Stopped the server in 3.2 s: disabling plugins 3.0 s, worlds 20 ms (world 9 ms, world_nether 3 ms, world_the_end 3 ms), other 212 ms. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
+Stopped the server in 3.2 s: disabling plugins 3.0 s, worlds 147 ms (world 9 ms, world_nether 4 ms, world_the_end 3 ms), background tasks 1 ms, other 9 ms. Plugins took 3.0 s to stop. Plugin: LifecycleSmokeTest 3.0 s.
 ```
 
 The startup time is the one of Paper's `Done` message, measured from the start of the server's main class. Its steps:
@@ -140,9 +140,19 @@ The startup time is the one of Paper's `Done` message, measured from the start o
 | other | Everything else: starting the JVM's logging, reading `server.properties`, `eula.txt` and the world's `level.dat`, creating the server, starting the bundled spark profiler, Query and RCON, the plugins' listeners of Paper's command registration (the `COMMANDS` lifecycle event) and of `ServerLoadEvent`, the short pauses between the steps and, when Minecraft upgrades a world from before 26.1, that upgrade of the world's files and the 30 seconds that Paper waits before it |
 
 The shutdown is measured from the moment the server begins to stop. Its steps are disabling the plugins, waiting for
-their asynchronous tasks (`plugin tasks`), saving the players, saving the worlds (per world) and waiting for the
-region files to be written; `other` is the rest. The lines leave out steps that took less than half a millisecond,
-which would show as 0 ms.
+their asynchronous tasks (`plugin tasks`), saving the players, saving the worlds (per world), waiting for the region
+files to be written and waiting for the tasks of Paper's and Minecraft's background threads (`background tasks`);
+`other` is the rest. `/restart` first kicks the players and closes the network port (`kicking players`), with two
+pauses of 100 ms that let the kick messages be sent and the port close. The lines leave out steps that took less than
+half a millisecond, which would show as 0 ms.
+
+When a world loads, Minecraft searches the positions of its strongholds in the background, which takes a few seconds.
+Paper and Purpur wait up to 3 seconds for these searches when the server stops, which showed as `other` when the server
+was stopped right after it started. Cubiq ends the searches that have not started yet once it has saved everything,
+instead of waiting for them. The positions are not saved: the next start searches them again, and on a running server,
+`/locate structure minecraft:stronghold` finds the same stronghold as before this change. Stopped right after it
+started, a test server stopped in 39 to 53 ms instead of 177 to 615 ms (six starts each, alternating, on the same
+machine).
 
 With more plugins, the line names the five slowest ones. The time of a plugin is the sum of its bootstrap (Paper
 plugins only), `onLoad`, enabling (`onEnable` and the `PluginEnableEvent`) and disabling (`onDisable` and removing
@@ -160,30 +170,34 @@ and steps that took no time are included. The report of a server without plugins
 {
   "formatVersion": 1,
   "startup": {
-    "totalMillis": 16398.0,
+    "totalMillis": 11523.0,
     "steps": [
-      {"name": "bootstrapping", "millis": 6679.35},
-      {"name": "data packs", "millis": 2828.16},
-      {"name": "server setup", "millis": 1876.296},
-      {"name": "loading plugins", "millis": 0.453},
-      {"name": "enabling plugins", "millis": 34.627},
-      {"name": "worlds", "millis": 955.43, "details": [
-        {"name": "world", "millis": 740.204},
-        {"name": "world_nether", "millis": 89.413},
-        {"name": "world_the_end", "millis": 110.214}
+      {"name": "bootstrapping", "millis": 4486.289},
+      {"name": "data packs", "millis": 1742.946},
+      {"name": "server setup", "millis": 1535.964},
+      {"name": "loading plugins", "millis": 0.394},
+      {"name": "enabling plugins", "millis": 21.628},
+      {"name": "worlds", "millis": 720.82, "details": [
+        {"name": "world", "millis": 539.811},
+        {"name": "world_nether", "millis": 71.397},
+        {"name": "world_the_end", "millis": 93.077}
       ]},
-      {"name": "initial save", "millis": 83.315},
-      {"name": "delayed init tasks", "millis": 17.137},
-      {"name": "other", "millis": 3923.233}
+      {"name": "initial save", "millis": 61.892},
+      {"name": "delayed init tasks", "millis": 3.474},
+      {"name": "other", "millis": 2949.592}
     ],
     "plugins": []
   },
   "shutdown": {
-    "totalMillis": 776.12,
+    "totalMillis": 50.662,
     "steps": [
-      {"name": "disabling plugins", "millis": 0.041},
-      {"name": "worlds", "millis": 29.365, "details": [{"name": "world", "millis": 12.557}]},
-      {"name": "other", "millis": 746.455}
+      {"name": "disabling plugins", "millis": 0.033},
+      {"name": "plugin tasks", "millis": 0.034},
+      {"name": "players", "millis": 0.105},
+      {"name": "worlds", "millis": 34.079, "details": [{"name": "world", "millis": 15.083}]},
+      {"name": "background tasks", "millis": 6.533},
+      {"name": "region files", "millis": 0.063},
+      {"name": "other", "millis": 9.815}
     ],
     "plugins": []
   }

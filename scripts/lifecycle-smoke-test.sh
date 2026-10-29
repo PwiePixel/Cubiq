@@ -111,7 +111,7 @@ if report.get("formatVersion") != 1:
     problems.append(f"formatVersion is {report.get('formatVersion')}")
 expected = {
     "startup": (["bootstrapping", "data packs", "server setup", "loading plugins", "enabling plugins", "worlds", "initial save"], ["bootstrap", "load", "enable"]),
-    "shutdown": (["disabling plugins", "worlds"], ["disable"]),
+    "shutdown": (["disabling plugins", "worlds", "background tasks"], ["disable"]),
 }
 for part, (steps, plugin_steps) in expected.items():
     timing = report.get(part)
@@ -152,6 +152,8 @@ run_server restart
 expect "Lifecycle watchdog: Disabling plugin LifecycleSmokeTest v1.0 has not finished after"
 expect "Lifecycle watchdog: Disabling plugin LifecycleSmokeTest v1.0 finished after"
 expect "Stopped the server in "
+# Kicking the players and closing the port, with the pauses of /restart, is a step of its own
+expect ": kicking players "
 expect "Plugins took 3."
 expect "to stop. Plugin: LifecycleSmokeTest "
 check

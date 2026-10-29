@@ -66,6 +66,9 @@ reports, and is covered by tests. In order of priority:
 - [x] A [breakdown of startup and shutdown time](FEATURES.md#summaries) by step (bootstrapping, data packs, server
       setup, plugins, worlds per world, saving) in the log, and an optional [JSON report](FEATURES.md#report-for-tools)
       for tools such as the benchmark harness
+- [x] Stop without waiting up to 3 seconds for the search for stronghold positions that Minecraft starts when a world
+      loads, which the breakdown showed as unexplained time when a server stopped right after it started; the breakdown
+      shows the time of background tasks and of the pauses of `/restart`
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
 - Not planned: tick time percentiles and tick-thread utilization in `/mspt`. The bundled spark already shows the

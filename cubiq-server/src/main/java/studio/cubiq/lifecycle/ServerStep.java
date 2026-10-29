@@ -36,6 +36,11 @@ public enum ServerStep {
     SAVING_AFTER_LOADING("Saving the players and worlds after loading them", "initial save"),
     /** Running the tasks scheduled for the first tick, which the server runs before it reports that it has started. */
     RUNNING_DELAYED_INIT_TASKS("Running delayed init tasks", "delayed init tasks"),
+    /**
+     * Kicking the players and closing the network port for {@code /restart}, including the two pauses of 100
+     * milliseconds that let the kick messages be sent and the port close.
+     */
+    KICKING_PLAYERS("Kicking the players and closing the network port", "kicking players"),
     /** Disabling the plugins. */
     DISABLING_PLUGINS("Disabling plugins", "disabling plugins"),
     /** Waiting for the asynchronous tasks of the plugins to finish. */
@@ -47,7 +52,9 @@ public enum ServerStep {
     /** Saving one world; the subject is its name. */
     SAVING_WORLD("Saving world", "worlds"),
     /** Waiting for the region files to be written. */
-    WAITING_FOR_REGION_FILES("Waiting for region file I/O", "region files");
+    WAITING_FOR_REGION_FILES("Waiting for region file I/O", "region files"),
+    /** Waiting for the tasks of Paper's and Minecraft's background threads to finish. */
+    WAITING_FOR_BACKGROUND_TASKS("Waiting for background tasks", "background tasks");
 
     private final String description;
     private final String label;

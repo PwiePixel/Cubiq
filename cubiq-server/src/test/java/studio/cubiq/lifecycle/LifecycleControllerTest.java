@@ -158,13 +158,16 @@ class LifecycleControllerTest {
             this.runServerStep(ServerStep.SAVING_WORLD, "world", 700);
             this.runServerStep(ServerStep.SAVING_WORLD, "world_nether", 200);
         }
+        // Paper's background tasks before the region files, Minecraft's after them; the summary adds them up
+        this.runServerStep(ServerStep.WAITING_FOR_BACKGROUND_TASKS, null, 20);
         this.runServerStep(ServerStep.WAITING_FOR_REGION_FILES, null, 50);
-        this.clock.advanceMillis(150);
+        this.runServerStep(ServerStep.WAITING_FOR_BACKGROUND_TASKS, null, 30);
+        this.clock.advanceMillis(100);
         this.controller.stopped();
 
         assertEquals(
             List.of("INFO Stopped the server in 2.4 s: disabling plugins 1.2 s, players 100 ms, worlds 900 ms (world 700 ms, world_nether 200 ms), "
-                + "region files 50 ms, other 150 ms. Plugins took 1.2 s to stop. Plugin: Example 1.2 s."),
+                + "background tasks 50 ms, region files 50 ms, other 100 ms. Plugins took 1.2 s to stop. Plugin: Example 1.2 s."),
             this.log
         );
     }
