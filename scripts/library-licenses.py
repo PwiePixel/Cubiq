@@ -4,13 +4,13 @@
 Usage: scripts/library-licenses.py <paperclip-jar> > docs/LIBRARIES.md
        scripts/library-licenses.py --notices > licenses/THIRD-PARTY-NOTICES.md
 
-The licenses are taken from scripts/library-notices.json for the libraries that have an entry there, and otherwise
-from the Maven POMs of the libraries, following parent POMs, in the Gradle cache of the build that created the jar
-($GRADLE_USER_HOME, by default ~/.gradle). POMs that the cache does not hold are downloaded from the repositories of
-the build: Gradle does not need the POM of a module again once it has cached the module's metadata, and the Gradle
-cache of CI removes files that a build did not use. scripts/library-licenses.json maps the license names that the POMs declare to
-license identifiers, says which licenses are allowed and which are open questions, and records the libraries whose
-POMs declare no license.
+The licenses are taken from scripts/library-notices.json for the libraries that have an entry there, and otherwise from
+the Maven POMs of the libraries, following parent POMs, in the Gradle cache of the build that created the jar
+($GRADLE_USER_HOME, by default ~/.gradle). POMs that the cache does not hold are downloaded from the repositories of the
+build: Gradle does not need the POM of a module again once it has cached the module's metadata, and the Gradle cache of
+CI removes files that a build did not use. scripts/library-licenses.json maps the license names that the POMs declare to
+license identifiers, says which licenses are allowed and which are open questions, and records the libraries whose POMs
+declare no license.
 
 scripts/library-notices.json has an entry for every library whose jar contains no license or notice file, and for
 libraries whose own files lack notices that apply to them or do not say where their source code is. It records the
