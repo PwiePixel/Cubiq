@@ -253,15 +253,28 @@ uploaded by hand.
   one is never cancelled, so two releases cannot get the same version; when more commits arrive while a run is going
   on, GitHub keeps only the newest waiting run, and the next release contains all of them.
 - **A release contains** the Paperclip jar as `cubiq-<Minecraft version>-v<version>.jar`, its SHA-256 in a `.sha256`
-  file, and notes from `scripts/release-notes.py`: the commits since the previous release, the Purpur and Paper commits
-  it is based on, and the license notices. Releases are marked as pre-releases while Cubiq is alpha software.
+  file, the source code of the bundled libraries whose license requires it to accompany the binary, and notes from
+  `scripts/release-notes.py`: the commits since the previous release, the Purpur and Paper commits it is based on, and
+  the license notices. Releases are marked as pre-releases while Cubiq is alpha software.
+- **Source code of bundled libraries.** MySQL Connector/J is licensed under the GPLv2, which requires its source code
+  to accompany the binary. `scripts/release-sources.py` fetches the source of each library marked with
+  `attachSourceToReleases` in `scripts/library-notices.json`, at the commit recorded there, and archives it as
+  `<artifact>-<version>-source.tar.gz`; the release and the snapshot attach these archives. When such a library changes
+  its version, its entry gets the commit of the new version (see [Smoke tests](#smoke-tests)), and the archive follows.
 - **The jar knows its release.** CI sets `CUBIQ_VERSION` and `BUILD_NUMBER` for the build, which end up in the
   manifest of the server jar as `Cubiq-Version` and `Build-Number`, and `/version` shows
   `You are running Cubiq v0.0.1`. Builds without `CUBIQ_VERSION` call themselves development builds.
+- **The snapshot** is a pre-release with the tag `snapshot` that always holds the newest development build: every
+  push to a branch of this repository other than `main` whose build passes all checks replaces it (job `snapshot`).
+  Its jar is `cubiq-<Minecraft version>-snapshot.jar`, it has the same files as a release, and its notes list the
+  commits since the latest release. The build records the branch as `snapshot` instead of the development branch's
+  name; to rebuild a snapshot the way CI does, check it out on a branch named `snapshot`. Builds of pull requests
+  publish nothing.
 - **On other branches and in pull requests,** the summary of the build job shows which version the next release from
   `main` would get and a preview of its notes.
-- The `release` job requests the permission to write the repository's contents for its `GITHUB_TOKEN`, which it needs
-  to create the tag and the release. A ruleset that restricts creating `v*` tags would make it fail.
+- The `release` and `snapshot` jobs request the permission to write the repository's contents for their
+  `GITHUB_TOKEN`, which they need to create tags and releases. A ruleset that restricts creating `v*` tags or the
+  `snapshot` tag would make them fail.
 
 ## Commits, branches and pull requests
 

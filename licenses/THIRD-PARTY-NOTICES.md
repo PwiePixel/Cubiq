@@ -163,7 +163,7 @@ Source: https://github.com/mysql/mysql-connector-j.git a3909bfeb62d5a517ab444bb8
 
 License texts and notices: in the library's jar.
 
-Listed for its source code, which the GPLv2 requires to be available. The jar contains its license information, including the licenses of the third-party code it contains and Oracle's written offer for the source code, and records the commit it was built from in INFO_SRC.
+Listed for its source code. The GPLv2 requires it to accompany the binary or a written offer, so scripts/release-sources.py attaches it to every release and snapshot. The jar contains its license information, including the licenses of the third-party code it contains and Oracle's written offer for the source code, and records the commit it was built from in INFO_SRC.
 
 ### com.velocitypowered:velocity-native 4.1.0
 
@@ -574,32 +574,9 @@ License texts and notices, in addition to those in the library's jar:
 
 The jar contains the Apache License 2.0, a NOTICE file with the acknowledgments of the Apache Software Foundation, the Indiana University Extreme! Lab, ThoughtWorks, Javolution and Rome, and the licenses of MXParser (Indiana University Extreme! Lab Software License 1.1.1), Javolution (BSD-2-Clause) and CruiseControl (BSD-3-Clause). Ten source files, whose classes are in the jar, carry the Apache Software License 1.1 in their header comment, which is their only license text, so the files are included whole: DirectoryScanner.java, ExceptionUtils.java, Expand.java, FileUtils.java, IOUtil.java, InterpolationFilterReader.java, Os.java, SelectorUtils.java, StringInputStream.java and StringUtils.java. As their license requires: "This product includes software developed by the Apache Software Foundation (http://www.apache.org/)." (Os.java) and "This product includes software developed by the Apache Software Foundation (http://www.codehaus.org/)." (the other nine)
 
-### org.eclipse.sisu:org.eclipse.sisu.inject 0.9.0.M2
-
-License: EPL-1.0 AND BSD-3-Clause
-
-Source: https://github.com/eclipse/sisu.inject.git 14439cd38535c22cc908eacf99b70daf66d949b3
-
-Copyright notices:
-
-- Copyright (c) 2010-present Sonatype, Inc.
-- Copyright (c) 2010-present Sonatype, Inc. and others
-- Copyright (c) 2021-present Sonatype, Inc. and others.
-- Copyright (c) 2008-present Stuart McCulloch
-- Copyright (c) 2023-present Contributors to the Eclipse Foundation
-- Copyright (c) 2000-2011 INRIA, France Telecom
-
-License texts and notices:
-
-- `third-party/sisu-inject/LICENSE.txt` (from https://github.com/eclipse/sisu.inject.git 14439cd38535c22cc908eacf99b70daf66d949b3, LICENSE.txt)
-- `third-party/sisu-inject/about.html` (from https://github.com/eclipse/sisu.inject.git 14439cd38535c22cc908eacf99b70daf66d949b3, org.eclipse.sisu.inject/about.html)
-- `third-party/asm-9.5/LICENSE.txt` (from https://gitlab.ow2.org/asm/asm.git 443339a964352dcec4dd3915de8f13188920d3ac, LICENSE.txt)
-
-Contains a repackaged copy of ASM 9.5 (BSD-3-Clause). about.html, which the jar contains as well, calls it ASM 9.2.
-
 ### org.jline:jline-native 4.4.6
 
-License: BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND APSL-2.0 AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception
+License: BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception
 
 Source: https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516
 
@@ -613,7 +590,6 @@ Copyright notices:
 - Copyright (c) the original author(s).
 - Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project
 - Copyright 1996, 1997, 1998, 2000 John D. Polstra.
-- Copyright (c) 2006-2008 Apple Inc. All rights reserved.
 - Copyright (C) 2009 Free Software Foundation, Inc. <http://fsf.org/>
 
 License texts and notices:
@@ -624,10 +600,8 @@ License texts and notices:
 - `third-party/gcc-11.2.0/COPYING.RUNTIME` (from https://github.com/gcc-mirror/gcc.git 7ca388565af176bd4efd4f8db1e5e9e11e98ef45, COPYING.RUNTIME)
 - `third-party/llvm-compiler-rt-14.0.0/LICENSE.TXT` (from https://github.com/llvm/llvm-project.git 329fda39c507e8740978d10458451dcdb21563be, compiler-rt/LICENSE.TXT)
 - `third-party/freebsd-9.3-csu/crti.S` (from https://github.com/freebsd/freebsd-src.git 2318891ec48af954532c881bc325619271e277ca, lib/csu/amd64/crti.S)
-- `third-party/apple-csu/dyld_glue.s` (from https://github.com/apple-oss-distributions/Csu.git ece0e9db9c1280f3e89671deec77b3562294c45e, dyld_glue.s)
-- `third-party/apple-apsl/APPLE_LICENSE` (from https://github.com/apple-oss-distributions/dyld.git 71dec0ac89e8e5c52085ae4b560139df9afbab2f, APPLE_LICENSE)
 
-Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), Apple Csu (APSL-2.0, notice in dyld_glue.s; only in the 32-bit macOS library), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives.
+Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives. Cubiq leaves out the 32-bit macOS library (org/jline/nativ/Mac/x86/), the only one with Apple's startup code under the APSL-2.0, which no Java 25 runtime loads (see cubiq-server/build.gradle.kts).
 
 ### org.jline:jline-reader 3.20.0
 

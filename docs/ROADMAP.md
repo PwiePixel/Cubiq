@@ -17,12 +17,14 @@ and pushed.
 - [x] Smoke test in CI: start a server twice, wait for `Done`, require a clean configuration check and a clean stop
 - [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
 - [ ] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
-      (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256 and notes that list the changes and
-      the exact upstream commits, and `/version` shows the release ([CONTRIBUTING.md](CONTRIBUTING.md#releases)).
-      Implemented and tested on a branch (version numbering, preview of the notes, a release build on a test server);
-      the release job runs for the first time when `main` contains it
-- [ ] A source archive for each release that contains the upstream sources as well, so that the corresponding source
-      does not depend on Paper's and Purpur's repositories staying available
+      (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256, the source code of MySQL
+      Connector/J that its license requires, and notes that list the changes and the exact upstream commits, and
+      `/version` shows the release; a snapshot pre-release holds the newest development build
+      ([CONTRIBUTING.md](CONTRIBUTING.md#releases)). Implemented and tested on a branch (version numbering, the notes,
+      a release build on a test server, the steps of the jobs with a stand-in for `gh`); the release job runs for the
+      first time when `main` contains it
+- Not planned: a source archive with the upstream sources for each release. The project owner decided that releases
+  refer to the tag and the upstream commits instead (see [LICENSING.md](LICENSING.md)).
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
       Paperclip jar (checked in CI)
 - [x] Reproducible across machines: builds of two commits on another machine, with a different JDK vendor and update
@@ -40,9 +42,9 @@ and pushed.
       the server jar and the Paperclip jar, collected from each project's source at the bundled version and checked in
       CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
 - [x] Decide the licensing questions that collecting the notices raised (decisions in [LICENSING.md](LICENSING.md))
-- [ ] Carry out the licensing decisions that need build changes: attach the source code of MySQL Connector/J to
-      releases, leave out the 32-bit macOS library of jline-native, and leave out Eclipse Sisu Inject if plugin
-      libraries load without it
+- [x] Leave out the bundled code whose license the FSF lists as incompatible with the GPL where the server does not
+      need it: Eclipse Sisu Inject (plugin libraries still load, checked on a server) and the 32-bit macOS library
+      of jline-native
 - [x] Cubiq logo for the server GUI, instead of the logo inherited from Purpur
 
 ## Diagnostics and administration (ongoing)

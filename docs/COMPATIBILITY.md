@@ -49,6 +49,8 @@ This page records what has been verified, what is inherited unchanged, and where
   `ServerBuildInfo#buildNumber()` is 1 for v0.0.1, 2 for the next release and so on; other builds have no build
   number and report `DEV` in its place, like Paper's development builds. Plugins that compare the build number with
   Paper's builds get meaningless results, as they do on Purpur, whose build numbers are its own as well.
+- **Eclipse Sisu Inject is not bundled**, unlike on Paper, because its license is not compatible with the GPL; the
+  server does not use it. A plugin that uses its classes has to load it through the `libraries` of its `plugin.yml`.
 - **`Bukkit.getTPS()` returns four values** (the averages of the last 5 seconds, 1, 5 and 15 minutes), as on
   Purpur, instead of Paper's three (1, 5 and 15 minutes). `getTPS()[0]` is therefore the 5-second average.
 - **Plugins that read `server.properties`, `bukkit.yml`, `spigot.yml` or `purpur.yml` themselves** keep working. If

@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 120
     outputs:
       publish: ${{ steps.release.outputs.publish }}
+      snapshot: ${{ steps.release.outputs.snapshot }}
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
       previous: ${{ steps.release.outputs.previous }}
@@ -58,8 +59,9 @@ jobs:
       # Every build of main that passes all checks becomes a release (job "release"), numbered after the existing
       # release tags by scripts/release-version.py; the jar records the version (Cubiq-Version) and the number of the
       # release (Build-Number). A commit is released only once: a build of a released commit, for example when its run
-      # is started again, gets the version of its release and makes no new release. Elsewhere, the summary only shows
-      # which version the next release from main would get.
+      # is started again, gets the version of its release and makes no new release. Every build of another branch of
+      # this repository that passes all checks replaces the snapshot (job "snapshot"); its jar records the branch as
+      # "snapshot", the name it is published under. Pull requests only show which version the next release would get.
       - name: Determine the release version
         id: release
         run: |
@@ -77,6 +79,10 @@ jobs:
             echo "CUBIQ_VERSION=$version" >> "$GITHUB_ENV"
             echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
             echo "This build becomes the release v$version if all checks pass." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ $GITHUB_REF == refs/heads/* && ($GITHUB_EVENT_NAME == push || $GITHUB_EVENT_NAME == workflow_dispatch) ]]; then
+            echo "snapshot=true" >> "$GITHUB_OUTPUT"
+            git checkout -q -B snapshot
+            echo "This build replaces the snapshot if all checks pass. The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -222,7 +228,8 @@ jobs:
           if-no-files-found: error
 
   # Publishes the build of main as a pre-release with its Paperclip jar once all checks passed, if the build job decided
-  # to release it (see "Determine the release version")
+  # to release it (see "Determine the release version"). The source code of bundled libraries whose license requires it
+  # to accompany the binary is attached as well (scripts/release-sources.py).
   release:
     name: Release
     needs: build
@@ -257,9 +264,62 @@ jobs:
           name="cubiq-$mc-v$VERSION.jar"
           mv "$RUNNER_TEMP"/artifact/cubiq-paperclip-*.jar "$RUNNER_TEMP/$name"
           (cd "$RUNNER_TEMP" && sha256sum "$name" > "$name.sha256")
+          python3 scripts/release-sources.py "$RUNNER_TEMP/sources" > "$RUNNER_TEMP/sources.txt"
+          mapfile -t sources < "$RUNNER_TEMP/sources.txt"
           python3 scripts/release-notes.py --version "$VERSION" --previous "$PREVIOUS" --jar "$RUNNER_TEMP/$name" --minecraft "$mc" \
             --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
-            > "$RUNNER_TEMP/notes.md"
-          gh release create "$TAG" "$RUNNER_TEMP/$name" "$RUNNER_TEMP/$name.sha256" --target "$GITHUB_SHA" \
+            --sources "${sources[@]}" > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" "$RUNNER_TEMP/$name" "$RUNNER_TEMP/$name.sha256" "${sources[@]}" --target "$GITHUB_SHA" \
             --title "Cubiq v$VERSION for Minecraft $mc" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
           echo "Released [$TAG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG)." >> "$GITHUB_STEP_SUMMARY"
+
+  # Replaces the snapshot, the pre-release with the newest build of a development branch, once all checks passed, if
+  # the build job decided so (see "Determine the release version"). The snapshot is deleted with its tag and created
+  # again at the new commit, with the same files as a release.
+  snapshot:
+    name: Snapshot
+    needs: build
+    if: needs.build.outputs.snapshot == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    # Builds of different branches replace the snapshot one after the other
+    concurrency:
+      group: ${{ github.workflow }}-snapshot
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Download the Paperclip jar
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: cubiq-${{ github.sha }}
+          path: ${{ runner.temp }}/artifact
+
+      - name: Replace the snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PREVIOUS: ${{ needs.build.outputs.previous }}
+          PURPUR_COMMIT: ${{ needs.build.outputs.purpur }}
+          PAPER_COMMIT: ${{ needs.build.outputs.paper }}
+        run: |
+          mc=$(sed -n 's/^mcVersion *= *//p' gradle.properties | tr -d '\r')
+          name="cubiq-$mc-snapshot.jar"
+          mv "$RUNNER_TEMP"/artifact/cubiq-paperclip-*.jar "$RUNNER_TEMP/$name"
+          (cd "$RUNNER_TEMP" && sha256sum "$name" > "$name.sha256")
+          python3 scripts/release-sources.py "$RUNNER_TEMP/sources" > "$RUNNER_TEMP/sources.txt"
+          mapfile -t sources < "$RUNNER_TEMP/sources.txt"
+          python3 scripts/release-notes.py --snapshot --previous "$PREVIOUS" --jar "$RUNNER_TEMP/$name" --minecraft "$mc" \
+            --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
+            --sources "${sources[@]}" > "$RUNNER_TEMP/notes.md"
+          if gh release view snapshot > /dev/null 2>&1; then
+            gh release delete snapshot --cleanup-tag --yes
+          fi
+          gh release create snapshot "$RUNNER_TEMP/$name" "$RUNNER_TEMP/$name.sha256" "${sources[@]}" --target "$GITHUB_SHA" \
+            --title "Cubiq snapshot for Minecraft $mc" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
+          echo "Replaced the [snapshot]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/snapshot)." >> "$GITHUB_STEP_SUMMARY"

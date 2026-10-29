@@ -72,9 +72,14 @@ sha256sum -c cubiq-26.3-v0.0.1.jar.sha256
 java -jar cubiq-26.3-v0.0.1.jar --nogui
 ```
 
-Releases are alpha software like everything else in Cubiq: back up your worlds before you try one. On first start,
-the jar downloads the Minecraft server from Mojang, and running it requires accepting the
-[Minecraft EULA](https://aka.ms/MinecraftEULA).
+The [snapshot](https://github.com/PwiePixel/Cubiq/releases/tag/snapshot), `cubiq-26.3-snapshot.jar`, is the newest
+development build, ahead of the latest release. Every build of a development branch that passes all checks replaces
+it, so it can contain unfinished changes; use it for testing only.
+
+Releases and the snapshot are alpha software like everything else in Cubiq: back up your worlds before you try one.
+On first start, the jar downloads the Minecraft server from Mojang, and running it requires accepting the
+[Minecraft EULA](https://aka.ms/MinecraftEULA). Each release and the snapshot also contain the source code of MySQL
+Connector/J, a bundled library whose license, the GPLv2, requires it.
 
 ## Building
 

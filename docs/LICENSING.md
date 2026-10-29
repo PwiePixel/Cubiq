@@ -70,16 +70,15 @@ The Paperclip jar also contains the server's runtime libraries as separate jars,
 [LIBRARIES.md](LIBRARIES.md) lists all of them with the licenses their Maven POMs declare and, for the libraries in
 `scripts/library-notices.json`, the licenses determined from their source, for example Configurate (Apache 2.0),
 leafpile (GPLv3), Rhino (MPL 2.0), upnp4j (LGPL 3.0, added by Purpur) and MySQL Connector/J (GPLv2 with the Universal
-FOSS Exception). Some come in as dependencies of other libraries, for example Eclipse Sisu Inject (EPL 1.0, through
-the Maven model builder used by Paper's API) and protobuf-java (BSD-3-Clause, through MySQL Connector/J).
+FOSS Exception). Some come in as dependencies of other libraries, for example protobuf-java (BSD-3-Clause, through MySQL
+Connector/J).
 `scripts/library-licenses.py` generates the list from the Paperclip jar, and CI fails when a library has a license
 that `scripts/library-licenses.json` does not cover or when the list is out of date. The libraries of Mojang's server
 jar, which Paperclip downloads from Mojang, are listed separately; Cubiq does not distribute them.
 
 ### License texts and notices of the libraries
 
-44 of the 69 jars in the Paperclip jar contain no LICENSE, NOTICE or COPYING file (Eclipse Sisu's contains only an
-`about.html` that refers to the EPL and reproduces the license of the ASM code it contains), although licenses such as
+43 of the 68 jars in the Paperclip jar contain no LICENSE, NOTICE or COPYING file, although licenses such as
 MIT and BSD require their notices to accompany binary copies, and the Apache License 2.0 requires its text and the
 project's `NOTICE` file. The jars of other libraries contain license files that lack notices that apply to them: for
 example the BSD notices of the startup code in the native libraries of sqlite-jdbc, the Apache License 1.1 headers of
@@ -93,16 +92,16 @@ Compress in Paperclip).
 
 The files were collected from each library's source at the bundled version, including the licenses of code of other
 projects that the jars contain, for example the relocated libraries in spark, libdeflate in the native libraries of
-`velocity-native`, WaifUPnP in upnp4j, a fork of SnakeYAML in Configurate, ASM in Eclipse Sisu, fastutil code in
-leafpile, and the toolchain code in the native libraries of `jline-native`, sqlite-jdbc and spark. For javax.inject and
-plexus-interpolation, whose projects have no license file, the Apache License 2.0 text was taken from apache.org.
-`scripts/library-notices.json` records the source (repository, commit and path, or URL) and the SHA-256 of every file;
-each file was fetched again from its source and compared byte for byte before it was added.
-`scripts/library-licenses.py` fails in CI when a bundled library without notices in its jar has no entry for its
-bundled version, or when a file differs from the recorded one, and `scripts/check-distribution.sh` checks that both
-jars contain every file unchanged. Whether the license files in a library's jar are complete is not checked
-automatically; libraries were found to need an entry by reviewing their jars and sources. The licenses determined this
-way are more precise than the ones the POMs declare, and [LIBRARIES.md](LIBRARIES.md) uses them for these libraries.
+`velocity-native`, WaifUPnP in upnp4j, a fork of SnakeYAML in Configurate, fastutil code in leafpile, and the toolchain
+code in the native libraries of `jline-native`, sqlite-jdbc and spark. For javax.inject and plexus-interpolation, whose
+projects have no license file, the Apache License 2.0 text was taken from apache.org. `scripts/library-notices.json`
+records the source (repository, commit and path, or URL) and the SHA-256 of every file; each file was fetched again from
+its source and compared byte for byte before it was added. `scripts/library-licenses.py` fails in CI when a bundled
+library without notices in its jar has no entry for its bundled version, or when a file differs from the recorded one,
+and `scripts/check-distribution.sh` checks that both jars contain every file unchanged. Whether the license files in a
+library's jar are complete is not checked automatically; libraries were found to need an entry by reviewing their jars
+and sources. The licenses determined this way are more precise than the ones the POMs declare, and
+[LIBRARIES.md](LIBRARIES.md) uses them for these libraries.
 
 The libraries licensed under the GPL or the LGPL (leafpile, spark, `velocity-native`, upnp4j and MySQL Connector/J) and
 under the MPL (Rhino) are distributed as separate jars; their source code is available from the repositories and
@@ -128,20 +127,23 @@ says so.
   them.
 - **The patch in the Paperclip jar** is distributed as it is, the same way as Paper and Purpur distribute theirs.
 - **Eclipse Sisu Inject** (EPL 1.0; its later versions are under the EPL 2.0 without a designated secondary license,
-  which the FSF also lists as incompatible with the GPL): Cubiq leaves it out of the server if plugin libraries still
-  load without it. Until a test on a real server shows that, it is bundled as in Paper.
+  which the FSF also lists as incompatible with the GPL) is left out of the server. The bundled Maven classes that
+  resolve the libraries of plugins only name it in annotations (`@org.eclipse.sisu.Nullable` and `@Typed`), which the
+  JVM ignores when their classes are missing, and a server without it loaded a plugin's library from its `plugin.yml`.
+  Paper bundles it.
 - **MySQL Connector/J** stays under its own license, the GPLv2 with the Universal FOSS Exception, which allows
   distributing it together with the GPLv3 server. Because the GPLv2 (section 3) requires its source code to accompany
-  the binary or a written offer, the source code of the bundled version is to be attached to every release; the release
-  job does not do this yet.
+  the binary or a written offer, every release and the snapshot attach the source code of the bundled version,
+  `mysql-connector-j-<version>-source.tar.gz`, made by `scripts/release-sources.py` from the commit of Oracle's
+  repository that the jar records as its source.
 - **`bungeecord-chat`** is distributed as in Paper. Its additional clause does not only concern Cubiq: it applies to
   everyone who uses the software for commercial software hosting services, for example hosting providers that offer
   Cubiq servers.
 - **The Apache License 1.1 and the Indiana University Extreme! Lab Software License 1.1.1** in plexus-interpolation and
   plexus-utils: the files are distributed as in Paper; the project owner considers this acceptable.
 - **The 32-bit (i386) macOS native library of `jline-native`**, which contains Apple's startup code (Csu) under the
-  APSL 2.0, is to be left out: no Java 25 runtime exists for 32-bit macOS, so the server never loads it. The build does
-  not leave it out yet.
+  APSL 2.0, is left out: no Java 25 runtime exists for 32-bit macOS, so the server never loads it. The build bundles
+  the jar without `org/jline/nativ/Mac/x86/` (see `cubiq-server/build.gradle.kts`).
 - **Minecraft's English language strings in `bungeecord-chat`** (`mojang-translations`) are distributed as in Paper.
 - **Logo.** The server GUI shows Cubiq's logo, which is part of Cubiq's own work under the Apache License 2.0; Purpur's
   logo is no longer distributed. The license grants no right to use the logo or the name Cubiq as a trademark
@@ -149,7 +151,8 @@ says so.
 - **Source code of releases.** Each release names the tag of this repository it was built from and the Purpur and
   Paper commits, and GitHub offers archives of the tag. The GPLv3- and LGPLv3-licensed libraries are referred to by the
   repositories and commits in `THIRD-PARTY-NOTICES.md` (GPLv3 section 6(d)). Releases attach no further source
-  archives, except the source code of MySQL Connector/J, see above.
+  archives, except the source code of MySQL Connector/J, see above. The same applies to the snapshot, the newest
+  development build, whose notes name the commit it was built from.
 
 A license itself cannot settle these questions: Cubiq can only license its own work, and the code of other projects
 stays under the licenses its authors chose. Where code under a license that the FSF lists as incompatible with the GPL
@@ -207,8 +210,9 @@ When distributing a Cubiq server jar (for example as a release or CI artifact):
   name the tag of this repository that it was built from and link the Purpur and Paper commits; GitHub offers
   archives of the tag, which contain Cubiq's patches but not the upstream sources. The GPLv3 (section 6(d)) allows the
   corresponding source to be on another server if clear directions next to the binary say where to find it, but the
-  distributor stays obliged to keep it available. A source archive for each release that contains the upstream sources
-  as well is not set up yet; it is on the roadmap.
+  distributor stays obliged to keep it available. The project owner decided that releases attach no archive with the
+  upstream sources; they attach the source code of MySQL Connector/J, whose license, the GPLv2, has no such provision
+  (see the decisions above).
 - **Modified files are marked.** Cubiq's changes to upstream files are marked with `// Cubiq`
   comments and are kept as patches, which documents what was changed.
 - **The Apache 2.0 `NOTICE` must be kept.** Derivative works of Cubiq must include the attribution

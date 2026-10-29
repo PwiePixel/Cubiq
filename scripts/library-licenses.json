@@ -27,10 +27,6 @@
       "status": "allowed",
       "note": "LLVM's runtime libraries; the exception waives the notice requirements for code compiled with them."
     },
-    "APSL-2.0": {
-      "status": "open",
-      "note": "The FSF lists the Apple Public Source License 2.0 as incompatible with the GPL. The 32-bit (i386) macOS native library of jline-native contains Apple's startup code under it; Paper bundles the same library. Leaving out this library, which Java 25 never loads, is decided but not done yet (see the decisions in LICENSING.md)."
-    },
     "blessing": {
       "status": "allowed",
       "note": "SQLite's dedication of its code to the public domain."
@@ -45,13 +41,9 @@
       "status": "allowed",
       "note": "David M. Gay's permissive license of dtoa, which requires its notice in all copies and in their documentation."
     },
-    "EPL-1.0": {
-      "status": "open",
-      "note": "The FSF lists the EPL 1.0 as incompatible with the GPL. Paper bundles the same library as a separate jar. Leaving it out if plugin libraries load without it is decided but not tested yet (see the decisions in LICENSING.md)."
-    },
     "GPL-2.0-only WITH Universal-FOSS-exception-1.0": {
-      "status": "open",
-      "note": "GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception allows distributing it together with other open source software such as the GPLv3 server. The GPLv2 requires its source code to accompany the binary; attaching it to releases is decided but not done yet (see the decisions in LICENSING.md). Paper bundles the same library."
+      "status": "allowed",
+      "note": "GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception allows distributing it together with other open source software such as the GPLv3 server. The GPLv2 requires its source code to accompany the binary, so every release and snapshot attaches it (scripts/release-sources.py). Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md)."
     },
     "GPL-3.0": {
       "status": "allowed",
