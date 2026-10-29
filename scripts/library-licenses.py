@@ -20,7 +20,9 @@ next to them.
 The inventory is written to standard output. The script fails when a library has a license name, a license or no
 license that the policy does not cover, when a library ships no license notices and has no current entry in
 scripts/library-notices.json, or when a file in licenses/third-party/ is missing, changed or not used, so that every
-new library and license is reviewed before it is distributed.
+new library and license is reviewed before it is distributed. It also fails when a library under the GPLv2 or the
+LGPLv2.1 only, whose source code has to accompany the jar, is not marked "attachSourceToReleases", or when the jar of
+a marked library does not record the commit of its source as the one it was built from, in INFO_SRC or its manifest.
 """
 
 import hashlib
@@ -41,6 +43,11 @@ CUBIQ_GROUP = "studio.cubiq"
 STATUSES = ("allowed", "open")
 # Files in a library jar that carry its license or notices
 NOTICE_FILE = re.compile(r"(^|/)(META-INF/)?[^/]*(license|notice|copying|copyright)[^/]*$", re.IGNORECASE)
+# Files in a library jar that can record the commit it was built from, for example INFO_SRC of MySQL Connector/J
+BUILD_INFO_FILES = ("INFO_SRC", "META-INF/MANIFEST.MF")
+# Licenses that require the source code to accompany the binary or a written offer, and allow no later version whose
+# terms allow pointing to a server instead
+SOURCE_WITH_BINARY = re.compile(r"^L?GPL-2\.[01](?!\+|-or-later)")
 
 
 def child_text(element, name):
@@ -152,9 +159,12 @@ def print_inventory(jar_path):
         bundled = {name[len("META-INF/libraries/"):]: name for name in jar.namelist() if name.startswith("META-INF/libraries/") and name.endswith(".jar")}
         listed = [line.split("\t") for line in jar.read("META-INF/libraries.list").decode("utf-8").splitlines() if line]
         notices_in_jar = {}
+        build_info = {}
         for path, name in bundled.items():
             with zipfile.ZipFile(jar.open(name)) as library:
-                notices_in_jar[path] = any(NOTICE_FILE.search(entry) and not entry.endswith((".class", "/")) for entry in library.namelist())
+                entries = library.namelist()
+                notices_in_jar[path] = any(NOTICE_FILE.search(entry) and not entry.endswith((".class", "/")) for entry in entries)
+                build_info[path] = "\n".join(library.read(entry).decode("utf-8", "replace") for entry in BUILD_INFO_FILES if entry in entries)
 
     problems = []
     check_notice_files(notices, problems)
@@ -182,6 +192,10 @@ def print_inventory(jar_path):
             if library.get("noticesInJar", False) != notices_in_jar[path]:
                 problems.append(f"{module}: {NOTICES.name} says that its jar contains {'a' if library.get('noticesInJar') else 'no'} license "
                                 f"or notice file, but it contains {'one' if notices_in_jar[path] else 'none'}; review the entry")
+            commit = library["source"].split()[-1] if library.get("attachSourceToReleases", False) else None
+            if commit and commit not in build_info[path]:
+                problems.append(f"{module}: releases attach its source at commit {commit[:7]}, but its jar does not record that commit "
+                                f"as the one it was built from in {' or '.join(BUILD_INFO_FILES)}; record the source of version {version}")
         if group == CUBIQ_GROUP:
             version = "this build"
 
@@ -211,6 +225,10 @@ def print_inventory(jar_path):
                     unknown_name = True
                 keys.append(found or "?")
             key, declared = " OR ".join(dict.fromkeys(keys)), "; ".join(f'"{name}"' for name, _ in licenses)
+
+        if any(SOURCE_WITH_BINARY.match(part) for part in components(key)) and not (library or {}).get("attachSourceToReleases", False):
+            problems.append(f"{module}: its license {key} requires the source code to accompany the jar; record its source in "
+                            f"{NOTICES.name} with attachSourceToReleases")
 
         status = override.get("status") or status_of(policy, key)
         for part in components(key):

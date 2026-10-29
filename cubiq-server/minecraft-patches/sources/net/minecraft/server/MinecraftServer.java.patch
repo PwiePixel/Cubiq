@@ -70,7 +70,22 @@
  
          this.isSaving = false;
          this.savedDataStorage.close();
-@@ -1083,7 +_,9 @@
+@@ -1073,9 +_,11 @@
+         }
+         // Spigot start
+         io.papermc.paper.util.MCUtil.ASYNC_EXECUTOR.shutdown(); // Paper
+-        try {
+-            io.papermc.paper.util.MCUtil.ASYNC_EXECUTOR.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS); // Paper
+-        } catch (InterruptedException _) {} // Paper
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.WAITING_FOR_BACKGROUND_TASKS)) { // Cubiq - Lifecycle diagnostics
++            try {
++                io.papermc.paper.util.MCUtil.ASYNC_EXECUTOR.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS); // Paper
++            } catch (InterruptedException _) {} // Paper
++        } // Cubiq - Lifecycle diagnostics
+         if (org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) {
+             LOGGER.info("Saving usercache.json");
+             this.services().nameToIdCache().save(false); // Paper - Perf: Async GameProfileCache saving
+@@ -1083,14 +_,20 @@
          // Spigot end
          // Paper start - rewrite chunk system
          LOGGER.info("Waiting for all RegionFile I/O tasks to complete...");
@@ -81,10 +96,14 @@
          LOGGER.info("All RegionFile I/O tasks to complete");
          if ((Object)this instanceof net.minecraft.server.dedicated.DedicatedServer) {
              ca.spottedleaf.moonrise.common.util.MoonriseCommon.haltExecutors();
-@@ -1091,6 +_,7 @@
+         }
          // Paper end - rewrite chunk system
          // Paper start - Improved watchdog support - move final shutdown items here
-         Util.shutdownExecutors();
+-        Util.shutdownExecutors();
++        net.minecraft.world.level.chunk.ChunkGeneratorStructureState.stopRingPositionSearches(); // Cubiq - Stop without finishing the search for stronghold positions
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.WAITING_FOR_BACKGROUND_TASKS)) { // Cubiq - Lifecycle diagnostics
++            Util.shutdownExecutors();
++        } // Cubiq - Lifecycle diagnostics
 +        studio.cubiq.lifecycle.ServerLifecycle.stopped(); // Cubiq - Lifecycle diagnostics - before onServerExit, after which logging may shut down
          this.onServerExit();
          // Paper end - Improved watchdog support - move final shutdown items here

@@ -15,7 +15,7 @@ class LifecycleWatchdogTest {
     private static final long WARN_EVERY_SECONDS = 60;
 
     private final FakeClock clock = new FakeClock();
-    private final LifecycleMonitor monitor = new LifecycleMonitor(this.clock, () -> true, (phase, durationNanos) -> {
+    private final LifecycleMonitor monitor = new LifecycleMonitor(this.clock, phase -> true, (phase, durationNanos) -> {
     });
     private final List<String> reports = new ArrayList<>();
     private boolean active = true;

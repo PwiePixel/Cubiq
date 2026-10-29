@@ -18,8 +18,10 @@ import org.jspecify.annotations.Nullable;
 /**
  * Writes how long starting and stopping the server took to a JSON file, for tools such as benchmarks.
  *
- * <p>The file is written when the server has started and again when it has stopped, and replaced atomically where the
- * file system supports it. Times are in milliseconds with three decimals. Format:</p>
+ * <p>The file is written when the server begins to start, without the parts below, so that a run that fails does not
+ * leave the report of an earlier run in place, then when the server has started and again when it has stopped. It is
+ * replaced atomically where the file system supports it. Times are in milliseconds with three decimals. Format,
+ * abridged:</p>
  * <pre>{@code
  * {
  *   "formatVersion": 1,
@@ -32,7 +34,11 @@ import org.jspecify.annotations.Nullable;
  *     ],
  *     "plugins": [{"name": "Example", "loadMillis": 12.5, "enableMillis": 310.25}]
  *   },
- *   "shutdown": {"totalMillis": 2104.9, "steps": [], "plugins": [{"name": "Example", "disableMillis": 52.0}]}
+ *   "shutdown": {
+ *     "totalMillis": 2104.9,
+ *     "steps": [{"name": "disabling plugins", "millis": 52.4}, {"name": "other", "millis": 2052.5}],
+ *     "plugins": [{"name": "Example", "disableMillis": 52.0}]
+ *   }
  * }
  * }</pre>
  * <p>{@code other} is the time that no step accounts for. A part is missing if the server has not started or stopped,
@@ -49,7 +55,8 @@ final class LifecycleReport {
     }
 
     /**
-     * Writes the report.
+     * Writes the report. It is written to a temporary file next to the report first, which then replaces the report, so
+     * that a reader never sees half of it.
      *
      * @param path     the file
      * @param startup  how long the startup took, or {@code null}
@@ -63,11 +70,21 @@ final class LifecycleReport {
             Files.createDirectories(directory);
         }
         final Path temporary = file.resolveSibling(file.getFileName() + ".tmp");
-        Files.writeString(temporary, toJson(startup, shutdown), StandardCharsets.UTF_8);
         try {
-            Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (final AtomicMoveNotSupportedException ex) {
-            Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
+            Files.writeString(temporary, toJson(startup, shutdown), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (final AtomicMoveNotSupportedException ex) {
+                Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (final IOException | RuntimeException ex) {
+            // For example if the report is a directory: the temporary file would be left behind otherwise
+            try {
+                Files.deleteIfExists(temporary);
+            } catch (final IOException deleteFailure) {
+                ex.addSuppressed(deleteFailure);
+            }
+            throw ex;
         }
     }
 

@@ -36,9 +36,9 @@ the CPU time the watchdog thread wasted while the server did not respond. The me
   tracking object (a few per plugin and world, so a few hundred on large servers), which takes an uncontended lock
   and reads the clock. Plugins enabled or disabled at runtime are tracked the same way, and so is saving each world,
   also in autosaves and `/save-all`, where the step is only timed, not recorded. The breakdowns of startup and
-  shutdown add one map entry per step and world, and the JSON report, if enabled, is a small file written twice. The
-  watchdog thread wakes up once per second; while the server runs normally it only finds that no phase is open.
-  Stack traces are only taken when a step is reported.
+  shutdown add one map entry per step and world, and the JSON report, if enabled, is a small file written three
+  times. The watchdog thread wakes up once per second; while the server runs normally it only finds that no phase
+  is open. Stack traces are only taken when a step is reported.
 
 ## Available measurement tools
 

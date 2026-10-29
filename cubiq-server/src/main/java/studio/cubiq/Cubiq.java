@@ -26,6 +26,11 @@ public final class Cubiq {
      */
     public static final String ISSUES_URL = REPOSITORY_URL + "/issues";
 
+    /**
+     * Where Cubiq's releases are published.
+     */
+    public static final String RELEASES_URL = REPOSITORY_URL + "/releases";
+
     private Cubiq() {
     }
 }

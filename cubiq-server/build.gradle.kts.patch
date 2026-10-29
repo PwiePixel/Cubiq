@@ -1,6 +1,6 @@
 --- a/purpur-server/build.gradle.kts
 +++ b/purpur-server/build.gradle.kts
-@@ -2,6 +_,12 @@
+@@ -2,6 +_,16 @@
  import io.papermc.paperweight.attribute.DevBundleOutput
  import io.papermc.paperweight.util.*
  import java.time.Instant
@@ -10,6 +10,10 @@
 +import java.util.zip.ZipEntry // Cubiq - Reproducible Paperclip jar
 +import java.util.zip.ZipFile // Cubiq - Reproducible Paperclip jar
 +import java.util.zip.ZipOutputStream // Cubiq - Reproducible Paperclip jar
++import java.io.ByteArrayOutputStream // Cubiq - Leave out bundled code
++import java.security.MessageDigest // Cubiq - Leave out bundled code
++import java.util.zip.CRC32 // Cubiq - Leave out bundled code
++import java.util.zip.ZipInputStream // Cubiq - Leave out bundled code
  import kotlin.io.path.createParentDirectories
  import kotlin.io.path.writeText
  
@@ -66,7 +70,7 @@
      implementation(platform("ca.spottedleaf.leafpile:bom:1.3.2"))
      implementation("ca.spottedleaf.leafpile:common")
      implementation("ca.spottedleaf.leafpile:concurrentutil")
-@@ -194,26 +_,34 @@
+@@ -194,26 +_,35 @@
      implementation("me.lucko:spark-paper:1.10.191")
  }
  
@@ -84,6 +88,7 @@
          val mcVersion = rootProject.providers.gradleProperty("mcVersion").get()
          val build = System.getenv("BUILD_NUMBER") ?: null
 -        val buildTime = if (build != null) Instant.now() else Instant.EPOCH // Purpur
++        val cubiqVersion = System.getenv("CUBIQ_VERSION") ?: null // Cubiq - release version, which CI sets for releases
 +        val buildTime = providers.environmentVariable("BUILD_STARTED_AT").map(Instant::parse).orElse(Instant.EPOCH).get() // Cubiq - reproducible builds: CI passes the start time, local builds use the epoch
          val gitHash = git.exec(providers, "rev-parse", "--short=7", "HEAD").get().trim()
          val implementationVersion = "$mcVersion-${build ?: "DEV"}-$gitHash"
@@ -107,10 +112,17 @@
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
-@@ -223,6 +_,11 @@
+@@ -222,7 +_,17 @@
+         for (tld in setOf("net", "com", "org")) {
              attributes("$tld/bukkit", "Sealed" to true)
          }
-     }
+-    }
++        // Cubiq start - release version
++        if (cubiqVersion != null) {
++            attributes("Cubiq-Version" to cubiqVersion)
++        }
++        // Cubiq end - release version
++    }
 +    // Cubiq start - Ship the license texts and notices that apply to the server with it
 +    into("META-INF/license") {
 +        with(cubiqLicenseFiles)
@@ -119,6 +131,84 @@
  }
  
  // Compile tests with -parameters for better junit parameterized test names
+@@ -291,6 +_,77 @@
+     )
+ }
+ 
++// Cubiq start - Leave out bundled code that the server never uses and whose license the FSF lists as incompatible with
++// the GPL (see the decisions in docs/LICENSING.md): Eclipse Sisu Inject (EPL 1.0), which the bundled Maven classes only
++// name in annotations, and the 32-bit macOS library of jline-native, which contains Apple's startup code under the
++// APSL 2.0 and which no Java 25 runtime loads. The bundler jar, which the Paperclip jar is made from, gets jline-native
++// without that library, with its other entries in their order and with their times so that builds stay reproducible,
++// and its hash in META-INF/libraries.list. The bundler of the development bundle contains no libraries.
++configurations.runtimeClasspath {
++    exclude(group = "org.eclipse.sisu", module = "org.eclipse.sisu.inject")
++}
++tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createBundlerJar") {
++    val bundlerJar = outputZip
++    doLast {
++        val jar = bundlerJar.get().asFile.toPath()
++        val rewritten = jar.resolveSibling(jar.fileName.toString() + ".rewritten")
++        ZipFile(jar.toFile()).use { input ->
++            val entries = input.entries().toList()
++            val jlineNative = entries.single { Regex("META-INF/libraries/org/jline/jline-native/[^/]+/jline-native-[^/]+\\.jar").matches(it.name) }
++            val stripped = ByteArrayOutputStream()
++            var leftOut = 0
++            ZipInputStream(input.getInputStream(jlineNative)).use { library ->
++                ZipOutputStream(stripped).use { out ->
++                    while (true) {
++                        val entry = library.nextEntry ?: break
++                        if (entry.name.startsWith("org/jline/nativ/Mac/x86/")) {
++                            leftOut++
++                            continue
++                        }
++                        val copy = ZipEntry(entry.name)
++                        copy.setTimeLocal(entry.timeLocal)
++                        out.putNextEntry(copy)
++                        library.copyTo(out)
++                        out.closeEntry()
++                    }
++                }
++            }
++            // A jline-native that moved or dropped the library needs a new look at the decision
++            check(leftOut > 0) { "${jlineNative.name} contains no org/jline/nativ/Mac/x86/; review the decision on it in docs/LICENSING.md" }
++            val strippedBytes = stripped.toByteArray()
++            val hash = MessageDigest.getInstance("SHA-256").digest(strippedBytes).joinToString("") { "%02x".format(it) }
++            val path = jlineNative.name.removePrefix("META-INF/libraries/")
++            ZipOutputStream(Files.newOutputStream(rewritten)).use { output ->
++                for (entry in entries) {
++                    val content = when (entry.name) {
++                        jlineNative.name -> strippedBytes
++                        "META-INF/libraries.list" -> input.getInputStream(entry).readBytes().toString(Charsets.UTF_8).lines().joinToString("\n") { line ->
++                            val fields = line.split("\t")
++                            if (fields.size == 3 && fields[2] == path) "$hash\t${fields[1]}\t${fields[2]}" else line
++                        }.toByteArray(Charsets.UTF_8)
++                        else -> input.getInputStream(entry).readBytes()
++                    }
++                    val copy = ZipEntry(entry.name)
++                    copy.setTimeLocal(entry.timeLocal)
++                    if (entry.method == ZipEntry.STORED) {
++                        val crc = CRC32()
++                        crc.update(content)
++                        copy.method = ZipEntry.STORED
++                        copy.size = content.size.toLong()
++                        copy.compressedSize = content.size.toLong()
++                        copy.crc = crc.value
++                    }
++                    output.putNextEntry(copy)
++                    output.write(content)
++                    output.closeEntry()
++                }
++            }
++        }
++        Files.move(rewritten, jar, StandardCopyOption.REPLACE_EXISTING)
++    }
++}
++// Cubiq end - Leave out bundled code that the server never uses and whose license the FSF lists as incompatible with the GPL
++
+ val generatedDir: java.nio.file.Path = layout.projectDirectory.dir("../paper-server/src/generated/java").asFile.toPath() // Purpur
+ idea {
+     module {
 @@ -372,6 +_,50 @@
      classpath(tasks.createPaperclipJar.flatMap { it.outputZip })
      mainClass.set(null as String?)

@@ -1,0 +1,29 @@
+--- a/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
++++ b/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
+@@ -39,6 +_,18 @@
+     private final long concentricRingsSeed;
+     private final Map<Structure, List<StructurePlacement>> placementsForStructure = new Object2ObjectOpenHashMap<>();
+     private final Map<ConcentricRingsStructurePlacement, CompletableFuture<List<ChunkPos>>> ringPositions = new Object2ObjectArrayMap<>();
++    // Cubiq start - Stop without finishing the search for stronghold positions
++    private static volatile boolean stopRingPositionSearches;
++
++    /**
++     * Ends the searches for the positions of concentric ring structures, such as strongholds, that have not started yet,
++     * so that the server does not wait for them when it stops. Only for when the server has saved everything and stops:
++     * the positions of searches that have not finished are never computed.
++     */
++    public static void stopRingPositionSearches() {
++        stopRingPositionSearches = true;
++    }
++    // Cubiq end - Stop without finishing the search for stronghold positions
+     private boolean hasGeneratedPositions;
+     private final ChunkPos origin;
+     private final List<Holder<StructureSet>> possibleStructureSets;
+@@ -202,6 +_,7 @@
+             tasks.add(
+                 CompletableFuture.supplyAsync(
+                     () -> {
++                        if (stopRingPositionSearches) throw new java.util.concurrent.CancellationException("The server is stopping"); // Cubiq - Stop without finishing the search for stronghold positions
+                         Pair<BlockPos, Holder<Biome>> closestBiome = this.biomeSource
+                             .findBiomeHorizontal(
+                                 SectionPos.sectionToBlockCoord(initialX, 8),

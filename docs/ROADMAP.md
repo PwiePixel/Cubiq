@@ -16,8 +16,15 @@ and pushed.
 - [x] Decision on the Minecraft EULA for test servers: accepted by the project owner for local tests and CI
 - [x] Smoke test in CI: start a server twice, wait for `Done`, require a clean configuration check and a clean stop
 - [x] Lifecycle smoke test in CI: a test plugin with slow lifecycle steps must be reported by the lifecycle watchdog
-- [ ] Release process: version scheme, release channel, published artifacts with checksums, changelog, and a
-      source archive with the exact upstream commits for each release
+- [ ] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
+      (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256, the source code of MySQL
+      Connector/J that its license requires, and notes that list the changes and the exact upstream commits, and
+      `/version` shows the release; a snapshot pre-release holds a recent development build
+      ([CONTRIBUTING.md](CONTRIBUTING.md#releases)). Implemented and tested on a branch (version numbering, the notes,
+      a release build on a test server, the steps of the jobs with a stand-in for `gh`), and the snapshot job has
+      published a snapshot; the release job runs for the first time when `main` contains it
+- Not planned: a source archive with the upstream sources for each release. The project owner decided that releases
+  refer to the tag and the upstream commits instead (see [LICENSING.md](LICENSING.md)).
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
       Paperclip jar (checked in CI)
 - [x] Reproducible across machines: builds of two commits on another machine, with a different JDK vendor and update
@@ -30,12 +37,15 @@ and pushed.
       always match what was built
 - [x] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
       ([LIBRARIES.md](LIBRARIES.md))
-- [x] Ship the license texts and copyright notices that the bundled libraries' jars lack (44 of 69 jars contain no
-      license or notice file, 7 more lack notices or a source pointer) and those of code of other projects compiled into
-      the server jar and the Paperclip jar, collected from each project's source at the bundled version and checked in
-      CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
-- [ ] Resolve the open licensing questions listed in [LICENSING.md](LICENSING.md)
-- [ ] Cubiq logo for the server GUI (the GUI currently shows the logo inherited from Purpur)
+- [x] Ship the license texts and copyright notices that the bundled libraries' jars lack (43 of the 67 jars of other
+      projects contain no license or notice file, 7 more lack notices or a source pointer) and those of code of other
+      projects compiled into the server jar and the Paperclip jar, collected from each project's source at the bundled
+      version and checked in CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
+- [x] Decide the licensing questions that collecting the notices raised (decisions in [LICENSING.md](LICENSING.md))
+- [x] Leave out the bundled code whose license the FSF lists as incompatible with the GPL where the server does not
+      need it: Eclipse Sisu Inject (plugin libraries still load, checked on a server) and the 32-bit macOS library
+      of jline-native
+- [x] Cubiq logo for the server GUI, instead of the logo inherited from Purpur
 
 ## Diagnostics and administration (ongoing)
 
@@ -56,6 +66,9 @@ reports, and is covered by tests. In order of priority:
 - [x] A [breakdown of startup and shutdown time](FEATURES.md#summaries) by step (bootstrapping, data packs, server
       setup, plugins, worlds per world, saving) in the log, and an optional [JSON report](FEATURES.md#report-for-tools)
       for tools such as the benchmark harness
+- [x] Stop without waiting up to 3 seconds for the search for stronghold positions that Minecraft starts when a world
+      loads, which the breakdown showed as unexplained time when a server stopped right after it started; the breakdown
+      shows the time of background tasks and of the pauses of `/restart`
 - [ ] Opt-in thread-context assertions that report, with plugin attribution, world access from the wrong thread
       (see phase 4)
 - Not planned: tick time percentiles and tick-thread utilization in `/mspt`. The bundled spark already shows the

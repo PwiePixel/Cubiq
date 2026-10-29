@@ -12,11 +12,14 @@ import org.jspecify.annotations.Nullable;
 public enum ServerStep {
     /** Discovering the plugins, running the bootstrappers of Paper plugins and bootstrapping Minecraft. */
     BOOTSTRAPPING("Bootstrapping the server", "bootstrapping"),
-    /** Loading the data packs and registries, before the server is created. */
+    /**
+     * Loading the data packs and registries, before the server is created, including Paper's import of a world that it
+     * has not run before.
+     */
     LOADING_DATA_PACKS("Loading data packs", "data packs"),
     /** Loading the configuration files, setting up the player lists and commands, and opening the network port. */
     SETTING_UP_THE_SERVER("Setting up the server", "server setup"),
-    /** Loading the plugins ({@code Plugin#onLoad()}). */
+    /** Creating the plugins and loading them ({@code Plugin#onLoad()}). */
     LOADING_PLUGINS("Loading plugins", "loading plugins"),
     /** Enabling the plugins, before the worlds are loaded or after. */
     ENABLING_PLUGINS("Enabling plugins", "enabling plugins"),
@@ -26,8 +29,18 @@ public enum ServerStep {
     LOADING_WORLD("Loading world", "worlds"),
     /** Preparing the spawn area of one world; the subject is its name. */
     PREPARING_WORLD("Preparing world", "worlds"),
+    /**
+     * Saving the players and all worlds once the worlds are loaded and the plugins enabled, including worlds that
+     * plugins created.
+     */
+    SAVING_AFTER_LOADING("Saving the players and worlds after loading them", "initial save"),
     /** Running the tasks scheduled for the first tick, which the server runs before it reports that it has started. */
     RUNNING_DELAYED_INIT_TASKS("Running delayed init tasks", "delayed init tasks"),
+    /**
+     * Kicking the players and closing the network port for {@code /restart}, including the two pauses of 100
+     * milliseconds that let the kick messages be sent and the port close.
+     */
+    KICKING_PLAYERS("Kicking the players and closing the network port", "kicking players"),
     /** Disabling the plugins. */
     DISABLING_PLUGINS("Disabling plugins", "disabling plugins"),
     /** Waiting for the asynchronous tasks of the plugins to finish. */
@@ -39,7 +52,9 @@ public enum ServerStep {
     /** Saving one world; the subject is its name. */
     SAVING_WORLD("Saving world", "worlds"),
     /** Waiting for the region files to be written. */
-    WAITING_FOR_REGION_FILES("Waiting for region file I/O", "region files");
+    WAITING_FOR_REGION_FILES("Waiting for region file I/O", "region files"),
+    /** Waiting for the tasks of Paper's and Minecraft's background threads to finish. */
+    WAITING_FOR_BACKGROUND_TASKS("Waiting for background tasks", "background tasks");
 
     private final String description;
     private final String label;

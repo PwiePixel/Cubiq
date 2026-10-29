@@ -1,3 +1,5 @@
+<img src="docs/assets/cubiq-logo.png" alt="Cubiq logo" width="160" align="right">
+
 # Cubiq
 
 Cubiq is Minecraft: Java Edition server software developed by **Cubiq Studio**. It is built on
@@ -46,7 +48,7 @@ Cubiq is put together.
 - Cubiq identifies itself as Cubiq (brand id `cubiqstudio:cubiq`). Plugins that check for Paper or
   Purpur through `ServerBuildInfo#isBrandCompatible` keep working.
 - `/version` does not query Paper's or Purpur's download APIs for Cubiq builds, which would report
-  misleading update information.
+  misleading update information. It shows which Cubiq release the server runs and links to Cubiq's releases.
 - Crash reports and watchdog messages ask users to report problems to Cubiq instead of Paper or Purpur.
 - The server does not submit server-implementation statistics to bStats under Purpur's name.
   Plugins that use bStats are not affected.
@@ -57,6 +59,28 @@ Cubiq is put together.
 - Builds are reproducible: two builds of the same commit in the same environment produce an identical server jar and
   Paperclip jar, which CI checks, and builds on another machine, with a different JDK and operating system, produced
   the same Paperclip jar as CI.
+
+## Download
+
+Every change on `main` that passes all checks in CI is published as a numbered pre-release on the
+[releases page](https://github.com/PwiePixel/Cubiq/releases), starting with v0.0.1. A release contains the Paperclip
+jar, for example `cubiq-26.3-v0.0.1.jar`, and its SHA-256 checksum, and its notes list the changes since the previous
+release and the Purpur and Paper commits it is based on. Check the jar and start it with Java 25:
+
+```bash
+sha256sum -c cubiq-26.3-v0.0.1.jar.sha256
+java -jar cubiq-26.3-v0.0.1.jar --nogui
+```
+
+The [snapshot](https://github.com/PwiePixel/Cubiq/releases/tag/snapshot), `cubiq-26.3-snapshot.jar`, is a recent
+development build: later builds of development branches that pass all checks replace it, under the conditions in
+[CONTRIBUTING.md](docs/CONTRIBUTING.md#releases). It can contain unfinished changes, and a release published after it
+can be newer; its notes name the commit it was built from. Use it for testing only.
+
+Releases and the snapshot are alpha software like everything else in Cubiq: back up your worlds before you try one.
+On first start, the jar downloads the Minecraft server from Mojang, and running it requires accepting the
+[Minecraft EULA](https://aka.ms/MinecraftEULA). Each release and the snapshot also contain the source code of MySQL
+Connector/J, a bundled library whose license, the GPLv2, requires it.
 
 ## Building
 

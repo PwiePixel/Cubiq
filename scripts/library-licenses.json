@@ -16,8 +16,8 @@
   },
   "licenses": {
     "Apache-1.1": {
-      "status": "open",
-      "note": "The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries. See the open questions in LICENSING.md."
+      "status": "allowed",
+      "note": "The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries, and the project owner decided to distribute them the same way (see the decisions in LICENSING.md)."
     },
     "Apache-2.0": {
       "status": "allowed",
@@ -26,10 +26,6 @@
     "Apache-2.0 WITH LLVM-exception": {
       "status": "allowed",
       "note": "LLVM's runtime libraries; the exception waives the notice requirements for code compiled with them."
-    },
-    "APSL-2.0": {
-      "status": "open",
-      "note": "The FSF lists the Apple Public Source License 2.0 as incompatible with the GPL. The 32-bit (i386) macOS native library of jline-native contains Apple's startup code under it; Paper bundles the same library. See the open questions in LICENSING.md."
     },
     "blessing": {
       "status": "allowed",
@@ -45,13 +41,9 @@
       "status": "allowed",
       "note": "David M. Gay's permissive license of dtoa, which requires its notice in all copies and in their documentation."
     },
-    "EPL-1.0": {
-      "status": "open",
-      "note": "The FSF lists the EPL 1.0 as incompatible with the GPL. Paper bundles the same library as a separate jar. See the open questions in LICENSING.md."
-    },
     "GPL-2.0-only WITH Universal-FOSS-exception-1.0": {
-      "status": "open",
-      "note": "GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception is meant to allow distributing it together with other open source software. Whether it covers Cubiq's distribution is not confirmed. Paper bundles the same library."
+      "status": "allowed",
+      "note": "GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception allows distributing it together with other open source software such as the GPLv3 server. The GPLv2 requires its source code to accompany the binary, so every release and snapshot attaches it (scripts/release-sources.py). Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md)."
     },
     "GPL-3.0": {
       "status": "allowed",
@@ -78,8 +70,8 @@
       "status": "allowed"
     },
     "LicenseRef-BungeeCord": {
-      "status": "open",
-      "note": "BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services; see the open questions."
+      "status": "allowed",
+      "note": "BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services, which applies to everyone who uses the software for such services. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md)."
     },
     "LicenseRef-HP-SGI-STL": {
       "status": "allowed",
@@ -97,8 +89,8 @@
       "note": "The MPL 2.0 allows distribution under the GPL as a Secondary License (section 3.3), unless the code is marked as incompatible with Secondary Licenses."
     },
     "xpp": {
-      "status": "open",
-      "note": "MXParser in plexus-utils is licensed under the Indiana University Extreme! Lab Software License 1.1.1. Like the Apache License 1.1, which the FSF lists as incompatible with the GPL because of its prohibitions on the use of names, it requires an acknowledgment and prohibits the use of the university's name for derived products. The FSF does not list this license. Paper bundles the same library. See the open questions in LICENSING.md."
+      "status": "allowed",
+      "note": "MXParser in plexus-utils is licensed under the Indiana University Extreme! Lab Software License 1.1.1. Like the Apache License 1.1, which the FSF lists as incompatible with the GPL because of its prohibitions on the use of names, it requires an acknowledgment and prohibits the use of the university's name for derived products. The FSF does not list this license. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md)."
     },
     "ZPL-2.1": {
       "status": "allowed",
@@ -110,7 +102,7 @@
       "note": "BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: \"You may not use the software for commercial software hosting services without written permission from the author.\" Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well. The jar also contains English language strings of Minecraft (mojang-translations), for which no license was found."
     },
     "org.codehaus.plexus:plexus-utils": {
-      "note": "Ten of its source files carry the Apache License 1.1, and MXParser the Indiana University Extreme! Lab Software License 1.1.1. The FSF lists the Apache License 1.1 as incompatible with the GPL because of its prohibitions on the use of names, which the Extreme! Lab license has as well; the FSF does not list the latter. Paper bundles the same library. See the open questions in LICENSING.md."
+      "note": "Ten of its source files carry the Apache License 1.1, and MXParser the Indiana University Extreme! Lab Software License 1.1.1. The FSF lists the Apache License 1.1 as incompatible with the GPL because of its prohibitions on the use of names, which the Extreme! Lab license has as well; the FSF does not list the latter. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md)."
     },
     "studio.cubiq:cubiq-api": {
       "license": "GPL-3.0",

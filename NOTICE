@@ -26,7 +26,12 @@ notices are preserved in the licenses/ directory:
 Cubiq's own contributions are licensed under the Apache License, Version 2.0
 (see LICENSE). Cubiq server builds combine these contributions with the
 GPLv3-licensed code listed above and are therefore distributed under the terms
-of the GNU General Public License version 3 (licenses/GPL-3.0.txt).
+of the GNU General Public License, version 3 only (licenses/GPL-3.0.txt).
+
+The Cubiq logo (docs/assets/cubiq-logo.png, and the icon of the server window)
+is part of Cubiq's own work and licensed under the Apache License, Version 2.0.
+The license grants no permission to use the Cubiq name or logo as a trademark
+(section 6 of the Apache License).
 
 Cubiq server builds do not contain Mojang's server jar or its libraries. On
 first start, the Paperclip launcher downloads the server from Mojang and applies

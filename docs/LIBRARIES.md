@@ -23,29 +23,27 @@ notices, or to lack where the source code is, the library has an entry in `scrip
 | --- | --- | --- | --- |
 | Apache-2.0 | 39 | allowed | Apache-licensed code may be part of a GPLv3 work. |
 | MIT | 17 | allowed |  |
-| BSD-3-Clause | 13 | allowed |  |
+| BSD-3-Clause | 12 | allowed |  |
 | GPL-3.0-only | 4 | allowed | The license of the server as a whole. |
 | BSD-2-Clause | 3 | allowed |  |
 | MPL-2.0 | 3 | allowed | The MPL 2.0 allows distribution under the GPL as a Secondary License (section 3.3), unless the code is marked as incompatible with Secondary Licenses. |
-| Apache-1.1 | 2 | open | The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries. See the open questions in LICENSING.md. |
+| Apache-1.1 | 2 | allowed | The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries, and the project owner decided to distribute them the same way (see the decisions in LICENSING.md). |
 | GPL-3.0-or-later | 2 | allowed |  |
 | GPL-3.0-or-later WITH GCC-exception-3.1 | 2 | allowed | The runtime libraries of GCC; the GCC Runtime Library Exception allows distributing code compiled with them under any license. |
 | ZPL-2.1 | 2 | allowed | The FSF lists the Zope Public License 2.1 as compatible with the GPL. |
 | dtoa | 2 | allowed | David M. Gay's permissive license of dtoa, which requires its notice in all copies and in their documentation. |
-| APSL-2.0 | 1 | open | The FSF lists the Apple Public Source License 2.0 as incompatible with the GPL. The 32-bit (i386) macOS native library of jline-native contains Apple's startup code under it; Paper bundles the same library. See the open questions in LICENSING.md. |
 | Apache-2.0 WITH LLVM-exception | 1 | allowed | LLVM's runtime libraries; the exception waives the notice requirements for code compiled with them. |
-| EPL-1.0 | 1 | open | The FSF lists the EPL 1.0 as incompatible with the GPL. Paper bundles the same library as a separate jar. See the open questions in LICENSING.md. |
-| GPL-2.0-only WITH Universal-FOSS-exception-1.0 | 1 | open | GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception is meant to allow distributing it together with other open source software. Whether it covers Cubiq's distribution is not confirmed. Paper bundles the same library. |
+| GPL-2.0-only WITH Universal-FOSS-exception-1.0 | 1 | allowed | GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception allows distributing it together with other open source software such as the GPLv3 server. The GPLv2 requires its source code to accompany the binary, so every release and snapshot attaches it (scripts/release-sources.py). Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md). |
 | GPL-3.0 | 1 | allowed | The license of the server as a whole. |
 | LGPL-2.1-or-later | 1 | allowed |  |
 | LGPL-3.0-only | 1 | allowed |  |
-| LicenseRef-BungeeCord | 1 | open | BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services; see the open questions. |
+| LicenseRef-BungeeCord | 1 | allowed | BungeeCord's license: the BSD 3-Clause License with an additional clause against commercial software hosting services, which applies to everyone who uses the software for such services. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md). |
 | LicenseRef-HP-SGI-STL | 1 | allowed | The permission notices of Hewlett-Packard (1994) and Silicon Graphics (1996, 1997) on the STL code of libstdc++: a permissive license that requires the notices in the documentation. |
 | LicenseRef-Intel-BSD | 1 | allowed | Portions of commons-codec's PureJavaCrc32C are licensed by Intel "under the BSD license" without naming its version. The FSF lists the original BSD license, which has an advertising clause, as incompatible with the GPL, and the 2- and 3-clause BSD licenses as compatible. The file comes from Apache projects (Commons Codec, Hadoop), whose policy does not admit the BSD license with the advertising clause. |
 | blessing | 1 | allowed | SQLite's dedication of its code to the public domain. |
-| xpp | 1 | open | MXParser in plexus-utils is licensed under the Indiana University Extreme! Lab Software License 1.1.1. Like the Apache License 1.1, which the FSF lists as incompatible with the GPL because of its prohibitions on the use of names, it requires an acknowledgment and prohibits the use of the university's name for derived products. The FSF does not list this license. Paper bundles the same library. See the open questions in LICENSING.md. |
+| xpp | 1 | allowed | MXParser in plexus-utils is licensed under the Indiana University Extreme! Lab Software License 1.1.1. Like the Apache License 1.1, which the FSF lists as incompatible with the GPL because of its prohibitions on the use of names, it requires an acknowledgment and prohibits the use of the university's name for derived products. The FSF does not list this license. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md). |
 
-## Libraries in the Paperclip jar (69)
+## Libraries in the Paperclip jar (68)
 
 | Library | Version | License | Declared as | Source | Notices | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -59,7 +57,7 @@ notices, or to lack where the source code is, the library has an entry in `scrip
 | `com.google.protobuf:protobuf-java` | 4.29.0 | BSD-3-Clause | "BSD-3-Clause" | protocolbuffers/protobuf 2d4414f | `protobuf/` | allowed |
 | `com.googlecode.json-simple:json-simple` | 1.1.1 | Apache-2.0 | "The Apache Software License, Version 2.0" | fangyidong/json-simple 5c4fc7e | `json-simple/` | allowed |
 | `com.lmax:disruptor` | 3.4.4 | Apache-2.0 | "The Apache Software License, Version 2.0" | LMAX-Exchange/disruptor a87bf42 | `disruptor/` | allowed |
-| `com.mysql:mysql-connector-j` | 9.2.0 | GPL-2.0-only WITH Universal-FOSS-exception-1.0 | "The GNU General Public License, v2 with Universal FOSS Exception, v1.0" | mysql/mysql-connector-j a3909bf | in its jar | open |
+| `com.mysql:mysql-connector-j` | 9.2.0 | GPL-2.0-only WITH Universal-FOSS-exception-1.0 | "The GNU General Public License, v2 with Universal FOSS Exception, v1.0" | mysql/mysql-connector-j a3909bf | in its jar | allowed |
 | `com.velocitypowered:velocity-native` | 4.1.0 | GPL-3.0-or-later AND MIT | none | PaperMC/Velocity a078053 | `libdeflate/`, `velocity/` | allowed |
 | `commons-codec:commons-codec` | 1.16.0 | Apache-2.0 AND LicenseRef-Intel-BSD | "Apache-2.0" | apache/commons-codec 2614a4c | in its jar, `commons-codec/` | allowed |
 | `commons-lang:commons-lang` | 2.6 | Apache-2.0 | "The Apache Software License, Version 2.0" | parent POM org.apache:apache:7 | in its jar | allowed |
@@ -81,7 +79,7 @@ notices, or to lack where the source code is, the library has an entry in `scrip
 | `net.kyori:adventure-text-serializer-plain` | 5.2.0 | MIT | "The MIT License" | PaperMC/adventure 4bcbbd7 | `adventure/` | allowed |
 | `net.kyori:ansi` | 1.1.1 | MIT | "The MIT License" | KyoriPowered/ansi 251d81e | `ansi/` | allowed |
 | `net.kyori:option` | 1.1.0 | MIT | "The MIT License" | KyoriPowered/option c1f7a76 | `option/` | allowed |
-| `net.md-5:bungeecord-chat` | 1.21-R0.2-deprecated+build.21 | LicenseRef-BungeeCord | none | SpigotMC/BungeeCord 9667743 | `bungeecord/` | open |
+| `net.md-5:bungeecord-chat` | 1.21-R0.2-deprecated+build.21 | LicenseRef-BungeeCord | none | SpigotMC/BungeeCord 9667743 | `bungeecord/` | allowed |
 | `net.minecrell:terminalconsoleappender` | 1.3.0 | MIT | "MIT License" | Minecrell/TerminalConsoleAppender 21a800d | `terminalconsoleappender/` | allowed |
 | `org.apache.httpcomponents:httpclient` | 4.5.14 | Apache-2.0 | "Apache License, Version 2.0" | parent POM org.apache.httpcomponents:httpcomponents-client:4.5.14 | in its jar | allowed |
 | `org.apache.httpcomponents:httpcore` | 4.4.16 | Apache-2.0 | "Apache License, Version 2.0" | parent POM org.apache.httpcomponents:httpcomponents-core:4.4.16 | in its jar | allowed |
@@ -99,10 +97,9 @@ notices, or to lack where the source code is, the library has an entry in `scrip
 | `org.apache.maven:maven-model` | 3.9.6 | Apache-2.0 | "Apache-2.0" | parent POM org.apache:apache:31 | in its jar | allowed |
 | `org.apache.maven:maven-repository-metadata` | 3.9.6 | Apache-2.0 | "Apache-2.0" | parent POM org.apache:apache:31 | in its jar | allowed |
 | `org.apache.maven:maven-resolver-provider` | 3.9.6 | Apache-2.0 | "Apache-2.0" | parent POM org.apache:apache:31 | in its jar | allowed |
-| `org.codehaus.plexus:plexus-interpolation` | 1.26 | Apache-2.0 AND Apache-1.1 AND MIT | "Apache License, Version 2.0" | codehaus-plexus/plexus-interpolation 159e697 | `plexus-interpolation/` | open |
-| `org.codehaus.plexus:plexus-utils` | 3.5.1 | Apache-2.0 AND Apache-1.1 AND xpp AND BSD-2-Clause AND BSD-3-Clause | "Apache License, Version 2.0" | codehaus-plexus/plexus-utils 8488ff2 | in its jar, `plexus-utils/` | open |
-| `org.eclipse.sisu:org.eclipse.sisu.inject` | 0.9.0.M2 | EPL-1.0 AND BSD-3-Clause | "Eclipse Public License, Version 1.0" | eclipse/sisu.inject 14439cd | `asm-9.5/`, `sisu-inject/` | open |
-| `org.jline:jline-native` | 4.4.6 | BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND APSL-2.0 AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception | "The BSD License" | jline/jline3 2ab1d06 | `apple-apsl/`, `apple-csu/`, `freebsd-9.3-csu/`, `gcc-11.2.0/`, `jansi/`, `jline/`, `llvm-compiler-rt-14.0.0/`, `mingw-w64/` | open |
+| `org.codehaus.plexus:plexus-interpolation` | 1.26 | Apache-2.0 AND Apache-1.1 AND MIT | "Apache License, Version 2.0" | codehaus-plexus/plexus-interpolation 159e697 | `plexus-interpolation/` | allowed |
+| `org.codehaus.plexus:plexus-utils` | 3.5.1 | Apache-2.0 AND Apache-1.1 AND xpp AND BSD-2-Clause AND BSD-3-Clause | "Apache License, Version 2.0" | codehaus-plexus/plexus-utils 8488ff2 | in its jar, `plexus-utils/` | allowed |
+| `org.jline:jline-native` | 4.4.6 | BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception | "The BSD License" | jline/jline3 2ab1d06 | `freebsd-9.3-csu/`, `gcc-11.2.0/`, `jansi/`, `jline/`, `llvm-compiler-rt-14.0.0/`, `mingw-w64/` | allowed |
 | `org.jline:jline-reader` | 3.20.0 | BSD-3-Clause AND Apache-2.0 | "The BSD License" | jline/jline3 a3e55d5 | `jansi/`, `jline-3.20.0/` | allowed |
 | `org.jline:jline-terminal-ffm` | 4.4.6 | BSD-3-Clause AND Apache-2.0 | "The BSD License" | jline/jline3 2ab1d06 | `jansi/`, `jline/` | allowed |
 | `org.jline:jline-terminal` | 4.4.6 | BSD-3-Clause AND Apache-2.0 | "The BSD License" | jline/jline3 2ab1d06 | `jansi/`, `jline/` | allowed |
@@ -121,15 +118,12 @@ notices, or to lack where the source code is, the library has an entry in `scrip
 
 ## Open questions
 
-- `com.mysql:mysql-connector-j` 9.2.0: GPLv2-only code cannot be combined with GPLv3 code by itself; Oracle's Universal FOSS Exception is meant to allow distributing it together with other open source software. Whether it covers Cubiq's distribution is not confirmed. Paper bundles the same library.
-- `net.md-5:bungeecord-chat` 1.21-R0.2-deprecated+build.21: BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: "You may not use the software for commercial software hosting services without written permission from the author." Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well. The jar also contains English language strings of Minecraft (mojang-translations), for which no license was found.
-- `org.codehaus.plexus:plexus-interpolation` 1.26: The FSF lists the Apache License 1.1 as incompatible with the GPL. Four source files of plexus-interpolation and ten of plexus-utils carry it; Paper bundles both libraries. See the open questions in LICENSING.md.
-- `org.codehaus.plexus:plexus-utils` 3.5.1: Ten of its source files carry the Apache License 1.1, and MXParser the Indiana University Extreme! Lab Software License 1.1.1. The FSF lists the Apache License 1.1 as incompatible with the GPL because of its prohibitions on the use of names, which the Extreme! Lab license has as well; the FSF does not list the latter. Paper bundles the same library. See the open questions in LICENSING.md.
-- `org.eclipse.sisu:org.eclipse.sisu.inject` 0.9.0.M2: The FSF lists the EPL 1.0 as incompatible with the GPL. Paper bundles the same library as a separate jar. See the open questions in LICENSING.md.
-- `org.jline:jline-native` 4.4.6: The FSF lists the Apple Public Source License 2.0 as incompatible with the GPL. The 32-bit (i386) macOS native library of jline-native contains Apple's startup code under it; Paper bundles the same library. See the open questions in LICENSING.md.
+None.
 
 ## Notes
 
+- `net.md-5:bungeecord-chat`: BungeeCord's license, which covers its chat module, is the BSD 3-Clause License with an additional clause: "You may not use the software for commercial software hosting services without written permission from the author." Such a restriction is not part of an open source license, and the GPLv3 does not allow further restrictions. Spigot's and Paper's APIs expose this library, and Paper bundles it as well. The jar also contains English language strings of Minecraft (mojang-translations), for which no license was found.
+- `org.codehaus.plexus:plexus-utils`: Ten of its source files carry the Apache License 1.1, and MXParser the Indiana University Extreme! Lab Software License 1.1.1. The FSF lists the Apache License 1.1 as incompatible with the GPL because of its prohibitions on the use of names, which the Extreme! Lab license has as well; the FSF does not list the latter. Paper bundles the same library, and the project owner decided to distribute it the same way (see the decisions in LICENSING.md).
 - `studio.cubiq:cubiq-api`: Paper's API with Purpur's and Cubiq's changes, distributed under the GPLv3 like the server.
 
 ## Libraries from Mojang's server jar (39)

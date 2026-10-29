@@ -43,24 +43,6 @@
       "repository": "https://github.com/KyoriPowered/ansi.git",
       "sha256": "b2ea556c24a3ec26e3af24f40754e6d347a8ef843c024278cdfafde730ad74a8"
     },
-    "apple-apsl/APPLE_LICENSE": {
-      "commit": "71dec0ac89e8e5c52085ae4b560139df9afbab2f",
-      "path": "APPLE_LICENSE",
-      "repository": "https://github.com/apple-oss-distributions/dyld.git",
-      "sha256": "e5881019d8766c1e88a5fe1dbca4ba40c78011d41fcb18f6e9f50df60182685b"
-    },
-    "apple-csu/dyld_glue.s": {
-      "commit": "ece0e9db9c1280f3e89671deec77b3562294c45e",
-      "path": "dyld_glue.s",
-      "repository": "https://github.com/apple-oss-distributions/Csu.git",
-      "sha256": "b5a7b2b43c057c1290359a473ed00a501af81f169968a9be7d2ea8acec1c9e93"
-    },
-    "asm-9.5/LICENSE.txt": {
-      "commit": "443339a964352dcec4dd3915de8f13188920d3ac",
-      "path": "LICENSE.txt",
-      "repository": "https://gitlab.ow2.org/asm/asm.git",
-      "sha256": "293b6af371eee28b0ff16f0334ea19e20a3d5522143faa4b95b346855507879a"
-    },
     "asm-9.7/LICENSE.txt": {
       "commit": "bde266f0d59dd12739ad15a39f1da43a61143eed",
       "path": "LICENSE.txt",
@@ -417,18 +399,6 @@
       "repository": "https://github.com/mozilla/rhino.git",
       "sha256": "09e909ce95544554c0ae4ddb01b7770b00776b8a62af9484861d8875775ca69b"
     },
-    "sisu-inject/LICENSE.txt": {
-      "commit": "14439cd38535c22cc908eacf99b70daf66d949b3",
-      "path": "LICENSE.txt",
-      "repository": "https://github.com/eclipse/sisu.inject.git",
-      "sha256": "44277b2bec6093e4ac313afec251a4de599d24c4e768f8574d95b13a9d2d97b5"
-    },
-    "sisu-inject/about.html": {
-      "commit": "14439cd38535c22cc908eacf99b70daf66d949b3",
-      "path": "org.eclipse.sisu.inject/about.html",
-      "repository": "https://github.com/eclipse/sisu.inject.git",
-      "sha256": "28219f909fdf4d41c0a4c3bda3e9b9c5cd0d47427ccec43ea0c8c291b4621564"
-    },
     "snakeyaml/LICENSE.txt": {
       "commit": "a34989252e6f59e36a3aaf788a903b7a37a73d33",
       "path": "LICENSE.txt",
@@ -622,9 +592,10 @@
       "license": "GPL-2.0-only WITH Universal-FOSS-exception-1.0",
       "source": "https://github.com/mysql/mysql-connector-j.git a3909bfeb62d5a517ab444bb88ba7ecf26100297",
       "noticesInJar": true,
+      "attachSourceToReleases": true,
       "files": [],
       "copyright": [],
-      "note": "Listed for its source code, which the GPLv2 requires to be available. The jar contains its license information, including the licenses of the third-party code it contains and Oracle's written offer for the source code, and records the commit it was built from in INFO_SRC."
+      "note": "Listed for its source code. The GPLv2 requires it to accompany the binary or a written offer, so scripts/release-sources.py attaches it to every release and snapshot. The jar contains its license information, including the licenses of the third-party code it contains and Oracle's written offer for the source code, and records the commit it was built from in INFO_SRC."
     },
     "com.velocitypowered:velocity-native": {
       "version": "4.1.0",
@@ -973,28 +944,9 @@
       ],
       "note": "The jar contains the Apache License 2.0, a NOTICE file with the acknowledgments of the Apache Software Foundation, the Indiana University Extreme! Lab, ThoughtWorks, Javolution and Rome, and the licenses of MXParser (Indiana University Extreme! Lab Software License 1.1.1), Javolution (BSD-2-Clause) and CruiseControl (BSD-3-Clause). Ten source files, whose classes are in the jar, carry the Apache Software License 1.1 in their header comment, which is their only license text, so the files are included whole: DirectoryScanner.java, ExceptionUtils.java, Expand.java, FileUtils.java, IOUtil.java, InterpolationFilterReader.java, Os.java, SelectorUtils.java, StringInputStream.java and StringUtils.java. As their license requires: \"This product includes software developed by the Apache Software Foundation (http://www.apache.org/).\" (Os.java) and \"This product includes software developed by the Apache Software Foundation (http://www.codehaus.org/).\" (the other nine)"
     },
-    "org.eclipse.sisu:org.eclipse.sisu.inject": {
-      "version": "0.9.0.M2",
-      "license": "EPL-1.0 AND BSD-3-Clause",
-      "source": "https://github.com/eclipse/sisu.inject.git 14439cd38535c22cc908eacf99b70daf66d949b3",
-      "files": [
-        "sisu-inject/LICENSE.txt",
-        "sisu-inject/about.html",
-        "asm-9.5/LICENSE.txt"
-      ],
-      "copyright": [
-        "Copyright (c) 2010-present Sonatype, Inc.",
-        "Copyright (c) 2010-present Sonatype, Inc. and others",
-        "Copyright (c) 2021-present Sonatype, Inc. and others.",
-        "Copyright (c) 2008-present Stuart McCulloch",
-        "Copyright (c) 2023-present Contributors to the Eclipse Foundation",
-        "Copyright (c) 2000-2011 INRIA, France Telecom"
-      ],
-      "note": "Contains a repackaged copy of ASM 9.5 (BSD-3-Clause). about.html, which the jar contains as well, calls it ASM 9.2."
-    },
     "org.jline:jline-native": {
       "version": "4.4.6",
-      "license": "BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND APSL-2.0 AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception",
+      "license": "BSD-3-Clause AND Apache-2.0 AND ZPL-2.1 AND BSD-2-Clause AND GPL-3.0-or-later WITH GCC-exception-3.1 AND Apache-2.0 WITH LLVM-exception",
       "source": "https://github.com/jline/jline3.git 2ab1d067deb9eeb615e2c9081c75009fdd6c4516",
       "files": [
         "jline/LICENSE.txt",
@@ -1002,9 +954,7 @@
         "mingw-w64/COPYING.MinGW-w64-runtime.txt",
         "gcc-11.2.0/COPYING.RUNTIME",
         "llvm-compiler-rt-14.0.0/LICENSE.TXT",
-        "freebsd-9.3-csu/crti.S",
-        "apple-csu/dyld_glue.s",
-        "apple-apsl/APPLE_LICENSE"
+        "freebsd-9.3-csu/crti.S"
       ],
       "copyright": [
         "Copyright (c) 2002-2023, the original author or authors.",
@@ -1015,10 +965,9 @@
         "Copyright (c) the original author(s).",
         "Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project",
         "Copyright 1996, 1997, 1998, 2000 John D. Polstra.",
-        "Copyright (c) 2006-2008 Apple Inc. All rights reserved.",
         "Copyright (C) 2009 Free Software Foundation, Inc. <http://fsf.org/>"
       ],
-      "note": "Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), Apple Csu (APSL-2.0, notice in dyld_glue.s; only in the 32-bit macOS library), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives."
+      "note": "Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives. Cubiq leaves out the 32-bit macOS library (org/jline/nativ/Mac/x86/), the only one with Apple's startup code under the APSL-2.0, which no Java 25 runtime loads (see cubiq-server/build.gradle.kts.patch)."
     },
     "org.jline:jline-reader": {
       "version": "3.20.0",

@@ -38,3 +38,14 @@
          long elapsed = Util.getNanos() - levelNanoTime;
          String time = String.format(Locale.ROOT, "%.3fs", elapsed / 1.0E9);
          LOGGER.info("Done preparing level \"{}\" ({})", this.getLevelIdName(), time); // Paper - Improve startup message, add total time
+@@ -404,7 +_,9 @@
+         org.purpurmc.purpur.task.BossBarTask.startAll(); // Purpur - Implement TPSBar
+         if (org.purpurmc.purpur.PurpurConfig.beeCountPayload) org.purpurmc.purpur.task.BeehiveTask.instance().register(); // Purpur - Give bee counts in beehives to Purpur clients
+ 
+-        this.saveEverything(false, true, true);
++        try (studio.cubiq.lifecycle.LifecyclePhase _ = studio.cubiq.lifecycle.ServerLifecycle.step(studio.cubiq.lifecycle.ServerStep.SAVING_AFTER_LOADING)) { // Cubiq - Lifecycle diagnostics
++            this.saveEverything(false, true, true);
++        } // Cubiq - Lifecycle diagnostics
+         this.notificationManager().serverStarted();
+         return true;
+     }
