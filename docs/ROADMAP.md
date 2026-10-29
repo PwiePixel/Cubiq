@@ -19,10 +19,10 @@ and pushed.
 - [ ] Release process: CI publishes every build of `main` that passes all checks as a numbered pre-release
       (`vMAJOR.MINOR.PATCH`, starting at v0.0.1) with the Paperclip jar, its SHA-256, the source code of MySQL
       Connector/J that its license requires, and notes that list the changes and the exact upstream commits, and
-      `/version` shows the release; a snapshot pre-release holds the newest development build
+      `/version` shows the release; a snapshot pre-release holds the build of the latest push to a development branch
       ([CONTRIBUTING.md](CONTRIBUTING.md#releases)). Implemented and tested on a branch (version numbering, the notes,
-      a release build on a test server, the steps of the jobs with a stand-in for `gh`); the release job runs for the
-      first time when `main` contains it
+      a release build on a test server, the steps of the jobs with a stand-in for `gh`), and the snapshot job has
+      published a snapshot; the release job runs for the first time when `main` contains it
 - Not planned: a source archive with the upstream sources for each release. The project owner decided that releases
   refer to the tag and the upstream commits instead (see [LICENSING.md](LICENSING.md)).
 - [x] Reproducible builds: two builds of the same commit in the same environment produce an identical server jar and
@@ -37,8 +37,8 @@ and pushed.
       always match what was built
 - [x] Generate an inventory of all bundled libraries and their licenses in CI, with an allowlist check
       ([LIBRARIES.md](LIBRARIES.md))
-- [x] Ship the license texts and copyright notices that the bundled libraries' jars lack (44 of 69 jars contain no
-      license or notice file, 7 more lack notices or a source pointer) and those of code of other projects compiled into
+- [x] Ship the license texts and copyright notices that the bundled libraries' jars lack (43 of the 67 jars of other
+      projects contain no license or notice file, 7 more lack notices or a source pointer) and those of code of other projects compiled into
       the server jar and the Paperclip jar, collected from each project's source at the bundled version and checked in
       CI ([THIRD-PARTY-NOTICES.md](../licenses/THIRD-PARTY-NOTICES.md))
 - [x] Decide the licensing questions that collecting the notices raised (decisions in [LICENSING.md](LICENSING.md))

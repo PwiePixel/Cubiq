@@ -601,7 +601,7 @@ License texts and notices:
 - `third-party/llvm-compiler-rt-14.0.0/LICENSE.TXT` (from https://github.com/llvm/llvm-project.git 329fda39c507e8740978d10458451dcdb21563be, compiler-rt/LICENSE.TXT)
 - `third-party/freebsd-9.3-csu/crti.S` (from https://github.com/freebsd/freebsd-src.git 2318891ec48af954532c881bc325619271e277ca, lib/csu/amd64/crti.S)
 
-Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives. Cubiq leaves out the 32-bit macOS library (org/jline/nativ/Mac/x86/), the only one with Apple's startup code under the APSL-2.0, which no Java 25 runtime loads (see cubiq-server/build.gradle.kts).
+Part of the JNI code comes from Jansi (Apache-2.0). The native libraries contain startup and runtime code of their toolchains, linked statically: FreeBSD 9.3 csu (BSD-2-Clause, notice in crti.S), the mingw-w64 runtime (ZPL-2.1, notice in COPYING.MinGW-w64-runtime.txt), LLVM compiler-rt (Apache-2.0 with the LLVM exception), the GCC runtime (GCC Runtime Library Exception 3.1) and the musl crt files, whose license notice musl waives. Cubiq leaves out the 32-bit macOS library (org/jline/nativ/Mac/x86/), the only one with Apple's startup code under the APSL-2.0, which no Java 25 runtime loads (see cubiq-server/build.gradle.kts.patch).
 
 ### org.jline:jline-reader 3.20.0
 

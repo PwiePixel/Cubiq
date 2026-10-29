@@ -131,7 +131,7 @@
  }
  
  // Compile tests with -parameters for better junit parameterized test names
-@@ -291,6 +_,73 @@
+@@ -291,6 +_,77 @@
      )
  }
  
@@ -140,11 +140,11 @@
 +// name in annotations, and the 32-bit macOS library of jline-native, which contains Apple's startup code under the
 +// APSL 2.0 and which no Java 25 runtime loads. The bundler jar, which the Paperclip jar is made from, gets jline-native
 +// without that library, with its other entries in their order and with their times so that builds stay reproducible,
-+// and its hash in META-INF/libraries.list.
++// and its hash in META-INF/libraries.list. The bundler of the development bundle contains no libraries.
 +configurations.runtimeClasspath {
 +    exclude(group = "org.eclipse.sisu", module = "org.eclipse.sisu.inject")
 +}
-+tasks.withType<io.papermc.paperweight.tasks.CreateBundlerJar>().configureEach {
++tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createBundlerJar") {
 +    val bundlerJar = outputZip
 +    doLast {
 +        val jar = bundlerJar.get().asFile.toPath()
@@ -153,11 +153,13 @@
 +            val entries = input.entries().toList()
 +            val jlineNative = entries.single { Regex("META-INF/libraries/org/jline/jline-native/[^/]+/jline-native-[^/]+\\.jar").matches(it.name) }
 +            val stripped = ByteArrayOutputStream()
++            var leftOut = 0
 +            ZipInputStream(input.getInputStream(jlineNative)).use { library ->
 +                ZipOutputStream(stripped).use { out ->
 +                    while (true) {
 +                        val entry = library.nextEntry ?: break
 +                        if (entry.name.startsWith("org/jline/nativ/Mac/x86/")) {
++                            leftOut++
 +                            continue
 +                        }
 +                        val copy = ZipEntry(entry.name)
@@ -168,6 +170,8 @@
 +                    }
 +                }
 +            }
++            // A jline-native that moved or dropped the library needs a new look at the decision
++            check(leftOut > 0) { "${jlineNative.name} contains no org/jline/nativ/Mac/x86/; review the decision on it in docs/LICENSING.md" }
 +            val strippedBytes = stripped.toByteArray()
 +            val hash = MessageDigest.getInstance("SHA-256").digest(strippedBytes).joinToString("") { "%02x".format(it) }
 +            val path = jlineNative.name.removePrefix("META-INF/libraries/")

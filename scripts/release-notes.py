@@ -8,8 +8,9 @@ Usage: scripts/release-notes.py --version <version> --previous <tag or ""> --jar
 Prints the notes in Markdown: what the release is, the file to download with its SHA-256, the upstream commits it is
 based on, the changes since the previous release (the subjects of the commits, without merge commits, from the git
 history of the current directory), the source code archives attached for bundled libraries, and the license and EULA
-notices. With --snapshot, the notes describe the snapshot, the newest development build, and --version is not used.
-Runs in the repository; needs its history back to the previous release.
+notices. With --snapshot, the notes describe the snapshot, a development build, and --version is not used; --previous
+is the latest release when the snapshot is built. Runs in the repository; needs its history back to the previous
+release.
 """
 
 import argparse
@@ -41,12 +42,11 @@ def notes(arguments):
         # The tree of the commit, which stays available after the snapshot has been replaced
         ref = commit
         lines = [
-            f"The newest development build of Cubiq for Minecraft {arguments.minecraft}, built from commit "
-            f"{commit[:7]}.",
+            f"A development build of Cubiq for Minecraft {arguments.minecraft}, built from commit {commit[:7]}.",
             "",
-            "This is a snapshot, not a release: every build of a development branch that passes all of Cubiq's checks "
-            "replaces it, so it can contain changes that are not finished. Use the numbered releases for servers you care "
-            "about, and back up your worlds before you try it.",
+            "This is a snapshot, not a release: the next build of a development branch that passes all of Cubiq's checks "
+            "replaces it, so it can contain changes that are not finished, and a release published after it can be "
+            "newer. Use the numbered releases for servers you care about, and back up your worlds before you try it.",
         ]
         source = f"commit `{commit[:7]}` of this repository"
     else:
@@ -71,10 +71,12 @@ def notes(arguments):
         "",
     ]
     commits = changes(arguments.previous, commit)
-    if arguments.previous:
+    if arguments.previous and arguments.snapshot:
+        lines.append(f"**Changes since {arguments.previous}, the latest release when this snapshot was built:**")
+    elif arguments.previous:
         lines.append(f"**Changes since {arguments.previous}:**")
     elif arguments.snapshot:
-        lines.append("**Changes:** there is no release yet, so these are all commits:")
+        lines.append("**Changes:** no release existed when this snapshot was built, so these are all commits:")
     else:
         lines.append("**Changes:** this is the first release, with these commits:")
     lines.append("")
@@ -87,7 +89,8 @@ def notes(arguments):
         "**License:** the server as a whole is distributed under the GNU General Public License, version 3 only; "
         "Cubiq's own code is licensed under the Apache License 2.0. The license texts and notices are in the jar under "
         f"`META-INF/license/` and in [`licenses/`]({repository}/tree/{ref}/licenses). The source code of this build "
-        f"is {source} together with the Purpur and Paper commits above; see "
+        f"is {source} together with the Purpur and Paper commits above, and for the bundled libraries the source code "
+        f"that [`THIRD-PARTY-NOTICES.md`]({repository}/blob/{ref}/licenses/THIRD-PARTY-NOTICES.md) names; see "
         f"[LICENSING.md]({repository}/blob/{ref}/docs/LICENSING.md).",
     ]
     for archive in arguments.sources:

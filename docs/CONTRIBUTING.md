@@ -199,8 +199,9 @@ identical files, which CI checks on every push. Two things break this:
 The manifest of the server jar records the build time, the branch, the build number and, for a
 [release](#releases), its version. Local builds use the epoch as build time, CI uses the commit time
 (`BUILD_STARTED_AT`, see `.github/workflows/build.yml`). To build a commit the way CI does, check it out on a branch
-with the same name as in CI, leave `BUILD_NUMBER` and `CUBIQ_VERSION` unset, or for a release set them to the values
-that its manifest shows as `Build-Number` and `Cubiq-Version`, and build it in a fresh clone:
+with the same name as in CI (`main` for a release, whatever branch its commit was pushed to, and `snapshot` for the
+snapshot, see [Releases](#releases)), leave `BUILD_NUMBER` and `CUBIQ_VERSION` unset, or for a release set them to the
+values that its manifest shows as `Build-Number` and `Cubiq-Version`, and build it in a fresh clone:
 
 ```
 export BUILD_STARTED_AT=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)
@@ -249,27 +250,38 @@ uploaded by hand.
   build. A release also gets a build number, the number of releases up to and including it (1 for v0.0.1), which the
   version string of the server shows, for example `26.3-1-main@abc1234`.
 - **One release per commit.** A build of a commit that has a release tag already, for example when its run is started
-  again, gets the version of that release and makes no new release. Runs of `main` run one at a time, and a running
-  one is never cancelled, so two releases cannot get the same version; when more commits arrive while a run is going
-  on, GitHub keeps only the newest waiting run, and the next release contains all of them.
+  again, gets the version of that release and makes no new release; if the tag exists without its release, because
+  publishing failed after GitHub had created the tag, the build of `main` creates the release. A build of a commit
+  that a release contains already, for example an older run of `main` that is started again after a newer commit was
+  released, is a development build and publishes nothing. When only the `release` job of a run is started again, it
+  first checks that the version the build job determined is still the release of the commit, and fails otherwise;
+  then start the whole run again. Runs of `main` run one at a time, and a running one is never cancelled, so two
+  releases cannot get the same version; when more commits arrive while a run is going on, GitHub keeps only the newest
+  waiting run, and the next release contains all of them. A run that is started again also replaces a waiting run of
+  `main`, which then has to be started again itself.
 - **A release contains** the Paperclip jar as `cubiq-<Minecraft version>-v<version>.jar`, its SHA-256 in a `.sha256`
   file, the source code of the bundled libraries whose license requires it to accompany the binary, and notes from
   `scripts/release-notes.py`: the commits since the previous release, the Purpur and Paper commits it is based on, and
-  the license notices. Releases are marked as pre-releases while Cubiq is alpha software.
+  the license notices. Releases are marked as pre-releases while Cubiq is alpha software. The release and snapshot jobs
+  publish the files of the artifact of the build job, which contains the Paperclip jar and the source code archives.
 - **Source code of bundled libraries.** MySQL Connector/J is licensed under the GPLv2, which requires its source code
   to accompany the binary. `scripts/release-sources.py` fetches the source of each library marked with
   `attachSourceToReleases` in `scripts/library-notices.json`, at the commit recorded there, and archives it as
-  `<artifact>-<version>-source.tar.gz`; the release and the snapshot attach these archives. When such a library changes
-  its version, its entry gets the commit of the new version (see [Smoke tests](#smoke-tests)), and the archive follows.
+  `<artifact>-<version>-source.tar.gz`; the artifact of every CI run contains these archives, and the release and the
+  snapshot attach them. When such a library changes its version, its entry gets the commit of the new version (see
+  [Smoke tests](#smoke-tests)), and the archive follows; `scripts/library-licenses.py` fails while the commit differs
+  from the one that the jar records, and when a library under the GPLv2 or the LGPLv2.1 only is not marked.
 - **The jar knows its release.** CI sets `CUBIQ_VERSION` and `BUILD_NUMBER` for the build, which end up in the
   manifest of the server jar as `Cubiq-Version` and `Build-Number`, and `/version` shows
   `You are running Cubiq v0.0.1`. Builds without `CUBIQ_VERSION` call themselves development builds.
-- **The snapshot** is a pre-release with the tag `snapshot` that always holds the newest development build: every
-  push to a branch of this repository other than `main` whose build passes all checks replaces it (job `snapshot`).
-  Its jar is `cubiq-<Minecraft version>-snapshot.jar`, it has the same files as a release, and its notes list the
-  commits since the latest release. The build records the branch as `snapshot` instead of the development branch's
-  name; to rebuild a snapshot the way CI does, check it out on a branch named `snapshot`. Builds of pull requests
-  publish nothing.
+- **The snapshot** is a pre-release with the tag `snapshot` that holds the build of the latest push to a development
+  branch: every push to a branch of this repository other than `main` whose build passes all checks replaces it (job
+  `snapshot`), if the branch contains the latest release, so merge `main` into a branch after a release, and if no
+  release contains its commit yet. Its jar is `cubiq-<Minecraft version>-snapshot.jar`, it has the same files as a
+  release, and its notes list the commits since the latest release at the time it was built. The build records the
+  branch as `snapshot` instead of the development branch's name. To rebuild a snapshot the way CI does, check it out
+  on a branch named `snapshot` and delete the tag `snapshot` in the clone (`git tag -d snapshot`); otherwise the
+  build records the branch as `heads/snapshot`. Builds of pull requests publish nothing.
 - **On other branches and in pull requests,** the summary of the build job shows which version the next release from
   `main` would get and a preview of its notes.
 - The `release` and `snapshot` jobs request the permission to write the repository's contents for their

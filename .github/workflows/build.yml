@@ -25,6 +25,7 @@ jobs:
       snapshot: ${{ steps.release.outputs.snapshot }}
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
+      build: ${{ steps.release.outputs.build }}
       previous: ${{ steps.release.outputs.previous }}
       purpur: ${{ steps.upstream.outputs.purpur }}
       paper: ${{ steps.upstream.outputs.paper }}
@@ -59,30 +60,54 @@ jobs:
       # Every build of main that passes all checks becomes a release (job "release"), numbered after the existing
       # release tags by scripts/release-version.py; the jar records the version (Cubiq-Version) and the number of the
       # release (Build-Number). A commit is released only once: a build of a released commit, for example when its run
-      # is started again, gets the version of its release and makes no new release. Every build of another branch of
-      # this repository that passes all checks replaces the snapshot (job "snapshot"); its jar records the branch as
-      # "snapshot", the name it is published under. Pull requests only show which version the next release would get.
+      # is started again, gets the version of its release and the branch main, so that it reproduces the release, and
+      # makes no new release, unless the tag exists without its release. A build of a commit that a release contains
+      # already, for example when an older run of main is started again, publishes nothing. Every other build of a
+      # branch of this repository that passes all checks replaces the snapshot (job "snapshot") if the branch contains
+      # the latest release; its jar records the branch as "snapshot", the name it is published under. Pull requests
+      # only show which version the next release would get.
       - name: Determine the release version
         id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           python3 scripts/release-version.py --self-test
           release=$(python3 scripts/release-version.py gradle.properties)
           echo "$release" >> "$GITHUB_OUTPUT"
-          version=$(sed -n 's/^version=//p' <<< "$release")
-          build=$(sed -n 's/^build=//p' <<< "$release")
-          if [[ $(sed -n 's/^released=//p' <<< "$release") == true ]]; then
+          value() { sed -n "s/^$1=//p" <<< "$release"; }
+          version=$(value version)
+          pushed=false
+          if [[ $GITHUB_REF == refs/heads/* && ($GITHUB_EVENT_NAME == push || $GITHUB_EVENT_NAME == workflow_dispatch) ]]; then
+            pushed=true
+          fi
+          if [[ $(value released) == true ]]; then
             echo "CUBIQ_VERSION=$version" >> "$GITHUB_ENV"
-            echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
-            echo "This commit is released as v$version. This build gets its version and makes no new release." >> "$GITHUB_STEP_SUMMARY"
-          elif [[ $GITHUB_REF == refs/heads/main && ($GITHUB_EVENT_NAME == push || $GITHUB_EVENT_NAME == workflow_dispatch) ]]; then
+            echo "BUILD_NUMBER=$(value build)" >> "$GITHUB_ENV"
+            git checkout -q -B main
+            # Publishing a release can fail after GitHub created its tag; the release is created again then
+            if [[ $GITHUB_REF == refs/heads/main && $pushed == true ]] &&
+              [[ $(gh release view "v$version" --json isDraft --jq .isDraft 2> /dev/null) != false ]]; then
+              echo "publish=true" >> "$GITHUB_OUTPUT"
+              echo "This commit has the tag v$version, but no release. This build creates it if all checks pass." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "This commit is released as v$version. This build gets its version and makes no new release." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          elif [[ -n $(value contained) ]]; then
+            echo "The release $(value contained) contains this commit. This build is a development build and publishes nothing." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ $GITHUB_REF == refs/heads/main && $pushed == true ]]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
             echo "CUBIQ_VERSION=$version" >> "$GITHUB_ENV"
-            echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
+            echo "BUILD_NUMBER=$(value build)" >> "$GITHUB_ENV"
             echo "This build becomes the release v$version if all checks pass." >> "$GITHUB_STEP_SUMMARY"
-          elif [[ $GITHUB_REF == refs/heads/* && ($GITHUB_EVENT_NAME == push || $GITHUB_EVENT_NAME == workflow_dispatch) ]]; then
+          elif [[ $pushed == true && -z $(value behind) ]]; then
             echo "snapshot=true" >> "$GITHUB_OUTPUT"
+            # The tag of the current snapshot would make the branch name ambiguous, and the jar would record "heads/snapshot"
+            git tag -d snapshot > /dev/null 2>&1 || true
             git checkout -q -B snapshot
             echo "This build replaces the snapshot if all checks pass. The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ $pushed == true ]]; then
+            echo "This branch does not contain the latest release $(value behind), so this build does not replace the snapshot; merge main into the branch. The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "The next release from main would be v$version." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -188,9 +213,17 @@ jobs:
           jar=$(ls cubiq-server/build/libs/cubiq-paperclip-*.jar)
           echo "SHA-256 of $(basename "$jar"): \`$(sha256sum "$jar" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
 
+      # The Paperclip jar and the source code of the bundled libraries whose license requires it to accompany the jar
+      # (scripts/release-sources.py), as the artifact of this run, which the release and snapshot jobs publish
+      - name: Collect the jar and the source code it requires
+        run: |
+          mkdir -p "$RUNNER_TEMP/artifact"
+          cp cubiq-server/build/libs/cubiq-paperclip-*.jar "$RUNNER_TEMP/artifact/"
+          python3 scripts/release-sources.py "$RUNNER_TEMP/artifact"
+
       # What the release job would publish, so that changes to the release notes can be checked before they reach main
       - name: Preview the release notes
-        if: steps.release.outputs.publish != 'true'
+        if: steps.release.outputs.publish != 'true' && steps.release.outputs.version != ''
         env:
           VERSION: ${{ steps.release.outputs.version }}
           PREVIOUS: ${{ steps.release.outputs.previous }}
@@ -201,12 +234,14 @@ jobs:
           jar="$RUNNER_TEMP/release-preview/cubiq-$mc-v$VERSION.jar"
           mkdir -p "$(dirname "$jar")"
           cp cubiq-server/build/libs/cubiq-paperclip-*.jar "$jar"
+          shopt -s nullglob
+          sources=("$RUNNER_TEMP"/artifact/*-source.tar.gz)
           {
             echo
             echo "### Release notes of v$VERSION (preview)"
             echo
             python3 scripts/release-notes.py --version "$VERSION" --previous "$PREVIOUS" --jar "$jar" --minecraft "$mc" \
-              --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY"
+              --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --sources "${sources[@]}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload smoke test logs
@@ -224,12 +259,12 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cubiq-${{ github.sha }}
-          path: cubiq-server/build/libs/cubiq-paperclip-*.jar
+          path: ${{ runner.temp }}/artifact/
           if-no-files-found: error
 
   # Publishes the build of main as a pre-release with its Paperclip jar once all checks passed, if the build job decided
   # to release it (see "Determine the release version"). The source code of bundled libraries whose license requires it
-  # to accompany the binary is attached as well (scripts/release-sources.py).
+  # to accompany the binary is attached as well (scripts/release-sources.py, run by the build job).
   release:
     name: Release
     needs: build
@@ -256,16 +291,25 @@ jobs:
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.build.outputs.version }}
           TAG: ${{ needs.build.outputs.tag }}
+          BUILD: ${{ needs.build.outputs.build }}
           PREVIOUS: ${{ needs.build.outputs.previous }}
           PURPUR_COMMIT: ${{ needs.build.outputs.purpur }}
           PAPER_COMMIT: ${{ needs.build.outputs.paper }}
         run: |
+          # When only this job is started again, the outputs of the build job are those of its first run, and newer
+          # releases may exist; the jar is published only while it is still the release of this commit
+          expected=$(printf 'version=%s\ntag=%s\nbuild=%s\nprevious=%s' "$VERSION" "$TAG" "$BUILD" "$PREVIOUS")
+          actual=$(python3 scripts/release-version.py --commit "$GITHUB_SHA" gradle.properties | grep -E '^(version|tag|build|previous)=')
+          if [[ $actual != "$expected" ]]; then
+            echo "::error::The jar was built as v$VERSION, but now the release of this commit would be: $(echo $actual). Start the whole run again."
+            exit 1
+          fi
           mc=$(sed -n 's/^mcVersion *= *//p' gradle.properties | tr -d '\r')
           name="cubiq-$mc-v$VERSION.jar"
           mv "$RUNNER_TEMP"/artifact/cubiq-paperclip-*.jar "$RUNNER_TEMP/$name"
           (cd "$RUNNER_TEMP" && sha256sum "$name" > "$name.sha256")
-          python3 scripts/release-sources.py "$RUNNER_TEMP/sources" > "$RUNNER_TEMP/sources.txt"
-          mapfile -t sources < "$RUNNER_TEMP/sources.txt"
+          shopt -s nullglob
+          sources=("$RUNNER_TEMP"/artifact/*-source.tar.gz)
           python3 scripts/release-notes.py --version "$VERSION" --previous "$PREVIOUS" --jar "$RUNNER_TEMP/$name" --minecraft "$mc" \
             --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
             --sources "${sources[@]}" > "$RUNNER_TEMP/notes.md"
@@ -312,14 +356,24 @@ jobs:
           name="cubiq-$mc-snapshot.jar"
           mv "$RUNNER_TEMP"/artifact/cubiq-paperclip-*.jar "$RUNNER_TEMP/$name"
           (cd "$RUNNER_TEMP" && sha256sum "$name" > "$name.sha256")
-          python3 scripts/release-sources.py "$RUNNER_TEMP/sources" > "$RUNNER_TEMP/sources.txt"
-          mapfile -t sources < "$RUNNER_TEMP/sources.txt"
+          shopt -s nullglob
+          sources=("$RUNNER_TEMP"/artifact/*-source.tar.gz)
           python3 scripts/release-notes.py --snapshot --previous "$PREVIOUS" --jar "$RUNNER_TEMP/$name" --minecraft "$mc" \
             --purpur "$PURPUR_COMMIT" --paper "$PAPER_COMMIT" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
             --sources "${sources[@]}" > "$RUNNER_TEMP/notes.md"
+          # The release and the tag are deleted separately, because a cancelled run can leave either without the other
           if gh release view snapshot > /dev/null 2>&1; then
-            gh release delete snapshot --cleanup-tag --yes
+            gh release delete snapshot --yes
+          fi
+          if gh api "repos/$GH_REPO/git/ref/tags/snapshot" > /dev/null 2>&1; then
+            gh api -X DELETE "repos/$GH_REPO/git/refs/tags/snapshot"
           fi
           gh release create snapshot "$RUNNER_TEMP/$name" "$RUNNER_TEMP/$name.sha256" "${sources[@]}" --target "$GITHUB_SHA" \
             --title "Cubiq snapshot for Minecraft $mc" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
+          # GitHub ignores the target if the tag exists, so check that the new tag points at this commit
+          tagged=$(gh api "repos/$GH_REPO/git/ref/tags/snapshot" --jq .object.sha)
+          if [[ $tagged != "$GITHUB_SHA" ]]; then
+            echo "::error::The tag snapshot points at $tagged instead of $GITHUB_SHA"
+            exit 1
+          fi
           echo "Replaced the [snapshot]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/snapshot)." >> "$GITHUB_STEP_SUMMARY"

@@ -78,9 +78,9 @@ jar, which Paperclip downloads from Mojang, are listed separately; Cubiq does no
 
 ### License texts and notices of the libraries
 
-43 of the 68 jars in the Paperclip jar contain no LICENSE, NOTICE or COPYING file, although licenses such as
-MIT and BSD require their notices to accompany binary copies, and the Apache License 2.0 requires its text and the
-project's `NOTICE` file. The jars of other libraries contain license files that lack notices that apply to them: for
+Of the 68 jars in the Paperclip jar, 67 are libraries of other projects, and 43 of these contain no LICENSE, NOTICE
+or COPYING file, although licenses such as MIT and BSD require their notices to accompany binary copies, and the
+Apache License 2.0 requires its text and the project's `NOTICE` file. The jars of other libraries contain license files that lack notices that apply to them: for
 example the BSD notices of the startup code in the native libraries of sqlite-jdbc, the Apache License 1.1 headers of
 ten files of plexus-utils, David M. Gay's notice on the number conversion code of Rhino, and the NOTICE of Apache
 Commons Logging, from which jcl-over-slf4j is derived. Cubiq ships these texts and notices itself:
@@ -135,7 +135,9 @@ says so.
   distributing it together with the GPLv3 server. Because the GPLv2 (section 3) requires its source code to accompany
   the binary or a written offer, every release and the snapshot attach the source code of the bundled version,
   `mysql-connector-j-<version>-source.tar.gz`, made by `scripts/release-sources.py` from the commit of Oracle's
-  repository that the jar records as its source.
+  repository that the jar records as its source; the artifact of each CI run contains it next to the jar. CI checks
+  that the commit recorded in `scripts/library-notices.json` is the one in the jar's `INFO_SRC`, and that every
+  library under the GPLv2 or the LGPLv2.1 only has its source attached.
 - **`bungeecord-chat`** is distributed as in Paper. Its additional clause does not only concern Cubiq: it applies to
   everyone who uses the software for commercial software hosting services, for example hosting providers that offer
   Cubiq servers.
@@ -143,11 +145,14 @@ says so.
   plexus-utils: the files are distributed as in Paper; the project owner considers this acceptable.
 - **The 32-bit (i386) macOS native library of `jline-native`**, which contains Apple's startup code (Csu) under the
   APSL 2.0, is left out: no Java 25 runtime exists for 32-bit macOS, so the server never loads it. The build bundles
-  the jar without `org/jline/nativ/Mac/x86/` (see `cubiq-server/build.gradle.kts`).
+  the jar without `org/jline/nativ/Mac/x86/` (see `cubiq-server/build.gradle.kts.patch`), and the build fails if a
+  new version of jline-native no longer contains that directory, so that the decision is reviewed.
 - **Minecraft's English language strings in `bungeecord-chat`** (`mojang-translations`) are distributed as in Paper.
-- **Logo.** The server GUI shows Cubiq's logo, which is part of Cubiq's own work under the Apache License 2.0; Purpur's
-  logo is no longer distributed. The license grants no right to use the logo or the name Cubiq as a trademark
-  (Apache License 2.0, section 6).
+- **Logo.** The server GUI shows Cubiq's logo, which is part of Cubiq's own work under the Apache License 2.0;
+  Purpur's logo is no longer in the server. The patch that replaces it, `0001-Cubiq-logo.patch` in
+  `cubiq-server/paper-patches/features/`, still contains Purpur's logo, because a binary patch of git holds both
+  versions of the file. The license grants no right to use the logo or the name Cubiq as a trademark (Apache License
+  2.0, section 6).
 - **Source code of releases.** Each release names the tag of this repository it was built from and the Purpur and
   Paper commits, and GitHub offers archives of the tag. The GPLv3- and LGPLv3-licensed libraries are referred to by the
   repositories and commits in `THIRD-PARTY-NOTICES.md` (GPLv3 section 6(d)). Releases attach no further source

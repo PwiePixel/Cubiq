@@ -72,9 +72,10 @@ sha256sum -c cubiq-26.3-v0.0.1.jar.sha256
 java -jar cubiq-26.3-v0.0.1.jar --nogui
 ```
 
-The [snapshot](https://github.com/PwiePixel/Cubiq/releases/tag/snapshot), `cubiq-26.3-snapshot.jar`, is the newest
-development build, ahead of the latest release. Every build of a development branch that passes all checks replaces
-it, so it can contain unfinished changes; use it for testing only.
+The [snapshot](https://github.com/PwiePixel/Cubiq/releases/tag/snapshot), `cubiq-26.3-snapshot.jar`, is a
+development build: the next build of a development branch that contains the latest release and passes all checks
+replaces it. It can contain unfinished changes, and a release published after it can be newer; its notes name the
+commit it was built from. Use it for testing only.
 
 Releases and the snapshot are alpha software like everything else in Cubiq: back up your worlds before you try one.
 On first start, the jar downloads the Minecraft server from Mojang, and running it requires accepting the
